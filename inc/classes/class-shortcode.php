@@ -15,6 +15,7 @@ class Shortcode {
 	}
 	public function setup_hooks() {
 		add_shortcode('custom-popup-btn', [$this, 'custom_popup_btn']);
+		add_shortcode('my_zip_code', [$this, 'my_zip_code']);
 	}
 	public function custom_popup_btn($args) {
 		ob_start();
@@ -25,6 +26,11 @@ class Shortcode {
 		$output = ob_get_clean();
 		// defined('DOING_AJAX') && DOING_AJAX && 
 		return $output;
+	}
+	public function my_zip_code($args) {
+		ob_start(); ?>
+		<?php echo esc_html(get_user_meta(get_current_user_id(), '_zip_code', true)); ?>
+		<?php $output = ob_get_clean();return $output;
 	}
 	
 }

@@ -43,7 +43,6 @@ import flatpickr from "flatpickr";
 			PROMPTS.i18n = this.i18n;
 			// voiceRecord.init_recorder(this);
 			// this.voiceRecord = voiceRecord;
-
 		}
 		init_toast() {
 			const thisClass = this;
@@ -98,20 +97,39 @@ import flatpickr from "flatpickr";
 				// && json.header.product_photo
 				if(thisClass.Swal && thisClass.Swal.isVisible()) {
 					// thisClass.prompts.progressSteps = [...new Set(thisClass.prompts.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):row.steptitle))];
-					thisClass.prompts.progressSteps = [...new Set(
-						thisClass.prompts.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):(
-							`${(row?.stepicon)?`<div class="swal2-progress-step__icon">${row.stepicon}</div>`:``}
-							<span>${row.steptitle}</span>`
-						))
-					)];
+					if(PROMPTS?.allStepsIn1Screen) {
+						// PROMPTS.freezedSteps = document.createElement('div');
+						thisClass.prompts.progressSteps = [
+							thisClass.i18n?.criteria??'Criteria',
+							thisClass.i18n?.contactinfo??'Contact info',
+							thisClass.i18n?.preview??'Preview'
+						];
+						var node = document.createElement('form'), fields = PROMPTS.secondStep(thisClass), step, foot;
+						node.action=thisClass.ajaxUrl;node.type='post';node.classList.add('popup_body');node.dataset.id = 'contact';
+						fields.forEach((field, i) => {
+							step = PROMPTS.do_field(field);i++;
+							step.dataset.step = field.fieldID;
+							node.appendChild(step);
+							PROMPTS.totalSteps=(i+1);
+						});
+						foot = html.querySelector('.dynamic_popup .popup_foot');
+						foot.parentElement?.insertBefore(node, foot);
+
+						var node = document.createElement('form');node.action=thisClass.ajaxUrl;
+						node.type='post';node.classList.add('popup_body');node.dataset.id = 'preview';
+						foot.parentElement?.insertBefore(node, foot);
+					} else {
+						thisClass.prompts.progressSteps = [...new Set(
+							thisClass.prompts.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):(
+								`${(row?.stepicon)?`<div class="swal2-progress-step__icon">${row.stepicon}</div>`:``}
+								<span>${row.steptitle}</span>`
+							))
+						)];
+					}
+					
 					thisClass.Swal.update({
 						progressSteps: thisClass.prompts.progressSteps,
 						currentProgressStep: 0,
-						// progressStepsDistance: '10px',
-
-						// showCloseButton: true,
-						// allowOutsideClick: true,
-						// allowEscapeKey: true,
 						html: html.innerHTML
 					});
 					thisClass.prompts.lastJson = thisClass.lastJson;
@@ -201,6 +219,9 @@ import flatpickr from "flatpickr";
 			document.body.addEventListener('namesuggestionloaded', async (event) => {
 				if(!(thisClass.lastJson?.names??false)) {return;}
 				PROMPTS.names = thisClass.lastJson.names;
+			});
+			document.body.addEventListener('zipcodeupdated', async (event) => {
+				if(thisClass.Swal.isVisible()) {thisClass.Swal.close();}
 			});
 		}
 		init_i18n() {
@@ -369,7 +390,7 @@ import flatpickr from "flatpickr";
 					event.preventDefault();
 					html = PROMPTS.zip_template(thisClass);
 					Swal.fire({
-						title: thisClass.i18n?.findsupersrvcinarea??'Find Super Services in Your Area',
+						title: thisClass.i18n?.findsupersrvcinarea??'Discover Local Services',
 						html: html,
 						width: 600,
 						showConfirmButton: false,
@@ -396,6 +417,7 @@ import flatpickr from "flatpickr";
 							const locationIcon = document.querySelector('.location-picker .icon-container');
 							const zipCodeResult = document.querySelector('.location-picker .zip-code');
 							const findButton = document.querySelector('.location-picker .submit-button');
+							const locateMe = document.querySelector('.location-locateme .locate-me');
 							locationIcon?.addEventListener("click", (event) => {
 								event.preventDefault();
 								// Check if geolocation is supported by the browser
@@ -444,6 +466,9 @@ import flatpickr from "flatpickr";
 									error = thisClass.i18n?.plsvalidzip??'Please input a valid zip code.';
 									thisClass.toastify({text: error, style: {background: "linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))"}}).showToast();
 								}
+							});
+							locateMe?.addEventListener("click", (event) => {
+								locationIcon?.click();
 							});
 						},
 						preConfirm: async (login) => {return thisClass.prompts.on_Closed(thisClass);}

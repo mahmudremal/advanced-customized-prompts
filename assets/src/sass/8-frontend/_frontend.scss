@@ -60,17 +60,9 @@ $frameWidth: 350px;
 .swal2-popup {
   &.fwp-swal2-popup {
     margin: auto;
-    // height: 95vh;
-    // min-height: 90vh;
-    // max-height: 100vh;
-    // width: 90vw !important;
-    // max-width: 100vw !important;
-    // font-family: "Amatic SC", Sans-serif;
-    // grid-column: unset;
-    // grid-row: unset;
-    // min-width: 95vw;
-    // height: unset;
-    
+    overflow: hidden;
+    border-radius: 15px;
+    padding-bottom: 10px;
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
@@ -106,19 +98,18 @@ $frameWidth: 350px;
         border-radius: 3px;
         // padding: 3px 10px;
         // border-radius: 15px;
-        // // background: $primaryColor;
+        background: $primaryColor;
         // transform: rotate(-90deg);
       }
-      // .swal2-progress-step-line {
-      //   margin: 0 -13px;
-      //   background: $primaryColor;
-      // }
+      .swal2-progress-step-line {
+        background: $primaryColor;
+      }
       .swal2-active-progress-step {
         background: $primaryColor;
         border: 1px solid $primaryColor;
-      //   // &~.swal2-progress-step-line, &~.swal2-progress-step {
-      //   //   background: $secondaryColor !important;
-      //   // }
+        &~.swal2-progress-step-line, &~.swal2-progress-step {
+          background: $secondaryColor;
+        }
       }
     }
     // & > .swal2-progress-steps {
@@ -169,7 +160,7 @@ $frameWidth: 350px;
         text-align: center;
       }
       &__header {
-        top: -10px;
+        top: 0;
         z-index: 1;
         width: 100%;
         height: 70px;
@@ -318,9 +309,9 @@ $frameWidth: 350px;
         display: block;
         text-align: unset;
         padding: 0rem 0rem;
-        margin-bottom: 4rem;
+        margin-bottom: 2rem;
         max-width: $frameWidth;
-        height: calc(100% - 160px);
+        // height: calc(100% - 160px);
         @include mq($until: 400px) {
           max-width: 100%;
         }
@@ -827,9 +818,13 @@ $frameWidth: 350px;
           & > h2 {
             font-size: 16px;
             font-weight: 600;
+            margin-top: 10px;
             line-height: 16px;
             text-align: unset;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            & + p {
+              margin-bottom: 10px;
+            }
           }
           .do_recorder {
             // gap: 10px;
@@ -1199,17 +1194,32 @@ $frameWidth: 350px;
           }
         }
       }
+      &.allsteps1screen {
+        .popup_body {
+          display: none;
+          table {
+            tbody {
+              tr {
+                td {
+                  &:nth-child(2) {
+                    text-align: right;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
   
       .popup_foot {
+        left: 0;
+        bottom: 0;
+        width: 100%;
         display: block;
         position: relative;
         background: #fff;
         border: 1px solid #ddd;
-  
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        // position: fixed;
+        border-bottom: unset;
         &__wrap {
           gap: 5px;
           width: 100%;
@@ -1290,14 +1300,17 @@ $frameWidth: 350px;
           color: #fff;
           display: flex;
           font-weight: 700;
-          padding: 10px 20px;
+          // padding: 10px 20px;
           border-radius: 9px;
           align-items: center;
           background-color: $primaryColor;
-          // font-family: "Open Sans", Sans-serif;
           // &[data-react="back"] {
           //   display: none;
           // }
+          &[disabled] {
+            cursor: progress;
+            padding: 5px 10px;
+          }
           .invisible {
             visibility: hidden;
           }
@@ -1385,15 +1398,14 @@ $frameWidth: 350px;
     padding: 5rem 3rem;
     border-radius: 10px;
     .swal2-title {
-      width: 240px;
+      width: 400px;
       margin: auto;
       padding: unset;
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 400;
       color: #000000;
+      text-align: left;
       line-height: 30px;
-      text-align: center;
-      margin-bottom: 10px;
     }
     .swal2-close {
       top: -20px;
@@ -1407,78 +1419,109 @@ $frameWidth: 350px;
       border-radius: 30px;
       align-items: center;
       color: $primaryColor;
-      box-shadow: 1px 1px 12px #a1a1a1b3;
+      box-shadow: 1px 1px 12px rgba(161, 161, 161, 0.7);
+      
+      box-shadow: unset;
+      color: #ddd;
+      font-size: 50px;
+      padding: unset;
+      background: unset;
+      right: 0;
+      top: 0;
       &:hover {
         background: #fff;
       }
     }
     .swal2-html-container {
+      margin-top: unset;
       &__subtitle {
         width: 400px;
         margin: auto;
+        color: #333;
         font-size: 14px;
-        font-weight: 400;
+        margin-top: 5px;
+        text-align: left;
         line-height: 20px;
-        text-align: center;
       }
       &__form {
         margin: auto;
-        margin-top: 3rem;
+        margin-top: 2rem;
+        min-height: 15rem;
         .location-picker {
           margin: auto;
           width: 400px;
-          height: 50px;
+          height: 60px;
           display: flex;
           position: relative;
-          border-radius: 5px;
-          padding-left: 10px;
           background: #fff;
           align-items: center;
           border: 1px solid #ccc;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .input-container {
-          height: 100%;
-          display: flex;
-          align-items: center;
-          width: calc(100% - 73px);
-          .zip-code {
-            width: 100%;
+          box-shadow: 0px 2px 6px rgb(171 171 171) inset;
+          
+          .input-container {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            width: calc(100% - 73px);
+            .zip-code {
+              width: 100%;
+              padding: 8px;
+              border: none;
+              outline: none;
+              font-size: 16px;
+              font-weight: 400;
+              line-height: 18px;
+              border-radius: 5px;
+            }
+          }
+          .icon-container {
+            width: 60px;
             padding: 8px;
+            height: 100%;
+            display: flex;
+            cursor: pointer;
+            padding-left: 10px;
+            align-items: center;
+            border-radius: unset;
+            background: #717171;
+            justify-content: center;
+            box-shadow: 0px 1px 6px rgb(71 71 71) inset;
+            i {
+              font-size: 25px;
+              color: #f0f0f0;
+            }
+          }
+          .submit-button {
+            right: 0;
+            height: 100%;
             border: none;
-            outline: none;
+            color: #fff;
+            cursor: pointer;
             font-size: 16px;
-            font-weight: 400;
+            font-weight: 600;
             line-height: 18px;
-            border-radius: 5px;
+            padding: 10px 30px;
+            position: absolute;
+            border-radius: 0 5px 5px 0;
+            background-color: $primaryColor;
+
+            top: unset;
+            width: 100%;
+            bottom: -120%;
+            border-radius: unset;
+            box-shadow: 0px 3px 3px #a1a1a1;
+
+            &:hover {
+              background-color: $primaryDarkColor;
+            }
           }
         }
-        .icon-container {
-          padding: 8px;
-          cursor: pointer;
-          padding-left: 10px;
-          border-radius: 5px;
-          background-color: #f0f0f0;
-          i {
-            color: #777;
-            font-size: 25px;
-          }
-        }
-        .submit-button {
-          right: 0;
-          height: 100%;
-          border: none;
-          color: #fff;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: 600;
-          line-height: 18px;
-          padding: 10px 30px;
-          position: absolute;
-          border-radius: 0 5px 5px 0;
-          background-color: $primaryColor;
-          &:hover {
-            background-color: $primaryDarkColor;
+        .location-locateme {
+          display: none;
+          &__text {
+            width: 400px;
+            text-align: left;
+            margin: 10px auto 5px;
           }
         }
         

@@ -1,21 +1,29 @@
 import icons from "./icons";
+import { secondStepInputFields } from "./database";
+
 const PROMPTS = {
     i18n: {},voices: {}, names: [], global_cartBtn: false,
+    allStepsIn1Screen: true, freezedSteps: 0,
     zip_template: (thisClass) => {
-        const subTitle = PROMPTS.i18n?.findsupersrvcinarea??'Please enter your Post code to discover a world of convenient and reliable services tailored just for you.';
-        const txtFind = PROMPTS.i18n?.find??'Find';
-        const enterZipCode = PROMPTS.i18n?.enterzipcode??'Enter ZIP Code';
+        const subTitle = PROMPTS.i18n?.findsupersrvcinarea??'Simply Enter Your Location or Zip Code';
+        const txtFind = PROMPTS.i18n?.findservices??'Locate Local Services';
+        const enterZipCode = PROMPTS.i18n?.enterzipcode??'Locate Me or Enter Your Zip Code';
+        const locateMe = PROMPTS.i18n?.locateme??'Locate me';
+        const Or = PROMPTS.i18n?.or??'or';
         const html = `
         <p class="swal2-html-container__subtitle">${subTitle}</p>
         <div class="swal2-html-container__form">
             <div class="location-picker">
                 <div class="icon-container">
-                    <i class="fas fa-map-marker-alt"></i>
+                    <i class="fas fa-bullseye" map-marker-alt></i>
                 </div>
                 <div class="input-container">
                     <input type="text" class="zip-code" placeholder="${enterZipCode}" value="${thisClass.config?.userzip??''}">
                 </div>
                 <button class="submit-button">${txtFind}</button>
+            </div>
+            <div class="location-locateme">
+                <p class="location-locateme__text">${Or} <a class="locate-me" href="#">${locateMe}</a></p>
             </div>
         </div>
         `;
@@ -24,6 +32,7 @@ const PROMPTS = {
     get_template: (thisClass) => {
         var json, html;PROMPTS.global_cartBtn = false;
         html = document.createElement('div');html.classList.add('dynamic_popup');
+        if(PROMPTS?.allStepsIn1Screen) {html.classList.add('allsteps1screen');}
         if(PROMPTS.lastJson) {
             html.innerHTML = PROMPTS.generate_template(thisClass);
         } else {
@@ -285,7 +294,7 @@ const PROMPTS = {
             document.querySelector('.popup_foot .button[data-react="continue"]')?.click();
         });
         
-        PROMPTS.currentStep=0;PROMPTS.do_pagination(true, thisClass);
+        PROMPTS.currentStep=0;// PROMPTS.do_pagination(true, thisClass);
     },
     generate_template: (thisClass) => {
         var json, html;
@@ -308,13 +317,15 @@ const PROMPTS = {
         html += PROMPTS.generate_fields(thisClass);
         return html;
     },
-    generate_fields: (thisClass) => {
-        var div, node, step, foot, footwrap, btn, back, prices, fields = PROMPTS.get_data(thisClass);
+    generate_fields: (thisClass, secStep = false) => {
+        var div, node, step, foot, footwrap, btn, back, prices, fields;
+        fields = (secStep)?secStep:PROMPTS.get_data(thisClass);
         if(!fields && (thisClass.config?.buildPath??false)) {
             return '<img src="'+thisClass.config.buildPath+'/icons/undraw_file_bundle_re_6q1e.svg">';
         }
         div = document.createElement('div');node = document.createElement('form');
         node.action=thisClass.ajaxUrl;node.type='post';node.classList.add('popup_body');
+        if(PROMPTS?.allStepsIn1Screen) {node.dataset.id = 'criteria';node.style.display = 'block';}
         fields.forEach((field, i) => {
             step = PROMPTS.do_field(field);i++;
             step.dataset.step = field.fieldID;
@@ -365,10 +376,13 @@ const PROMPTS = {
         fields.forEach((row, i) => {row.orderAt = (i+1);});
         return fields;
     },
+    secondStep: (thisClass) => {
+        return secondStepInputFields;
+    },
     do_field: (field, child = false) => {
         var fields, form, group, fieldset, input, level, span, option, head, image, others, body, div, info, title, done, imgwrap, i = 0;
         div = document.createElement('div');if(!child) {div.classList.add('popup_step', 'd-none', 'popup_step__'+field.type.replaceAll(' ', '-'));}
-        
+        if(PROMPTS?.allStepsIn1Screen) {div.classList.remove('d-none');}
         if(!child) {
             done = document.createElement('button');done.type = 'button';done.dataset.type = 'done';
             done.innerHTML = PROMPTS.i18n?.done??'Done';div.appendChild(done);
@@ -617,101 +631,181 @@ const PROMPTS = {
         }
     },
     do_pagination: async (plus, thisClass) => {
-        var step, root, header, field, back, data, submit;PROMPTS.currentStep = PROMPTS?.currentStep??0;
-        root = '.fwp-swal2-popup .popup_body .popup_step';
-        if(!PROMPTS.lastJson.product || !PROMPTS.lastJson.product.custom_fields || PROMPTS.lastJson.product.custom_fields=='') {return;}
-        if(PROMPTS?.global_cartBtn || await PROMPTS.beforeSwitch(thisClass, plus)) {
-            PROMPTS.currentStep = (plus)?(
-                (PROMPTS.currentStep < PROMPTS.totalSteps)?(PROMPTS.currentStep+1):PROMPTS.currentStep
-           ):(
-                (PROMPTS.currentStep > 0)?(PROMPTS.currentStep-1):PROMPTS.currentStep
-           );
-            if(PROMPTS.currentStep <= 0) {return;}
-            submit = document.querySelector('.popup_foot .button[data-react="continue"]');
-            if(submit && submit.classList) {
-                if(PROMPTS.currentStep >= (PROMPTS.totalSteps-1) || PROMPTS?.global_cartBtn) {
-                    submit.firstElementChild.innerHTML = PROMPTS.i18n?.done??'Done';
-                } else {
-                    submit.firstElementChild.innerHTML = PROMPTS.i18n?.continue??'Continue';
-                }
-            }
-            
-            field = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt==PROMPTS.currentStep);
-            if(plus && field && field.type == 'confirm' && ! await PROMPTS.do_search(field, thisClass)) {
-                return false;
-            }
+        var step, root, header, field, back, data, error, submit;PROMPTS.currentStep = PROMPTS?.currentStep??0;
+        if(PROMPTS?.allStepsIn1Screen) {
+            const continueBtn = document.querySelector('.popup_foot .button[data-react="continue"]');
+            if(plus) {continueBtn.disabled = true;setTimeout(() => {continueBtn.disabled = false;}, 1000);}
+            setTimeout(() => {
+                const popupBodys = document.querySelectorAll('.dynamic_popup .popup_body');
+                if(plus) {PROMPTS.freezedSteps++;} else {PROMPTS.freezedSteps--;}
+                if(popupBodys[PROMPTS.freezedSteps]) {
+                    popupBodys.forEach((popBody) => {popBody.style.display = 'none';});
+                    if(popupBodys[PROMPTS.freezedSteps].dataset.id == 'preview') {
+                        data = [];
+                        document.querySelectorAll('.popup_body').forEach((form) => {
+                            var formdata = thisClass.generate_formdata(form), changedata = [];
+                            Object.keys(formdata).forEach((key) => {
+                                changedata.push({
+                                    key: form.querySelector('[name="'+key+'"]').parentElement.previousElementSibling.previousElementSibling.innerHTML,
+                                    val: formdata[key]
+                                });
+                            });
+                            data.push(changedata);
+                        });
+                        // console.log(data);
+                        popupBodys[PROMPTS.freezedSteps].innerHTML = `
+                        <table>
+                            <tr>
+                                <th>Key</th>
+                                <th></th>
+                                <th>Value</th>
+                            </tr>
+                            ${data.map((row) => {
+                                return row.map((item) => `
+                                <tr>
+                                    <td>${item.key.trim()}</td>
+                                    <td>:</td>
+                                    <td>${item.val.trim()}</td>
+                                </tr>`).join('')
+                            }).join('')}
+                        </table>
+                        
+                        <table>
+                            <tr>
+                                Submit
+                            </tr>
+                        </table>
+                        `;
+                        if(true) {
+                            var formdata = new FormData();
+                            formdata.append('action', 'sospopsproject/ajax/add/order');
+                            formdata.append('_nonce', thisClass.ajaxNonce);
+                            
+                            formdata.append('dataset', JSON.stringify({}));
+                            formdata.append('product_id', PROMPTS.lastJson.product.id);
+                            formdata.append('quantity', 1);
+                            thisClass.sendToServer(formdata);
+                        }
+                    }
 
-            if(PROMPTS.currentStep >= PROMPTS.totalSteps || PROMPTS?.global_cartBtn) {
-                step = document.querySelector('.popup_step.step_visible');data = [];
-                data = thisClass.transformObjectKeys(thisClass.generate_formdata(document.querySelector('.popup_body')));
-                
-                console.log('Submitting...');
+                    popupBodys[PROMPTS.freezedSteps].style.display = 'block';
+                    setTimeout(() => {
+                        var popup = document.querySelector('.dynamic_popup');
+                        thisClass.frozenNode = document.createElement('div');
+                        thisClass.frozenNode.appendChild(popup);
+                        setTimeout(() => {
+                            thisClass.Swal.update({currentProgressStep: PROMPTS.freezedSteps});
+                            setTimeout(() => {
+                                var popContainer = document.querySelector('.swal2-html-container');
+                                popContainer.innerHTML = '';
+                                popContainer.appendChild(
+                                    thisClass.frozenNode.querySelector('.dynamic_popup')
+                                );
+                            }, 100);
+                        }, 100);
+                    }, 300);
+                    
+                } else {
+                    if(plus) {PROMPTS.freezedSteps--;} else {PROMPTS.freezedSteps++;}
+                    error = thisClass.i18n?.nxtstepundrdev??'Next step under develpment.';
+                    thisClass.toastify({text: error, style: {background: "linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))"}}).showToast();
+                }
+            }, 1000);
+        } else {
+            root = '.fwp-swal2-popup .popup_body .popup_step';
+            if(!PROMPTS.lastJson.product || !PROMPTS.lastJson.product.custom_fields || PROMPTS.lastJson.product.custom_fields=='') {return;}
+            if(PROMPTS?.global_cartBtn || await PROMPTS.beforeSwitch(thisClass, plus)) {
+                PROMPTS.currentStep = (plus)?(
+                    (PROMPTS.currentStep < PROMPTS.totalSteps)?(PROMPTS.currentStep+1):PROMPTS.currentStep
+            ):(
+                    (PROMPTS.currentStep > 0)?(PROMPTS.currentStep-1):PROMPTS.currentStep
+            );
+                if(PROMPTS.currentStep <= 0) {return;}
                 submit = document.querySelector('.popup_foot .button[data-react="continue"]');
                 if(submit && submit.classList) {
-                    submit.setAttribute('disabled', true);
-                    PROMPTS.currentStep--;
-
-                    // data.product = PROMPTS.lastJson.product.id;
-                    var formdata = new FormData();
-                    formdata.append('action', 'sospopsproject/ajax/cart/add');
-                    formdata.append('_nonce', thisClass.ajaxNonce);
-                    const generated = await PROMPTS.get_formdata(thisClass, formdata);
-                    
-                    // formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
-                    formdata.append('dataset', JSON.stringify(generated));
-                    formdata.append('product_id', PROMPTS.lastJson.product.id);
-                    formdata.append('quantity', 1);
-                    thisClass.sendToServer(formdata);
-                    PROMPTS.global_cartBtn = false;
-
-                    setTimeout(() => {submit.removeAttribute('disabled');}, 100000);
-                }
-                // if(PROMPTS.validateField(step, data, thisClass)) {
-                // } else {console.log('Didn\'t Submit');}
-            } else {
-                document.querySelectorAll('.popup_foot .button[data-react="back"], .back2previous_step[data-react="back"]').forEach((back)=>{
-                    if(!plus && PROMPTS.currentStep<=1) {back.classList.add('invisible');}
-                    else {back.classList.remove('invisible');}
-                });
-                
-                field = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt==PROMPTS.currentStep);
-                header = document.querySelector('.header_image');
-                if(header) {
-                    if(field && field.headerbgurl!='') {
-                        jQuery(header).css('background-image', 'url('+field.headerbgurl+')');
-                        // header.innerHTML = '';
+                    if(PROMPTS.currentStep >= (PROMPTS.totalSteps-1) || PROMPTS?.global_cartBtn) {
+                        submit.firstElementChild.innerHTML = PROMPTS.i18n?.done??'Done';
+                    } else {
+                        submit.firstElementChild.innerHTML = PROMPTS.i18n?.continue??'Continue';
                     }
                 }
-                document.querySelectorAll(root+'.step_visible').forEach((el)=>{el.classList.add('d-none');el.classList.remove('step_visible');});
-                step = document.querySelector(root+'[data-step="'+(field?.fieldID??PROMPTS.currentStep)+'"]');
-                if(step) {
-                    if(!plus) {step.classList.add('popup2left');}
-                    step.classList.remove('d-none');setTimeout(()=>{step.classList.add('step_visible');},300);
-                    if(!plus) {setTimeout(()=>{step.classList.remove('popup2left');},1500);}
+                
+                field = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt==PROMPTS.currentStep);
+                if(plus && field && field.type == 'confirm' && ! await PROMPTS.do_search(field, thisClass)) {
+                    return false;
                 }
 
-                // Change swal step current one.
-                var popup = document.querySelector('.dynamic_popup');
-                var popupParent = (popup)?popup.parentElement:document.querySelector('.swal2-html-container');
-                thisClass.frozenNode = document.createElement('div');
-                thisClass.frozenNode.appendChild(popup);
+                if(PROMPTS.currentStep >= PROMPTS.totalSteps || PROMPTS?.global_cartBtn) {
+                    step = document.querySelector('.popup_step.step_visible');data = [];
+                    data = thisClass.transformObjectKeys(thisClass.generate_formdata(document.querySelector('.popup_body')));
+                    
+                    console.log('Submitting...');
+                    submit = document.querySelector('.popup_foot .button[data-react="continue"]');
+                    if(submit && submit.classList) {
+                        submit.setAttribute('disabled', true);
+                        PROMPTS.currentStep--;
 
-                var find = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt == PROMPTS.currentStep);
-                var found = PROMPTS.progressSteps.indexOf(find?.steptitle??false);
-                // thisClass.Swal.update({
-                //     currentProgressStep: ((found)?found:(PROMPTS.currentStep-1)),
-                //     // progressStepsDistance: (PROMPTS.progressSteps.length<=5)?'2rem':(
-                //     //     (PROMPTS.progressSteps.length>=8)?'0rem':'1rem'
-                //     //)
-                // });
-                thisClass.Swal.update({currentProgressStep: (PROMPTS.currentStep-1)});
+                        // data.product = PROMPTS.lastJson.product.id;
+                        var formdata = new FormData();
+                        formdata.append('action', 'sospopsproject/ajax/cart/add');
+                        formdata.append('_nonce', thisClass.ajaxNonce);
+                        const generated = await PROMPTS.get_formdata(thisClass, formdata);
+                        
+                        // formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
+                        formdata.append('dataset', JSON.stringify(generated));
+                        formdata.append('product_id', PROMPTS.lastJson.product.id);
+                        formdata.append('quantity', 1);
+                        thisClass.sendToServer(formdata);
+                        PROMPTS.global_cartBtn = false;
 
-                if(popupParent) {popupParent.innerHTML = '';popupParent.appendChild(thisClass.frozenNode.childNodes[0]);}
-                setTimeout(() => {PROMPTS.work_with_pagination(thisClass);}, 300);
-                
+                        setTimeout(() => {submit.removeAttribute('disabled');}, 100000);
+                    }
+                    // if(PROMPTS.validateField(step, data, thisClass)) {
+                    // } else {console.log('Didn\'t Submit');}
+                } else {
+                    document.querySelectorAll('.popup_foot .button[data-react="back"], .back2previous_step[data-react="back"]').forEach((back)=>{
+                        if(!plus && PROMPTS.currentStep<=1) {back.classList.add('invisible');}
+                        else {back.classList.remove('invisible');}
+                    });
+                    
+                    field = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt==PROMPTS.currentStep);
+                    header = document.querySelector('.header_image');
+                    if(header) {
+                        if(field && field.headerbgurl!='') {
+                            jQuery(header).css('background-image', 'url('+field.headerbgurl+')');
+                            // header.innerHTML = '';
+                        }
+                    }
+                    document.querySelectorAll(root+'.step_visible').forEach((el)=>{el.classList.add('d-none');el.classList.remove('step_visible');});
+                    step = document.querySelector(root+'[data-step="'+(field?.fieldID??PROMPTS.currentStep)+'"]');
+                    if(step) {
+                        if(!plus) {step.classList.add('popup2left');}
+                        step.classList.remove('d-none');setTimeout(()=>{step.classList.add('step_visible');},300);
+                        if(!plus) {setTimeout(()=>{step.classList.remove('popup2left');},1500);}
+                    }
+
+                    // Change swal step current one.
+                    var popup = document.querySelector('.dynamic_popup');
+                    var popupParent = (popup)?popup.parentElement:document.querySelector('.swal2-html-container');
+                    thisClass.frozenNode = document.createElement('div');
+                    thisClass.frozenNode.appendChild(popup);
+
+                    var find = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt == PROMPTS.currentStep);
+                    var found = PROMPTS.progressSteps.indexOf(find?.steptitle??false);
+                    // thisClass.Swal.update({
+                    //     currentProgressStep: ((found)?found:(PROMPTS.currentStep-1)),
+                    //     // progressStepsDistance: (PROMPTS.progressSteps.length<=5)?'2rem':(
+                    //     //     (PROMPTS.progressSteps.length>=8)?'0rem':'1rem'
+                    //     //)
+                    // });
+                    thisClass.Swal.update({currentProgressStep: (PROMPTS.currentStep-1)});
+
+                    if(popupParent) {popupParent.innerHTML = '';popupParent.appendChild(thisClass.frozenNode.childNodes[0]);}
+                    setTimeout(() => {PROMPTS.work_with_pagination(thisClass);}, 300);
+                }
+            } else {
+                console.log('Proceed failed');
             }
-        } else {
-            console.log('Proceed failed');
         }
     },
     beforeSwitch: async (thisClass, plus) => {
