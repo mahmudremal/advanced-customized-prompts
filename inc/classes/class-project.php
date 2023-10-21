@@ -12,19 +12,22 @@ class Project {
 	protected function __construct() {
 		// Load class.
 		I18n::get_instance();
-		// Cart::get_instance();
+		Cart::get_instance();
 		Ajax::get_instance();
 		// Order::get_instance();
 		// Hooks::get_instance();
 		// Media::get_instance();
 		Menus::get_instance();
+		Service::get_instance();
 		// Addons::get_instance();
 		Assets::get_instance();
 		Install::get_instance();
 		Option::get_instance();
 		Product::get_instance();
-		Meta_Boxes::get_instance();
+		Checkout::get_instance();
 		Shortcode::get_instance();
+		Meta_Boxes::get_instance();
+		Myaccount::get_instance();
 
 		// $this->setup_hooks();
 	}

@@ -1,6 +1,8 @@
 import icons from "./icons";
 import { secondStepInputFields } from "./database";
 
+// NiceSelect.bind(document.getElementById("a-select"), {searchable: true, placeholder: 'select', searchtext: 'zoek', selectedtext: 'geselecteerd'});
+
 const PROMPTS = {
     i18n: {},voices: {}, names: [], global_cartBtn: false,
     allStepsIn1Screen: true, freezedSteps: 0,
@@ -214,8 +216,26 @@ const PROMPTS = {
                 }
             });
         });
+        document.querySelectorAll('.dynamic_popup .popup_body select').forEach((el)=>{
+            el.addEventListener('change', (event)=>{
+                const selectedOption = event.target.options[event.target.selectedIndex];
+                Object.values(event.target.options).forEach((option) => {
+                    if((selectedOption.dataset?.cost??'')?.trim() != '') {
+                        thisClass.popupCart.removeAdditionalPrice(option.value, parseFloat(option.dataset.cost));
+                    }
+                });
+                if((selectedOption.dataset?.cost??'')?.trim() != '') {
+                    thisClass.popupCart.addAdditionalPrice(selectedOption.value, parseFloat(selectedOption.dataset.cost), false);
+                }
+            });
+        });
         document.querySelectorAll('.dynamic_popup input[type="date"]').forEach((el)=>{
             el.type = 'text';thisClass.flatpickr(el, {enableTime: false, dateFormat: "d M, Y"});
+        });
+        document.querySelectorAll('.dynamic_popup select').forEach((el)=>{
+            new thisClass.SlimSelect({select: el, settings: {
+                showSearch: (el.childElementCount >= 10)
+            }});
         });
 
         document.querySelectorAll('.dynamic_popup button[data-type="done"]:not([data-handled])').forEach((done)=>{
@@ -290,9 +310,9 @@ const PROMPTS = {
                 } else {}
             });
         });
-        document.querySelector('.calculated-prices .price_amount')?.addEventListener('click', (event) => {
-            document.querySelector('.popup_foot .button[data-react="continue"]')?.click();
-        });
+        // document.querySelector('.calculated-prices .price_amount')?.addEventListener('click', (event) => {
+        //     document.querySelector('.popup_foot .button[data-react="continue"]')?.click();
+        // });
         
         PROMPTS.currentStep=0;// PROMPTS.do_pagination(true, thisClass);
     },
@@ -349,10 +369,10 @@ const PROMPTS = {
         // back.style.display = 'none';
         footwrap.appendChild(back);
         
-        // prices = document.createElement('div');prices.classList.add('calculated-prices');
-        // prices.innerHTML=`<span>${PROMPTS.i18n?.total??'Total'}</span><div class="price_amount">${(PROMPTS.lastJson.product && PROMPTS.lastJson.product.priceHtml)?PROMPTS.lastJson.product.priceHtml:(thisClass.config?.currencySign??'')+'0.00'}</div>`;
-        // // document.querySelector('.popup-prices')?.appendChild(prices);
-        // footwrap.appendChild(prices);
+        prices = document.createElement('div');prices.classList.add('calculated-prices');
+        prices.innerHTML=`<span>${PROMPTS.i18n?.total??'Total'}</span><div class="price_amount">${(PROMPTS.lastJson.product && PROMPTS.lastJson.product.priceHtml)?PROMPTS.lastJson.product.priceHtml:(thisClass.config?.currencySign??'')+'0.00'}</div>`;
+        // document.querySelector('.popup-prices')?.appendChild(prices);
+        footwrap.appendChild(prices);
         
         btn = document.createElement('button');btn.classList.add('btn', 'btn-primary', 'button');
         btn.type='button';btn.dataset.react='continue';
@@ -386,6 +406,9 @@ const PROMPTS = {
         if(!child) {
             done = document.createElement('button');done.type = 'button';done.dataset.type = 'done';
             done.innerHTML = PROMPTS.i18n?.done??'Done';div.appendChild(done);
+        }
+        if(field?.classes) {
+            try {div.classList.add(...(field.classes.split(' ')));} catch (error) {}
         }
         if((field?.heading??'').trim() != '') {
             head = document.createElement('h2');
@@ -433,10 +456,19 @@ const PROMPTS = {
             case 'select':
                 input = document.createElement('select');input.classList.add('form-control');
                 input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
+                if((field?.name??'')?.trim() != '') {input.dataset.name = field?.name;}
                 // if(field?.dataset??false) {input.dataset = field.dataset;}
                 input.dataset.fieldId = field.fieldID;
                 (field?.options??[]).forEach((opt,i)=> {
-                    option = document.createElement('option');option.value=opt?.label??'';option.innerHTML=opt?.label??'';option.dataset.index = i;
+                    option = document.createElement('option');
+                    option.value=opt?.label??'';
+                    option.innerHTML=opt?.label??'';
+                    option.dataset.index = i;
+                    if(opt?.cost) {
+                        option.dataset.cost = parseFloat(opt?.cost);
+                        option.innerHTML += ` (${parseFloat(opt?.cost).toFixed(2)})`
+                    }
+                    
                     input.appendChild(option);
                 });
                 
@@ -635,7 +667,7 @@ const PROMPTS = {
         if(PROMPTS?.allStepsIn1Screen) {
             const continueBtn = document.querySelector('.popup_foot .button[data-react="continue"]');
             if(plus) {continueBtn.disabled = true;setTimeout(() => {continueBtn.disabled = false;}, 1000);}
-            setTimeout(() => {
+            setTimeout(async () => {
                 const popupBodys = document.querySelectorAll('.dynamic_popup .popup_body');
                 if(plus) {PROMPTS.freezedSteps++;} else {PROMPTS.freezedSteps--;}
                 if(popupBodys[PROMPTS.freezedSteps]) {
@@ -652,9 +684,44 @@ const PROMPTS = {
                             });
                             data.push(changedata);
                         });
-                        // console.log(data);
-                        popupBodys[PROMPTS.freezedSteps].innerHTML = `
-                        <table>
+                        PROMPTS.lastFormsData = data;
+                        popupBodys[PROMPTS.freezedSteps].innerHTML += `
+                        <div class="form-groups">
+                            <div class="form-row">
+                                ${[1, 2, 3, 4, 5, 6].map((row) => `
+                                <div class="form-col">
+                                    <div class="form-col-8">
+                                        <h3 class="">Bedroom & Washroom</h3>
+                                        <a class="" href="#">Add/Change</a>
+                                    </div>
+                                    <div class="form-col-4">
+                                        <span class="d-block">2 Bedroom</span>
+                                        <span class="d-block">4 Washroom</span>
+                                    </div>
+                                </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <table class="pricing_table">
+                            <tbody>
+                                <tr>
+                                    <th>SubTotal</th>
+                                    <td>${thisClass.popupCart.getSubTotalHtml(2)}</td>
+                                </tr>
+                                <tr>
+                                    <th>Taxes and Fees</th>
+                                    <td>${thisClass.popupCart.getTEXnFeesHtml(2)}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total Amount</th>
+                                    <td>${thisClass.popupCart.getTotalHtml(2)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <table style="display: none;">
                             <tr>
                                 <th>Key</th>
                                 <th></th>
@@ -669,26 +736,18 @@ const PROMPTS = {
                                 </tr>`).join('')
                             }).join('')}
                         </table>
-                        
-                        <table>
-                            <tr>
-                                Submit
-                            </tr>
-                        </table>
                         `;
-                        if(true) {
-                            var formdata = new FormData();
-                            formdata.append('action', 'sospopsproject/ajax/add/order');
-                            formdata.append('_nonce', thisClass.ajaxNonce);
-                            
-                            formdata.append('dataset', JSON.stringify({}));
-                            formdata.append('product_id', PROMPTS.lastJson.product.id);
-                            formdata.append('quantity', 1);
-                            thisClass.sendToServer(formdata);
-                        }
+                        setTimeout(() => {
+                            const checkoutForm = document.querySelector('#checkout-form-container');
+                            if(checkoutForm) {
+                                checkoutForm.style.display = 'block';
+                                popupBodys[PROMPTS.freezedSteps].appendChild(checkoutForm);
+                            }
+                            window.popupBodys = popupBodys[PROMPTS.freezedSteps];
+                        }, 500);
                     }
 
-                    popupBodys[PROMPTS.freezedSteps].style.display = 'block';
+                    popupBodys[PROMPTS.freezedSteps].style.display = 'flex';
                     setTimeout(() => {
                         var popup = document.querySelector('.dynamic_popup');
                         thisClass.frozenNode = document.createElement('div');
@@ -709,6 +768,32 @@ const PROMPTS = {
                     if(plus) {PROMPTS.freezedSteps--;} else {PROMPTS.freezedSteps++;}
                     error = thisClass.i18n?.nxtstepundrdev??'Next step under develpment.';
                     thisClass.toastify({text: error, style: {background: "linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))"}}).showToast();
+                    if(plus) {
+                        const changedata = [];
+                        document.querySelectorAll('.popup_body').forEach((form) => {
+                            var formdata = thisClass.generate_formdata(form), input;
+                            Object.keys(formdata).forEach((key) => {
+                                input = form.querySelector('[name="'+key+'"]')
+                                changedata.push({
+                                    key: key, name: input.dataset?.name,
+                                    title: ((input.parentElement?.previousElementSibling)?.previousElementSibling)?.innerHTML,
+                                    value: formdata[key]
+                                });
+                            });
+                        });
+                        const filteredData = changedata.filter(item => item?.name !== undefined && item.name !== null);
+                        PROMPTS.lastFormsData = changedata;PROMPTS.toSearchQuery = filteredData;
+
+                        var formdata = new FormData();
+                        formdata.append('action', 'sospopsproject/ajax/cart/add');
+                        formdata.append('_nonce', thisClass.ajaxNonce);
+                        // const generated = await PROMPTS.get_formdata(thisClass, formdata);
+                        formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
+                        formdata.append('dataset', JSON.stringify(changedata));
+                        formdata.append('product_id', PROMPTS.lastJson.product.id);
+                        formdata.append('quantity', 1);
+                        thisClass.sendToServer(formdata);
+                    }
                 }
             }, 1000);
         } else {
@@ -751,7 +836,7 @@ const PROMPTS = {
                         formdata.append('_nonce', thisClass.ajaxNonce);
                         const generated = await PROMPTS.get_formdata(thisClass, formdata);
                         
-                        // formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
+                        formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
                         formdata.append('dataset', JSON.stringify(generated));
                         formdata.append('product_id', PROMPTS.lastJson.product.id);
                         formdata.append('quantity', 1);
@@ -1051,7 +1136,7 @@ const PROMPTS = {
                             el.classList.add('step_visible');el.classList.remove('d-none');
                             document.querySelector('.popup_body')?.classList.add('visible_card');
                             if(el.dataset?.step) {
-                                var presentStep = thisClass.prompts.lastJson.product.custom_fields.find((row)=>row.orderAt == el.dataset.step);
+                                var presentStep = PROMPTS.lastJson.product.custom_fields.find((row)=>row.orderAt == el.dataset.step);
                                 if(presentStep) {
                                     document.querySelector('.popup_body').dataset.stepType = presentStep.type;
                                 }

@@ -1,29 +1,24 @@
 # Advanced customized prompts
-This plugin specially created for [Dubido](https://dubido.co.il/), a customized teddy-bear provider company. Please find the features below.
+This plugin specially created for [SoS](Super Of The Suburbs), service listing site developed on behalf of WeTechPro.
 
-* Apearance generating
-   * For each product individually.
-   * An option defining Globally.
-* Certificate Generating
-   * Generate & verify certificate.
-   * Autometically & manually sending certificate email.
-* Voice recording
-  * Record & upload voice with order.
-  * Possibility to send recorded file later.
-* In-build Pricing
-  * Pricing Genearted dynamically.
-  * Possibility to escape pricing.
-* Administrative facility
-  * Orginal Audio decoded file downloadable.
-  * One click Import feature.
-  * One click Export feature.
+* Main Features
+  * Professiona Registration Pops
+  * Cetregory selection Pops
+  * Single service lead data gathering pops.
+  * On Screen Payment processing.
+* Service Templates
+  * Custom Service archive Template
+  * Single Service template
+  * Customized filters
+  * Advanced Search bar
 
-![Products](/templates/screenshot/dolls-preview.jpg)
-![Pops](/templates/screenshot/customization-screen.png)
-![Hearts](/templates/screenshot/select-hearts.jpg)
-![Outfits](/templates/screenshot/select-outfits.jpg)
-![Recorder](/templates/screenshot/voice-addons.jpg)
-![Confirm](/templates/screenshot/confirmation.jpg)
+![Single Service Page](/templates/screenshot/Single_service_page.png)
+![Single Service Page](/templates/screenshot/Single_service_page-1.png)
+![Single Service Page](/templates/screenshot/Single_service_page-2.png)
+![Single Service Page](/templates/screenshot/Single_service_page-3.png)
+![Single Service Page](/templates/screenshot/Single_service_page-4.png)
+![Professional Registration](/templates/screenshot/pros_regs.png)
+![Category Tree](/templates/screenshot/category_tree.png)
 
 #### Hi, I'm Remal Mahmud, currently working on something freelance projects 😉
 ### Connect with me:

@@ -24,7 +24,7 @@ import tippy from 'tippy.js';
 		setup_hooks() {
 			const thisClass = this;
 			window.thisClass = this;
-			window.mediaImages = mediaImages;
+			this.mediaImages = mediaImages;
 			this.prompts = PROMPTS;
 			PROMPTS.i18n = this.i18n;
 			this.Sortable = Sortable;
@@ -37,6 +37,7 @@ import tippy from 'tippy.js';
 			this.init_wavesurfer();
 			this.ask4teddybearname();
 			this.initRandTeddyName();
+			mediaImages.uploadTexToImage(this);
 		}
 		init_toast() {
 			const thisClass = this;
@@ -95,6 +96,7 @@ import tippy from 'tippy.js';
 							thisClass.prompts.do_fetch(thisClass);
 						}
 						thisClass.prompts.init_events(thisClass);
+						thisClass.prompts.load_cutocomplete_data(thisClass);
 					}, 300);
 				}
 			});
@@ -113,6 +115,13 @@ import tippy from 'tippy.js';
 			document.body.addEventListener('ajaxi18nloaded', async (event) => {
 				if(!(thisClass.lastJson?.translates??false)) {return;}
 				thisClass.i18n = PROMPTS.i18n = {...thisClass.i18n, ...thisClass.lastJson.translates};
+			});
+			document.body.addEventListener('fields_names_loaded', async (event) => {
+				if(!(thisClass.lastJson?.fields_names??false)) {return;}
+				thisClass.prompts.autocomplets.fields_names = (thisClass.lastJson?.fields_names??[]).map((row)=>{
+					return {label: row[0], value: row[1]};
+				});
+				PROMPTS.init_intervalevent(thisClass);
 			});
 		}
 		init_i18n() {

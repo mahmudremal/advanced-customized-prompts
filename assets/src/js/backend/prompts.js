@@ -1,5 +1,7 @@
+import Awesomplete from 'awesomplete';
+
 const PROMPTS = {
-    i18n: {},
+    i18n: {}, autocomplets: {},
     get_template: (thisClass) => {
         var json, html;
         html = document.createElement('div');html.classList.add('dynamic_popup');
@@ -292,6 +294,21 @@ const PROMPTS = {
             
             fieldset.appendChild(label);fieldset.appendChild(input);div.appendChild(fieldset);
         }
+        if(true) {
+            PROMPTS.lastfieldID++;
+            fieldset = document.createElement('div');fieldset.classList.add('form-group');
+            input = document.createElement('input');input.classList.add('form-control');
+            input.name = 'name';input.type = 'text';
+            input.id = 'thefield'+PROMPTS.lastfieldID;input.setAttribute('value', data?.name??'');
+            input.placeholder=PROMPTS.i18n?.field_name??'Field name';
+            label = document.createElement('label');label.classList.add('form-label');
+            label.setAttribute('for', input.id);
+            label.innerHTML = PROMPTS.i18n?.field_name??'Field name';
+            span = document.createElement('span');span.classList.add('tippy__help');
+            span.innerHTML = PROMPTS.i18n?.quest??'?';
+            
+            label.appendChild(span);fieldset.appendChild(label);fieldset.appendChild(input);div.appendChild(fieldset);
+        }
         PROMPTS.lastfieldID++;
         switch (field.type) {
             case 'textarea':
@@ -357,10 +374,10 @@ const PROMPTS = {
                 label.setAttribute('for', input.id);label.innerHTML = PROMPTS.i18n?.placeholder_text??'Field descriptions.';
                 fieldset.appendChild(label);fieldset.appendChild(input);
                 PROMPTS.lastfieldID++;
-                input = document.createElement('input');input.classList.add('form-control', 'form-control-'+field.type);input.type='text';input.name = 'placeholder';input.id='thefield'+PROMPTS.lastfieldID;input.setAttribute('value', data?.placeholder??'');
-                label = document.createElement('label');label.classList.add('form-label');
-                label.setAttribute('for', input.id);label.innerHTML = PROMPTS.i18n?.placeholder_text??'Placeholder text';
-                fieldset.appendChild(label);fieldset.appendChild(input);
+                // input = document.createElement('input');input.classList.add('form-control', 'form-control-'+field.type);input.type='text';input.name = 'placeholder';input.id='thefield'+PROMPTS.lastfieldID;input.setAttribute('value', data?.placeholder??'');
+                // label = document.createElement('label');label.classList.add('form-label');
+                // label.setAttribute('for', input.id);label.innerHTML = PROMPTS.i18n?.placeholder_text??'Placeholder text';
+                // fieldset.appendChild(label);fieldset.appendChild(input);
                 /**
                  * Reapeter fields
                  */
@@ -580,7 +597,8 @@ const PROMPTS = {
     get_fields: () => {
         var fields;
         fields = {
-            types: ['text', 'number', 'date', 'time', 'local', 'color', 'range', 'textarea', 'select', 'radio', 'checkbox'],
+            types: ['select'],
+            // types: ['text', 'number', 'date', 'time', 'local', 'color', 'range', 'textarea', 'select', 'radio', 'checkbox'],
             // , 'doll', 'voice', 'outfit', 'info'
         };
         return fields;
@@ -703,6 +721,25 @@ const PROMPTS = {
                 else {input.removeAttribute('value');}
                 input.innerHTML = input.dataset.innertext;
             });
+        });
+        document.querySelectorAll('.tippy__help:not([data-tipped-handled])').forEach((el) => {
+            if(PROMPTS.autocomplets?.fields_names??false) {
+                el.dataset.tippedHandled = true;
+                thisClass.tippy(el, {
+                    allowHTML: true,
+                    content: `
+                    <div class="fwp-help__tippy">
+                        ${(PROMPTS.autocomplets?.fields_names??[]).map((row)=>`<code>"${row.value}"</code> ${row.label}<br/>`).join('')}
+                    </div>`
+                });
+            }
+        });
+        document.querySelectorAll('.form-wrap .popup_step__body .form-group > input[name=name]:not([data-autocomplete-handled])').forEach((el) => {
+            if(PROMPTS.autocomplets?.fields_names??false) {
+                el.dataset.autocompleteHandled = true;
+                var awesomplete = new Awesomplete(el);
+                awesomplete.list = PROMPTS.autocomplets?.fields_names??[];
+            }
         });
     },
     insertAfter: (referenceNode, newNode) => {
@@ -960,6 +997,12 @@ const PROMPTS = {
         contextMenu.addEventListener("contextmenu", function(event) {
             event.preventDefault();
         });
+    },
+    load_cutocomplete_data: (thisClass) => {
+        var formdata = new FormData();
+        formdata.append('action', 'sospopsproject/ajax/fields/names');
+        formdata.append('_nonce', thisClass.ajaxNonce);
+        thisClass.sendToServer(formdata);
     }
 };
 export default PROMPTS;

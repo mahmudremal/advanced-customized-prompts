@@ -7,10 +7,12 @@
 import Swal from "sweetalert2";
 // import Awesomplete from "awesomplete";
 import PROMPTS from "./prompts";
+import CAT_PROMPTS from "./cat_prompts";
 import Toastify from 'toastify-js';
 // import voiceRecord from "./voicerecord";
-// import popupCart from "./popupcart";
+import popupCart from "./popupcart";
 import flatpickr from "flatpickr";
+import SlimSelect from 'slim-select';
 
 ( function ( $ ) {
 	class FutureWordPress_Frontend {
@@ -28,17 +30,21 @@ import flatpickr from "flatpickr";
 		}
 		setup_hooks() {
 			const thisClass = this;
+			this.Swal = Swal;
 			window.thisClass = this;
 			this.prompts = PROMPTS;
-			this.Swal = Swal;
+			this.CAT_PROMPTS = CAT_PROMPTS;
 			this.flatpickr = flatpickr;
-			// popupCart.priceSign = this.config?.currencySign??'$';
-			// this.popupCart = popupCart;
+			this.SlimSelect = SlimSelect;
+			popupCart.priceSign = this.config?.currencySign??'$';
+			this.popupCart = popupCart;
 			this.init_toast();
 			this.init_events();
 			this.init_i18n();
 			this.init_zip_picker();
 			this.init_pops_asks();
+			this.init_pro_regis();
+			this.init_category_pops();
 			// voiceRecord.i18n = this.i18n;
 			PROMPTS.i18n = this.i18n;
 			// voiceRecord.init_recorder(this);
@@ -88,35 +94,49 @@ import flatpickr from "flatpickr";
 		init_events() {
 			const thisClass = this;var template, html;
 			document.body.addEventListener('gotproductpopupresult', async (event) => {
-				thisClass.prompts.lastJson = thisClass.lastJson;
-				// thisClass.popupCart.additionalPrices = [];
-				// thisClass.popupCart.basePrice = parseFloat(thisClass.prompts.lastJson.product.price);
-				// thisClass.popupCart.priceSign = thisClass.prompts.lastJson.product.currency;
-				template = await thisClass.prompts.get_template(thisClass);
+				PROMPTS.lastJson = thisClass.lastJson;
+				thisClass.popupCart.additionalPrices = [];
+				thisClass.popupCart.setBasePrice(PROMPTS.lastJson.product.price);
+				thisClass.popupCart.priceSign = PROMPTS.lastJson.product.currency;
+				template = await PROMPTS.get_template(thisClass);
 				html = document.createElement('div');html.appendChild(template);
+				
+				var elem = document.createElement('div');elem.classList.add('popup_step', 'popup_step__heading');elem.dataset.step = 0;
+				elem.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Criteria Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
+				var firstStep = template.querySelector('.popup_body > .popup_step:first-child');
+				if(firstStep) {firstStep.parentElement.insertBefore(elem, firstStep);}
+				
 				// && json.header.product_photo
 				if(thisClass.Swal && thisClass.Swal.isVisible()) {
-					// thisClass.prompts.progressSteps = [...new Set(thisClass.prompts.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):row.steptitle))];
+					// PROMPTS.progressSteps = [...new Set(PROMPTS.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):row.steptitle))];
 					if(PROMPTS?.allStepsIn1Screen) {
 						// PROMPTS.freezedSteps = document.createElement('div');
-						thisClass.prompts.progressSteps = [
+						PROMPTS.progressSteps = [
 							thisClass.i18n?.criteria??'Criteria',
-							thisClass.i18n?.contactinfo??'Contact info',
+							thisClass.i18n?.contact??'Contact',
 							thisClass.i18n?.preview??'Preview'
 						];
 						var node = document.createElement('form'), fields = PROMPTS.secondStep(thisClass), step, foot;
-						node.action=thisClass.ajaxUrl;node.type='post';node.classList.add('popup_body');node.dataset.id = 'contact';
+						node.action=thisClass.ajaxUrl;node.type='post';node.classList.add('popup_body', 'popup_body__row');node.dataset.id = 'contact';
 						fields.forEach((field, i) => {
 							step = PROMPTS.do_field(field);i++;
 							step.dataset.step = field.fieldID;
 							node.appendChild(step);
 							PROMPTS.totalSteps=(i+1);
 						});
+						var elem = document.createElement('div');elem.classList.add('popup_step', 'popup_step__heading');elem.dataset.step = 0;
+						elem.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Contact Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
+						var firstStep = node.querySelector('.popup_body > .popup_step:first-child');
+						if(firstStep) {firstStep.parentElement.insertBefore(elem, firstStep);}
+						
 						foot = html.querySelector('.dynamic_popup .popup_foot');
 						foot.parentElement?.insertBefore(node, foot);
 
 						var node = document.createElement('form');node.action=thisClass.ajaxUrl;
-						node.type='post';node.classList.add('popup_body');node.dataset.id = 'preview';
+						node.type='post';node.classList.add('popup_body', 'popup_body__row');node.dataset.id = 'preview';
+						var elem = document.createElement('div');elem.classList.add('popup_step', 'popup_step__heading');elem.dataset.step = 0;
+						elem.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Review Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
+						node.appendChild(elem);
 						foot.parentElement?.insertBefore(node, foot);
 					} else {
 						thisClass.prompts.progressSteps = [...new Set(
@@ -222,6 +242,20 @@ import flatpickr from "flatpickr";
 			});
 			document.body.addEventListener('zipcodeupdated', async (event) => {
 				if(thisClass.Swal.isVisible()) {thisClass.Swal.close();}
+			});
+			document.body.addEventListener('addedToCartSuccess', async (event) => {
+				if((thisClass.lastJson?.redirectTo) && (thisClass.prompts?.toSearchQuery)) {
+					var href = thisClass.lastJson.redirectTo;
+					href += '?' + thisClass.prompts.toSearchQuery.map((row) => row.name + '=' + row.value).join('&')
+					location.href = href;
+				}
+			});
+			document.body.addEventListener('categorylistsfalied', async (event) => {
+				if(!(CAT_PROMPTS?.lastCategoryLink)) {return;}
+				location.href = CAT_PROMPTS.lastCategoryLink;
+			});
+			document.body.addEventListener('categorylistsloaded', async (event) => {
+				CAT_PROMPTS.load_template(thisClass);
 			});
 		}
 		init_i18n() {
@@ -516,7 +550,7 @@ import flatpickr from "flatpickr";
 					html = PROMPTS.get_template(thisClass);
 					Swal.fire({
 						title: false, // thisClass.i18n?.generateaicontent??'Generate AI content',
-						width: 600,
+						width: 700,
 						showConfirmButton: false,
 						showCancelButton: false,
 						showCloseButton: false,
@@ -551,6 +585,7 @@ import flatpickr from "flatpickr";
 						},
 						preConfirm: async (login) => {return thisClass.prompts.on_Closed(thisClass);}
 					}).then( async (result) => {
+						PROMPTS.freezedSteps = 0;
 						if( result.isConfirmed ) {
 							if( typeof result.value === 'undefined') {
 								thisClass.notify.fire( {
@@ -580,6 +615,38 @@ import flatpickr from "flatpickr";
 			// });
 			el.previousElementSibling.classList.remove('button');
 		}
+		init_pro_regis() {
+			document.querySelectorAll('.professional_registration_btn').forEach((btn) => {
+				btn.addEventListener('click', (event) => {
+					event.preventDefault();
+					const wrap = document.querySelector('.professional_registration_wrap');
+					if(! wrap) {return;}
+					const container = wrap.querySelector('.uael-cf7-container');
+					if(! container) {return;}
+					thisClass.Swal.fire({
+						title: false, width: 1000, padding: '1em',
+						background: 'rgb(255 255 255)',
+						showConfirmButton: false,
+						showCancelButton: false,
+						showCloseButton: true,
+						allowOutsideClick: false,
+						allowEscapeKey: true,
+						showDenyButton: false,
+						// backdrop: `rgb(137 137 137 / 74%)`,
+						html: `<div class="pro_reg_cf7"></div>`,
+						customClass: {popup: 'fwp-pro_reg'},
+						didOpen: async () => {
+							document.querySelector('.pro_reg_cf7')?.appendChild(container);
+						},
+						allowOutsideClick: () => !Swal.isLoading(),
+					}).then((res) => {
+					});
+				});
+			});
+		}
+		init_category_pops() {
+			CAT_PROMPTS.init(this);
+		} 
 		
 		clearAllFromCart() {
 			document.querySelectorAll('.woocommerce-page #content table.cart td.product-remove a').forEach((el)=>{el.click();});

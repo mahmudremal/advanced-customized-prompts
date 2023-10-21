@@ -29,7 +29,7 @@ class Meta_Boxes {
 	 * @return void
 	 */
 	public function add_custom_meta_box() {
-		$screens = ['page'];
+		$screens = ['page', 'product', 'service'];
 		foreach ($screens as $screen) {
 			add_meta_box(
 				'product_customization_prompts',           	// Unique ID

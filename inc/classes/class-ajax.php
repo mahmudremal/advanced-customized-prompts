@@ -29,19 +29,22 @@ class Ajax {
 		add_action('wp_ajax_sospopsproject/ajax/search/popup', [$this, 'search_popup'], 10, 0);
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/search/popup', [$this, 'search_popup'], 10, 0);
 		
+		add_action('wp_ajax_sospopsproject/ajax/search/category', [$this, 'search_category'], 10, 0);
+		add_action('wp_ajax_nopriv_sospopsproject/ajax/search/category', [$this, 'search_category'], 10, 0);
+		
 		add_action('wp_ajax_sospopsproject/ajax/update/orderitem', [$this, 'update_orderitem'], 10, 0);
 
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/suggested/names', [$this, 'suggested_names'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/suggested/names', [$this, 'suggested_names'], 10, 0);
+
+		add_action('wp_ajax_nopriv_sospopsproject/ajax/hero/autocomplete', [$this, 'hero_autocomplete'], 10, 0);
+		add_action('wp_ajax_sospopsproject/ajax/hero/autocomplete', [$this, 'hero_autocomplete'], 10, 0);
 
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/update/zipcode', [$this, 'update_zipcode'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/update/zipcode', [$this, 'update_zipcode'], 10, 0);
 		
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/add/order', [$this, 'add_order'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/add/order', [$this, 'add_order'], 10, 0);
-
-		add_action('woocommerce_new_order', [$this, 'initiate_payment_process']);
-
 	}
 	public function get_autocomplete() {
 		global $wpdb;
@@ -65,6 +68,26 @@ class Ajax {
 		
 		// $res = [];for ($i=0; $i < 10; $i++) {$res[] = ['name'=>'Result '.$i,'value'=>'result_'.$i];}
 		wp_send_json_success($res, 200);
+	}
+	public function hero_autocomplete() {
+		$json = ['hooks' => ['hero_autocomplete_failed']];
+		if(isset($_POST['query'])) {
+			$posts = get_posts([
+				's' => $_POST['query']
+			]);
+			$suggestions = array();
+			foreach($posts as $post) {
+				$suggestions[] = [
+					'label'		=> get_the_title($post),
+					'url'		=> get_the_permalink($post),
+					'category'	=> get_the_category($post->ID)[0]->name
+				];
+			}
+			$json['hooks'] = ['hero_autocomplete_success'];
+			$json['suggestions'] = $suggestions;
+			wp_send_json_success($json);
+		}
+		wp_send_json_error($json);
 	}
 	public function search_product() {
 		global $wpdb;global  $woocommerce;global $teddyProduct;
@@ -193,6 +216,66 @@ class Ajax {
 		$request = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['formdata']))), true);
 		
 		wp_send_json_error($json);
+	}
+	public function search_category() {
+		global $SOS_Service;global $wpdb;$json = ['hooks' => ['categorylistsfalied'], 'parent' => []];
+		if(isset($_POST['category_id'])) {
+			$category = get_term($_POST['category_id']);
+			if($category && ! is_wp_error($category)) {
+				$catChilds = get_term_children($category->term_id, $SOS_Service->taxonomy);
+				if($catChilds && ! is_wp_error($catChilds)) {
+					$category->childrens = [];
+					foreach($catChilds as $term_id) {
+						$term = get_term($term_id);
+						$category->childrens[] = [
+							'term_id'	=> $term->term_id,
+							'name'		=> $term->name,
+							'count'		=> $term->count,
+							'parent'	=> $term->parent,
+							'url'		=> get_term_link($term),
+							'services'	=> $this->get_term_posts($term),
+							'thumbnail'	=> get_term_meta($term->term_id, 'texonomy_featured_image', true)
+						];
+					}
+				}
+				$category->services = $this->get_term_posts($term);
+				$json['parent'] = $category;
+				$json['hooks'] = ['categorylistsloaded'];
+				wp_send_json_success($json);
+			}
+		}
+		$json['message'] = __('Failed to load category information. Instead of, we\'re redirecting to you category screen.', 'sospopsprompts');
+		wp_send_json_error($json);
+	}
+	public function get_term_posts($term) {
+		global $SOS_Service;$posts = [];
+		$args = [
+			'post_type' => $SOS_Service->post_type,
+			'orderby'	=> 'menu_order title',
+			'order'		=> 'DESC',
+			'nopaging'	=> true,
+			'tax_query' => [
+				[
+					'taxonomy'	=> $SOS_Service->taxonomy,
+					'field'		=> 'term_id',
+					'terms'		=> $term->term_id
+				]
+			]
+		];
+		$queries = new \WP_Query($args);
+		if($queries->have_posts()) {
+			while($queries->have_posts()) {
+				$queries->the_post();
+				$posts[] = [
+					'title'		=> get_the_title(),
+					'thumbnail'	=> get_the_post_thumbnail_url(get_the_ID(), 'thumbnail'),
+					'url'		=> get_the_permalink()
+				];
+			}
+			wp_reset_postdata();
+			return $posts;
+		}
+		return false;
 	}
 	public function save_product() {
 		$result = [];
@@ -403,158 +486,17 @@ class Ajax {
 		wp_send_json_success($args);
 	}
 	public function add_order() {
-		$json = ['message' => __('Something went wrong!', 'domain'), 'hooks' => []];
-		$cart_item_data = [
-			'product_id' => 0,
-			'quantity' => 1,
-			'custom_data' => [
-				'title' => 'Custom Item',
-			  	'price' => 100
-			],
-			'billing_first_name' => 'John',
-			'billing_last_name' => 'Doe',
-			'billing_company' => '',
-			'billing_email' => 'johndoe@example.com',
-			'billing_phone' => '+1234567890',
-			'billing_address_1' => '123 Main Street',
-			'billing_address_2' => '',
-			'billing_city' => 'Anytown',
-			'billing_state' => 'CA',
-			'billing_postcode' => '12345',
-			'billing_country' => 'US',
-			'shipping_first_name' => 'John',
-			'shipping_last_name' => 'Doe',
-			'shipping_company' => '',
-			'shipping_email' => 'johndoe@example.com',
-			'shipping_phone' => '+1234567890',
-			'shipping_address_1' => '123 Main Street',
-			'shipping_address_2' => '',
-			'shipping_city' => 'Anytown',
-			'shipping_state' => 'CA',
-			'shipping_postcode' => '12345',
-			'shipping_country' => 'US',
-		];
+		$json = ['message' => __('Error happening while trying to add information to cart.', 'domain')];
+		$product_id = 2735;$quantity = 1;
 		
-		ob_start();
-		do_action('woocommerce_before_checkout_form');
-		wc_get_template('checkout/form-checkout.php');
-		do_action('woocommerce_after_checkout_form');
-		$checkout_form = ob_get_clean();
-		
-		$json['message'] = $checkout_form;
-		wp_send_json_success($json);
-	}
-	public function create_custom_order__($cart_item_data) {
-		// Get the cart item data.
-		$product_id = $cart_item_data['product_id'];
-		$quantity = $cart_item_data['quantity'];
-		$custom_data = $cart_item_data['custom_data'];
-	  
-		// Create the order.
-		$order = wc_create_order();
-		
-		// Add the custom line item to the order.
-		// $order_item = $this->create_custom_order_item([
-		// 	'name'		=> $custom_data['title'],
-		// 	'price'		=> $custom_data['price']
-		// ]);
-		$order_item = new \WC_Order_Item();
-		$order_item->set_product_id(0);
-		$order_item->set_name('Custom product');
-		$order_item->set_price(20);
-		$order->add_item($order_item);
-	  
-		// Add shipping.
-		// $shipping = new WC_Order_Item_Shipping();
-		// $shipping->set_method_title('Free shipping');
-		// $shipping->set_method_id('free_shipping:1'); // set an existing Shipping method ID
-		// $shipping->set_total(0); // optional
-		// $order->add_item($shipping);
-	  
-		// Add billing and shipping addresses.
-		$address = [
-			'first_name' => $cart_item_data['billing_first_name'],
-			'last_name'  => $cart_item_data['billing_last_name'],
-			'company'    => $cart_item_data['billing_company'],
-			'email'      => $cart_item_data['billing_email'],
-			'phone'      => $cart_item_data['billing_phone'],
-			'address_1'  => $cart_item_data['billing_address_1'],
-			'address_2'  => $cart_item_data['billing_address_2'],
-			'city'       => $cart_item_data['billing_city'],
-			'state'      => $cart_item_data['billing_state'],
-			'postcode'   => $cart_item_data['billing_postcode'],
-			'country'    => $cart_item_data['billing_country'],
-		];
-		
-		$order->set_address($address, 'billing');
-		$order->set_address($address, 'shipping');
-		
-		// Add payment method.
-		$order->set_payment_method('stripe');
-		$order->set_payment_method_title('Credit/Debit card');
-		
-		// Order status.
-		$order->set_status('wc-pending', 'Order is created programmatically');
-		if(is_user_logged_in()) {$order->set_customer_id(get_current_user_id());}
-	  
-		// Calculate and save.
-		$order->calculate_totals();
-		$order->save();
-	}
-	public function create_custom_order_item($data) {
-		$data = wp_parse_args($data, [
-			'product_id' => 0, 'title' => '', 'price' => ''
-		]);
-		$order_item = new \WC_Order_Item();
-		// $order_item->set_product_id(intval($data['product_id']));
-		// $order_item->set_name($data['title']);
-		// $order_item->set_price($data['price']);
-		$order_item->set_product_id(0);
-		$order_item->set_name('Custom product');
-		$order_item->set_price(20);
-		return $order_item;
-	}
-	// Step 1: Add Custom Cart Item
-	public function add_custom_cart_item() {
-		// You can retrieve the title and price from your data sent to admin-ajax.php
-		$title = $_POST['title'];
-		$price = $_POST['price'];
-
-		// Create an array for the custom cart item
-		$custom_cart_item_data = array(
-			'data' => wc_get_product(), // You can use wc_get_product() to create a generic product.
-			'quantity' => 1,
-			'price' => $price,
-			'custom_title' => $title,
-		);
-
-		// Add the custom cart item to the cart
-		WC()->cart->add_to_cart($custom_cart_item_data);
-	}
-	// Step 2: Create an Order
-	public function create_custom_order() {
-		// Create an order
-		$order = wc_create_order();
-
-		// Step 3: Add Custom Cart Items to the Order
-		foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
-			$order->add_product($cart_item['data'], $cart_item['quantity'], array(
-				'subtotal' => $cart_item['line_subtotal'],
-				'total' => $cart_item['line_total'],
-				'subtotal_tax' => $cart_item['line_subtotal_tax'],
-				'total_tax' => $cart_item['line_tax'],
-				'title' => $cart_item['custom_title'], // Custom title
-			));
+		if(class_exists('WooCommerce')) {
+			$cart = WC()->cart;
+			$cart->add_to_cart($product_id, $quantity);
+			$json['redirectTo'] = wc_get_checkout_url();
+			$json['message'] = __('Successfully added your ninformation & in a while, you\'ll be redirected to order confirmation screen. Please hold on a couple of seconds.', 'domain');
+			$json['hooks'] = ['addedToCartSuccess'];
+			wp_send_json_success($json);
 		}
-
-		// Step 4: Set Order Details (Billing, Shipping, Customer info, etc.)
-		// You can set these details as needed based on your requirements.
-
-		// Step 5: Save the Order
-		$order->save();
-
-		// Optionally, clear the cart if needed
-		WC()->cart->empty_cart();
+		wp_send_json_error($json);
 	}
-
 }

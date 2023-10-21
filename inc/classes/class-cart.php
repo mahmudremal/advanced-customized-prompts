@@ -46,10 +46,10 @@ class Cart {
 		];
 		$product_id = intval($_POST['product_id']);
 		$quantity = intval($_POST['quantity']);
-		$product = wc_get_product($product_id);
-		if (!$product || !$product->is_purchasable()) {
-			wp_send_json_error('Invalid product or product is not purchasable.');
-		}
+		// $product = wc_get_product($product_id);
+		// if(!$product || !$product->is_purchasable()) {
+		// 	wp_send_json_error('Invalid product or product is not purchasable.');
+		// }
 		
 		
 		try {
@@ -58,18 +58,34 @@ class Cart {
 			if(isset($_FILES['voice'])) {
 				$is_uploaded = $this->custom_upload_audio_video($_FILES['voice']);
 			}
-			$cart_item_key = WC()->cart->add_to_cart($product_id, $quantity);
-			$json['hooks'] = ['popup_submitting_done'];
-			// $json['redirectedTo'] = wc_get_checkout_url();
-			// $json['message'] = __('Product added to cart successfully. Please hold on until you\'re redirected to checkout page.', 'sospopsprompts');
-			$json['message'] = false;
-			$custom_data = (array) get_post_meta($product_id, '_teddy_custom_data', true);
-			$json['confirmation'] = [
-				'title'				=> sprintf(__('%s added to your cart successfully', 'sospopsprompts'), get_the_title($product_id)),
-				'accessoriesUrl'	=> isset($custom_data['accessoriesUrl'])?esc_url($custom_data['accessoriesUrl']):false,
-				'checkoutUrl'		=> wc_get_checkout_url()
-			];
-			wp_send_json_success($json);
+			// $cart_item_key = WC()->cart->add_to_cart($product_id, $quantity);
+			// $json['hooks'] = ['popup_submitting_done'];
+			// // $json['redirectedTo'] = wc_get_checkout_url();
+			// // $json['message'] = __('Product added to cart successfully. Please hold on until you\'re redirected to checkout page.', 'sospopsprompts');
+			// $json['message'] = false;
+			// $custom_data = (array) get_post_meta($product_id, '_teddy_custom_data', true);
+			// $json['confirmation'] = [
+			// 	'title'				=> sprintf(__('%s added to your cart successfully', 'sospopsprompts'), get_the_title($product_id)),
+			// 	'accessoriesUrl'	=> isset($custom_data['accessoriesUrl'])?esc_url($custom_data['accessoriesUrl']):false,
+			// 	'checkoutUrl'		=> wc_get_checkout_url()
+			// ];
+
+			$is_updated = true;
+			if(is_user_logged_in()) {
+				$is_updated = update_user_meta(get_current_user_id(), '__sos_userdata', $dataset);
+				foreach($dataset as $row) {
+					if(isset($row['name']) && !empty(trim($row['name'])) && !empty(trim($row['value']))) {
+						$is_added = update_user_meta(get_current_user_id(), str_replace([' '], [''], $row['name']), $row['value']);
+					}
+				}
+			}
+			
+			// $json['redirectTo'] = wc_get_checkout_url();
+			if($is_updated) {
+				$json['message'] = __('Successfully updated your information.', 'domain');
+				$json['hooks'] = ['addedToCartSuccess'];
+				wp_send_json_success($json);
+			}
 		} catch (\Exception $e) {
 			// Handle the exception here
 			$json['message'] = 'Error: ' . $e->getMessage();

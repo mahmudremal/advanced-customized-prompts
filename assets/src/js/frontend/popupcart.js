@@ -4,7 +4,12 @@ const popupCart = {
     additionalPrices: [],
 
     setBasePrice: (price) => {
-        popupCart.basePrice = price;
+        if(parseFloat(price)) {
+            popupCart.basePrice = parseFloat(price);
+            if(popupCart.basePrice >= 0) {
+                popupCart.basePrice = 0;
+            }
+        }
     },
     addAdditionalPrice: (item, price, unique = true) => {
         const existingIndex = popupCart.additionalPrices.findIndex(p => p.item === item);
@@ -27,14 +32,31 @@ const popupCart = {
             popupCart.updateTotalPrice();
         }
     },
-    getTotalPrice: () => {
+    getTotal: () => {
+        return (
+            popupCart.getSubTotal() + popupCart.getTEXnFees()
+        );
+    },
+    getTotalHtml: (toFix = 2) => {
+        return popupCart.priceSign + popupCart.getTotal().toFixed(toFix);
+    },
+    getSubTotal: () => {
         const additionalPriceTotal = popupCart.additionalPrices.reduce((total, item) => total + item.price, 0);
         return (popupCart.basePrice + additionalPriceTotal);
+    },
+    getSubTotalHtml: (toFix) => {
+        return popupCart.priceSign + popupCart.getSubTotal().toFixed(toFix);
+    },
+    getTEXnFees: () => {
+        return 0;
+    },
+    getTEXnFeesHtml: (toFix) => {
+        return popupCart.priceSign + popupCart.getTEXnFees().toFixed(toFix);
     },
     updateTotalPrice: () => {
         const priceAlt = document.querySelector('.calculated-prices .price_amount');
         if(priceAlt) {
-            priceAlt.innerHTML = popupCart.priceSign +''+ parseFloat(popupCart.getTotalPrice()).toFixed(2) + popupCart.cartIcon;
+            priceAlt.innerHTML = popupCart.priceSign +''+ parseFloat(popupCart.getSubTotal()).toFixed(2) + (popupCart?.cartIcon??'');
         }
     }
 };

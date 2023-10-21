@@ -14,8 +14,8 @@ class I18n {
 	protected function setup_hooks() {
 		add_action('init', [$this, 'load_plugin_textdomain'], 1, 0);
 
-		add_action('wp_ajax_nopriv_sospopsproject/ajax/i18n/js', [$this, 'js_translates'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/i18n/js', [$this, 'js_translates'], 10, 0);
+		add_action('wp_ajax_nopriv_sospopsproject/ajax/i18n/js', [$this, 'js_translates'], 10, 0);
 	}
 	public function js_translates() {
 		$translates = [
