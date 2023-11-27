@@ -33,15 +33,13 @@ class Option {
 		// Add settings link to plugins page
 		add_filter('plugin_action_links_' . plugin_basename($this->file) , array($this, 'add_settings_link'));
 
-		add_filter('teddybear/project/system/getoption', [$this, 'getOption'], 10, 2);
-		add_filter('teddybear/project/system/isactive', [$this, 'isActive'], 10, 1);
 	}
 	/**
 	 * Initialise settings
 	 * @return void
 	 */
 	public function init() {
-		$this->general = (object) wp_parse_args(apply_filters('teddybear/project/settings/general', []), [
+		$this->general = (object) wp_parse_args(apply_filters('sos/project/settings/general', []), [
 			'page_title'					=> __('Pops Configuration.', 'sospopsprompts'),
 			'menu_title'					=> __('Pops customize', 'sospopsprompts'),
 			'role'							=> 'manage_options',
@@ -81,7 +79,7 @@ class Option {
 	 */
 	private function settings_fields() {
 		$settings = [];
-		$settings = apply_filters('teddybear/project/settings/fields', $settings);
+		$settings = apply_filters('sos/project/settings/fields', $settings);
 		return $settings;
 	}
 	/**
@@ -202,10 +200,10 @@ class Option {
 			case 'checkbox_multi':
 			case 'radio':
 			case 'select_multi':
-				$html .= apply_filters('teddybear/project/settings/fields/label', '<br/><span class="description">' . $field['description'] . '</span>', $field);
+				$html .= apply_filters('sos/project/settings/fields/label', '<br/><span class="description">' . $field['description'] . '</span>', $field);
 			break;
 			default:
-				$html .= apply_filters('teddybear/project/settings/fields/label', '<label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>' . "\n", $field);
+				$html .= apply_filters('sos/project/settings/fields/label', '<label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>' . "\n", $field);
 			break;
 		}
 		echo $html;
@@ -301,20 +299,4 @@ class Option {
 		return $html;
 	}
 	
-	/**
-	 * Get and option value, return default. Default false.
-	 * 
-	 * @return string
-	 */
-	public function getOption($option, $default) {
-		return isset(SOSPOPSPROJECT_OPTIONS[$option])?SOSPOPSPROJECT_OPTIONS[$option]:$default;
-	}
-	/**
-	 * Check if is active or not.
-	 * 
-	 * @return bool
-	 */
-	public function isActive($option) {
-		return (isset(SOSPOPSPROJECT_OPTIONS[$option]) && SOSPOPSPROJECT_OPTIONS[$option] == 'on');
-	}
 }

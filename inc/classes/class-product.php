@@ -14,8 +14,6 @@ class Product {
 	use Singleton;
 	protected function __construct() {
 		$this->setup_hooks();
-		global $teddyProduct;
-		$teddyProduct = $this;
 	}
 	public function setup_hooks() {
 		// add_filter('get_post_metadata', [$this, 'get_post_metadata'], 99, 4);
@@ -35,9 +33,9 @@ class Product {
 		return $this->get_post_metadata($value, $post_id, $meta_key, $single);
 	}
 	public function get_post_metadata($value, $post_id, $meta_key, $single) {
-		$global_post_id = apply_filters('teddybear/project/system/getoption', 'standard-global', 0);
+		$global_post_id = apply_filters('sos/project/system/getoption', 'standard-global', 0);
 		if ($single && $meta_key == '_sos_custom_popup' && $post_id != $global_post_id) {
-			if (!$value || !is_array($value) || apply_filters('teddybear/project/system/isactive', 'standard-forceglobal')) {
+			if (!$value || !is_array($value) || apply_filters('sos/project/system/isactive', 'standard-forceglobal')) {
 				$value = get_post_meta($global_post_id, '_sos_custom_popup', true);
 			}
 		}

@@ -35,8 +35,8 @@ import tippy from 'tippy.js';
 			this.init_button();
 			this.init_tooltips();
 			this.init_wavesurfer();
-			this.ask4teddybearname();
-			this.initRandTeddyName();
+			this.ask4sosname();
+			this.init_custom_services_repeater();
 			mediaImages.uploadTexToImage(this);
 		}
 		init_toast() {
@@ -438,7 +438,7 @@ import tippy from 'tippy.js';
 				});
 			});
 		}
-		ask4teddybearname() {
+		ask4sosname() {
 			const thisClass = this;
 			if(window?.teddyNameRequired) {
 				document.querySelector('#actions select[name="wc_order_action"]')?.addEventListener('change', (event) => {
@@ -487,22 +487,22 @@ import tippy from 'tippy.js';
 				// if (result.isConfirmed) {}
 			})
 		}
-		initRandTeddyName() {
+		init_custom_services_repeater() {
 			const thisClass = this;
-			const do_repeater = document.querySelector('[name="sospopsprompts[do_repeater]"]');
+			const do_repeater = document.querySelector('[data-name="_sos_custom_services[do_repeater_service]"]');
 			if(do_repeater) {
 				do_repeater?.addEventListener('click', (event) => {
 					event.preventDefault();
-					var i = do_repeater.parentElement.parentElement.parentElement.childElementCount;
-					var template = document.createElement('tr');
-					template.innerHTML = `<th scope="row">#${i}</th><td><input id="teddy-name-${i}" type="text" name="sospopsprompts[teddy-name-${i}]" placeholder="" value=""><label for="teddy-name-${i}"></label></td>`;
-					do_repeater.parentElement.parentElement.parentElement.insertBefore(template, do_repeater.parentElement.parentElement);
+					var i = (do_repeater.parentElement.childElementCount - 1);
+					var template = document.createElement('div');template.classList.add('single-service-veriation');
+					template.innerHTML = `<input id="_sos_custom_services-${i}" type="text" name="_sos_custom_services[]" placeholder="" value="" style="width: 100%;"><label for="_sos_custom_services-${i}"></label>`;
+					do_repeater.parentElement.insertBefore(template, do_repeater);
 				});
-				document.querySelectorAll('[id^="teddy-name-"]').forEach((el) => {
-					el.nextElementSibling.querySelector('.description').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" fill="none"><path opacity="0.5" d="M11.6068 21.9998H12.3937C15.1012 21.9998 16.4549 21.9998 17.3351 21.1366C18.2153 20.2734 18.3054 18.8575 18.4855 16.0256L18.745 11.945C18.8427 10.4085 18.8916 9.6402 18.45 9.15335C18.0084 8.6665 17.2628 8.6665 15.7714 8.6665H8.22905C6.73771 8.6665 5.99204 8.6665 5.55047 9.15335C5.10891 9.6402 5.15777 10.4085 5.25549 11.945L5.515 16.0256C5.6951 18.8575 5.78515 20.2734 6.66534 21.1366C7.54553 21.9998 8.89927 21.9998 11.6068 21.9998Z" fill="#1C274C"/><path d="M3 6.52381C3 6.12932 3.32671 5.80952 3.72973 5.80952H8.51787C8.52437 4.9683 8.61554 3.81504 9.45037 3.01668C10.1074 2.38839 11.0081 2 12 2C12.9919 2 13.8926 2.38839 14.5496 3.01668C15.3844 3.81504 15.4756 4.9683 15.4821 5.80952H20.2703C20.6733 5.80952 21 6.12932 21 6.52381C21 6.9183 20.6733 7.2381 20.2703 7.2381H3.72973C3.32671 7.2381 3 6.9183 3 6.52381Z" fill="#1C274C"/></svg>`;
+				document.querySelectorAll('[id^="_sos_custom_services-"]').forEach((el) => {
+					el.nextElementSibling.querySelector('.description').innerHTML = icons.trash;
 					el.nextElementSibling.addEventListener('click', (event) => {
 						var message = thisClass.i18n?.rusure??'Are you sure?';
-						if(confirm(message)) {el.parentElement.parentElement.remove();}
+						if(confirm(message)) {el.parentElement.remove();}
 					});
 				});
 			}

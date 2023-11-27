@@ -17,8 +17,6 @@ class Order {
 	 * Construct method.
 	 */
 	protected function __construct() {
-		global $teddyBear__Order;
-		$teddyBear__Order = $this;
 		$this->lastCustomData = false;
 		$this->setup_hooks();
 	}
@@ -33,24 +31,12 @@ class Order {
 		 */
 		// add_shortcode( 'checkout_video', [ $this, 'checkout_video' ] );
 		add_action('add_meta_boxes',[$this, 'add_custom_meta_box']);
-
-		add_action('woocommerce_order_item_meta_end', [$this, 'woocommerce_order_item_add_certificate_link'], 11, 4);
-
-		add_action('woocommerce_order_item_meta_end', [$this, 'woocommerce_order_item_meta_end'], 10, 4);
-		add_filter('woocommerce_email_classes', [$this, 'custom_track_order_confirmation_email'], 1, 1);
-
-		add_filter('woocommerce_order_actions', [$this, 'woocommerce_order_actions'], 10, 1);
-		add_action('woocommerce_order_action_send_birth_certificates', [$this, 'woocommerce_order_action_send_birth_certificates'], 10, 1);
-		
-		add_action('woocommerce_checkout_create_order_line_item', [$this, 'woocommerce_checkout_create_order_line_item'], 10, 4);
-		add_action('woocommerce_new_order_item', [$this, 'woocommerce_new_order_item'], 10, 3);
-		// add_action('woocommerce_order_item_get_internal_meta_keys', [$this, 'woocommerce_order_item_get_internal_meta_keys'], 10, 1);
 	}
 	public function add_custom_meta_box() {
 		$screens = ['shop_order'];
 		foreach($screens as $screen) {
 			add_meta_box(
-				'teddybear_meta_data',           				// Unique ID
+				'sos_meta_data',           				// Unique ID
 				__( 'Appearances', 'sospopsprompts' ),  // Box title
 				[ $this, 'custom_meta_box_html' ],  		// Content callback, must be of type callable
 				$screen,                   							// Post type
@@ -153,233 +139,8 @@ class Order {
 	}
 
 
-
-
-
 	/**
 	 * Work on wooommerce order email.
 	 */
 	public function woocommerce_email_order_meta($order, $sent_to_admin, $plain_text) {}
-	public function woocommerce_email_order_meta_fields($fields, $sent_to_admin, $order) {}
-	public function woocommerce_email_order_meta_keys($fields, $sent_to_admin) {}
-
-	public function woocommerce_email_after_order_table($order, $sent_to_admin, $plain_text, $email) {}
-	public function custom_track_order_confirmation_email($email_classes) {
-		if(isset($email_classes['WC_Email_Customer_Processing_Order'])) {
-			// $email_classes['WC_Email_New_Order']->is_order_confirmation = true;
-			$email_classes['WC_Email_Customer_Processing_Order']->is_order_confirmation = true;
-			$this->confirmMailTrack = true;
-		}
-		return $email_classes;
-	}
-	public function woocommerce_order_item_meta_end($item_id, $item, $order, $plain_text) {
-		// if(!isset($order->is_order_confirmation) || $order->is_order_confirmation !== true) {return;}
-		if($this->confirmMailTrack !== true) {return;}global $teddyProduct;
-
-		$order_id  = $order->get_id();
-		$product_id = $item->get_product_id();
-		$custom_popup = $teddyProduct->get_post_meta($product_id, '_sos_custom_popup', true);
-		if(!$custom_popup || empty($custom_popup)) {return;}
-		
-		
-		$item_metas = $item->get_meta_data();
-		foreach($custom_popup as $row) {
-			if($row['type'] == 'voice') {
-				$voiceShouldExists = $voiceFileExists = false;
-				foreach($item_metas as $meta) {
-					if($meta->key == $row['steptitle']) {
-						$voiceShouldExists = $row['steptitle'];
-					}
-				}
-				if($voiceShouldExists) {
-					$meta_data = $item->get_meta('custom_teddey_bear_data', true);
-					foreach($meta_data['field'] as $field) {
-						foreach($field as $i => $row) {
-							if($row['title'] == $voiceShouldExists) {
-								$voiceFileExists = true;
-							}
-						}
-					}
-				}
-				if($voiceShouldExists && !$voiceFileExists) {
-					// $uploadVoiceURL = site_url('upload-voice/'.$order_id.'/'.$item_id.'/');
-					$uploadVoiceURL = 'mailto:'.get_option('admin_email').'?subject='.esc_attr(__('Voice Record', 'sospopsprompts')).'&body='.esc_attr(sprintf(__('Order #%d, Cart Item: #%d, Item Subtotal: %s %s Product: %s', 'sospopsprompts'), $order_id, $item_id, $item->get_subtotal(), '%0D%0A', get_the_title($product_id)));
-					?>
-					<a href="<?php echo esc_attr($uploadVoiceURL); ?>" target="_blank" style="color: #fff;font-weight:normal;text-decoration:underline;background: #7f54b3;padding: 10px 15px;border-radius: 5px;line-height: 40px;text-decoration: none;"><?php esc_html_e('Send Recorded voice', 'sospopsprompts'); ?></a>
-					<?php
-				}
-			}
-		}
-	}
-	public function woocommerce_order_item_add_certificate_link($item_id, $item, $order, $plain_text) {
-		if(!is_wc_endpoint_url('view-order')) {return;}
-		if(!in_array($order->get_status(), ['completed'])) {return;}
-		$order_id = $order->get_id();
-		?>
-		<a href="<?php echo esc_url(site_url('/?certificate_preview=' . $order_id . '-' . $item_id)); ?>" class="button btn" target="_blank"><?php esc_html_e('View certificate', 'sospopsprompts'); ?></a>
-		<?php
-	}
-	
-	public function woocommerce_checkout_create_order_line_item($item, $cart_item_key, $cart_item, $order) {
-		if(isset($cart_item['custom_teddey_bear_makeup'])) {
-			foreach($cart_item['custom_teddey_bear_makeup'] as $meta) {
-				if(!empty($meta['item']) && !empty($meta['price']) && is_numeric($meta['price'])) {
-					$item->add_meta_data(esc_html($meta['item']), wc_price($meta['price']), true);
-				}
-			}
-		}
-		if(isset($cart_item['custom_teddey_bear_data'])) {
-			$this->lastCustomData = $cart_item['custom_teddey_bear_data'];
-		}
-	}
-	public function woocommerce_order_item_get_internal_meta_keys($keys) {
-		// $keys[] = '';
-		return $keys;
-	}
-	public function woocommerce_new_order_item($item_id, $item, $order_id) {
-		global $wpdb;$meta_key = 'custom_teddey_bear_data';
-		if($this->lastCustomData) {
-			$meta_value = maybe_serialize($this->lastCustomData);
-			$this->lastCustomData = false;
-			// Check if the meta key already exists for the order item
-			$existing_meta = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT meta_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE order_item_id = %d AND meta_key = %s",
-					$item_id, $meta_key
-				)
-			);
-			if(!$existing_meta || empty($existing_meta)) {
-				// Insert the new meta data
-				$wpdb->insert(
-					$wpdb->prefix . 'woocommerce_order_itemmeta',
-					[
-						'order_item_id' => $item_id,
-						'meta_key'      => $meta_key,
-						'meta_value'    => $meta_value
-					],
-					[
-						'%d',
-						'%s',
-						'%s'
-					]
-				);
-			} else {
-				// Update the existing meta data
-				$wpdb->update(
-					$wpdb->prefix . 'woocommerce_order_itemmeta',
-					['meta_value' => $meta_value],
-					['order_item_id' => $item_id, 'meta_key' => $meta_key],
-					['%s'],
-					['%d', '%s']
-				);
-			}
-		}
-	}
-
-
-	/**
-	 * Order actions.
-	 */
-	public function woocommerce_order_actions($actions) {
-		$actions['send_birth_certificates'] = __('Send Birth Certificates', 'sospopsprompts');
-    	return $actions;
-	}
-	public function woocommerce_order_action_send_birth_certificates($order, $preview = false) {
-		$certificates = [];global $teddyProduct;
-		$order_id = $order->get_id();
-		// $order->get_status();
-		
-		foreach($order->get_items() as $order_item_id => $order_item) {
-			if($preview && $preview != $order_item_id) {continue;}
-			$item_id = $order_item->get_id();
-			// $item_name = $order_item->get_name();
-			$product_id = $order_item->get_product_id();
-			// $product = $order_item->get_product();
-			// $quantity = $order_item->get_quantity();.
-			$popup_meta = $teddyProduct->get_post_meta($product_id, '_sos_custom_popup', true);
-			if(!$popup_meta || !is_array($popup_meta) || count($popup_meta) <= 0) {continue;}
-			
-			foreach($popup_meta as $i => $field) {
-				if($field['type'] == 'info') {
-					$item_meta_data = $order_item->get_meta('custom_teddey_bear_data', true);
-					if(!$item_meta_data) {continue;}
-					foreach($item_meta_data['field'] as $i => $iRow) {
-						foreach($iRow as $j => $jRow) {
-							// if($jRow['title'] == 'Voice') {}
-							if($field['steptitle'] == $jRow['title'] && $j == 0) {
-								$custom_data = wp_parse_args((array) get_post_meta($product_id, '_teddy_custom_data', true), [
-									'eye'				=> '',
-									'brow'				=> '',
-									'weight'			=> '',
-									'height'			=> '',
-								]);
-								$args = [
-									'eye'			=> $custom_data['eye'],
-									'brow'			=> $custom_data['brow'],
-
-									'id_num'		=> $order_id,
-									// bin2hex($order_id), // strtolower(base_convert($order_id, 10, 36) . base_convert($item_id, 10, 36) . '-' . rand(1, 9999)),
-
-									'teddyname'		=> $iRow[0]['value'],
-									'birth'			=> $iRow[1]['value'],
-									'belongto'		=> $iRow[2]['value'],
-									'gift_by'		=> $iRow[3]['value'],
-
-									'weight'		=> $custom_data['weight'],
-									'height'		=> $custom_data['height'],
-
-									'preview'		=> (bool) $preview,
-									// 'single'		=> ($preview)?$preview:false,
-									
-									'pdf'			=> 'certificate-'.$item_id.'-'.$order_id.'.pdf'
-								];
-								// print_r([$args]);wp_die($item_id);
-								$certificates[] = apply_filters('teddybearpopupaddon_generate_certificate', false, $args);
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		try {
-			if(count($certificates) >= 1) {
-				do_action('teddybearpopupaddon_mail_certificates', $certificates, [
-					'to'		=> $order->get_billing_email()
-				]);
-			} else {
-				wp_die(__('No certificate found.', 'sospopsprompts'));
-			}
-		} catch (\Exception $e) {
-			wp_die($e->getMessage(), __('Error happens', 'sospopsprompts'));
-		}
-	}
-	public function get_order_item_meta($order_item_id, $meta_key) {
-		global $wpdb;
-		$existing_meta = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT meta_value FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE order_item_id = %d AND meta_key = %s",
-				$order_item_id, $meta_key
-			)
-		);
-		return maybe_unserialize($existing_meta);
-	}
-	public function is_name_required($order, $order_item) {
-		global $teddyProduct;
-		$product_id = $order_item->get_product_id();
-		$popup_meta = $teddyProduct->get_post_meta($product_id, '_sos_custom_popup', true);
-		foreach($popup_meta as $i => $field) {
-			if($field['type'] == 'info') {
-				$item_meta_data = $order_item->get_meta('custom_teddey_bear_data', true);
-				if(!$item_meta_data) {continue;}
-				foreach($item_meta_data['field'] as $i => $iRow) {
-					foreach($iRow as $j => $jRow) {
-						if($field['steptitle'] == $jRow['title'] && $j == 0) {
-							return (trim($iRow[0]['value']) == '');
-						}
-					}
-				}
-			}
-		}
-	}
 }

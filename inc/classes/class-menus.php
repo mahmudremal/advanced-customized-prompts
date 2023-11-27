@@ -17,8 +17,8 @@ class Menus {
 		 * Actions.
 		 */
 		// add_action('init', [$this, 'register_menus']);
-		add_filter('teddybear/project/settings/general', [$this, 'general'], 10, 1);
-		add_filter('teddybear/project/settings/fields', [$this, 'menus'], 10, 1);
+		add_filter('sos/project/settings/general', [$this, 'general'], 10, 1);
+		add_filter('sos/project/settings/fields', [$this, 'menus'], 10, 1);
 		add_action('in_admin_header', [$this, 'in_admin_header'], 100, 0);
 	}
 	public function register_menus() {
@@ -99,7 +99,7 @@ class Menus {
 		return $args;
 	}
 	public function menus($args) {
-		$args['standard'] 		= [
+		$args['standard']	= [
 			'title'							=> __('General', 'sospopsprompts'),
 			'description'					=> __('General settings for teddy-bear customization popup.', 'sospopsprompts'),
 			'fields'						=> [
@@ -112,11 +112,11 @@ class Menus {
 				],
 				[
 					'id' 					=> 'standard-global',
-					'label'					=> __('Global product', 'sospopsprompts'),
-					'description'			=> __('Select a global product that will be replaced if requsted product doesn\'t have any customization popup set.', 'sospopsprompts'),
+					'label'					=> __('Global Service', 'sospopsprompts'),
+					'description'			=> __('Select a global Service that will be replaced if requsted service doesn\'t have any customized popup set.', 'sospopsprompts'),
 					'type'					=> 'select',
 					'default'				=> '',
-					'options'				=> $this->get_query(['post_type' => 'product', 'type' => 'option', 'limit' => 500])
+					'options'				=> $this->get_query(['post_type' => 'service', 'type' => 'option', 'limit' => 500])
 				],
 				[
 					'id' 					=> 'standard-forceglobal',
@@ -127,44 +127,101 @@ class Menus {
 				],
 			]
 		];
-		$args['default'] 		= [
-			'title'							=> __('Teddy Meta', 'sospopsprompts'),
-			'description'					=> __('Teddy bear\'s default data that will be replaced if meta on specific product not exists or empty exists. Existing data won\'t be replaced.', 'sospopsprompts'),
+		$args['email'] 		= [
+			'title'							=> __('Email', 'sospopsprompts'),
+			'description'					=> __('Email temlates, address & all necessery informations goes here.', 'sospopsprompts'),
 			'fields'						=> [
 				[
-					'id' 						=> 'default-eye',
-					'label'					=> __('Eye color', 'sospopsprompts'),
-					'description'			=> __('Teddy\'s default eye color that will be replaced if meta not exists on birth certificates.', 'sospopsprompts'),
+					'id' 					=> 'email-enable',
+					'label'					=> __('Enable', 'sospopsprompts'),
+					'description'			=> __('Mark to enable email while pops submits.', 'sospopsprompts'),
+					'type'					=> 'checkbox',
+					'default'				=> false
+				],
+				[
+					'id' 						=> 'email-reciever',
+					'label'					=> __('Email Reciever\'s', 'sospopsprompts'),
+					'description'			=> __('Give here reciever full address. Comma seperated, you could enter multiple email without space and using comma.', 'sospopsprompts'),
 					'type'					=> 'text',
 					'default'				=> ''
 				],
 				[
-					'id' 						=> 'default-brow',
-					'label'					=> __('Fur color', 'sospopsprompts'),
-					'description'			=> __('Teddy\'s default brow color that will be replaced if meta not exists on birth certificates.', 'sospopsprompts'),
+					'id' 						=> 'email-subject',
+					'label'					=> __('Email Subject', 'sospopsprompts'),
+					'description'			=> __('Email subject content. Try to turncate it around 30 characters', 'sospopsprompts'),
 					'type'					=> 'text',
 					'default'				=> ''
 				],
 				[
-					'id' 						=> 'default-weight',
-					'label'					=> __('Teddy\'s weight', 'sospopsprompts'),
-					'description'			=> __('Teddy\'s default weight that will be replaced if meta not exists on birth certificates.', 'sospopsprompts'),
+					'id' 						=> 'email-template',
+					'label'					=> __('Email template', 'sospopsprompts'),
+					'description'			=> __('Here you could change email template by replacing this template contents.', 'sospopsprompts'),
+					'type'					=> 'textarea',
+					'default'				=> "Dear [Name],\nWe are delighted to invite you to join us for [Event/Service/Product], a [brief description of event/service/product].\n[Event/Service/Product] offers [brief summary of benefits or features]. As a valued member of our community, we would like to extend a special invitation for you to be part of this exciting opportunity.\nTo register, simply click on the link below:\n[Registration link]\nShould you have any questions or require additional information, please do not hesitate to contact us at [contact information].\nWe look forward to seeing you at [Event/Service/Product].\nBest regards,\n[Your Name/Company Name]",
+					'attr'					=> ['data-a-tinymce' => true]
+				],
+			]
+		];
+		$args['stripe']		= [
+			'title'							=> __('Stripe', 'domain'),
+			'description'				=> __('Stripe payment system configuration process should be do carefully. Here some field is importent to work with no inturrupt. Such as API key or secret key, if it\'s expired on your stripe id, it won\'t work here. New user could face problem fo that reason.', 'domain'),
+			'fields'						=> [
+				[
+					'id' 						=> 'stripe-cancelsubscription',
+					'label'					=> __('Cancellation', 'domain'),
+					'description'		=> __('Enable it to make a possibility to user to cancel subscription from client dashboard.', 'domain'),
+					'type'					=> 'checkbox',
+					'default'				=> false
+				],
+				[
+					'id' 						=> 'stripe-publishablekey',
+					'label'					=> __('Publishable Key', 'domain'),
+					'description'		=> __('The key which is secure, could import into JS, and is safe evenif any thirdparty got those code. Note that, secret key is not a publishable key.', 'domain'),
 					'type'					=> 'text',
 					'default'				=> ''
 				],
 				[
-					'id' 						=> 'default-height',
-					'label'					=> __('Teddy\'s height', 'sospopsprompts'),
-					'description'			=> __('Teddy\'s default height that will be replaced if meta not exists on birth certificates.', 'sospopsprompts'),
+					'id' 						=> 'stripe-secretkey',
+					'label'					=> __('Secret Key', 'domain'),
+					'description'		=> __('The secret key that never share with any kind of frontend functionalities and is ofr backend purpose. Is required.', 'domain'),
 					'type'					=> 'text',
 					'default'				=> ''
 				],
 				[
-					'id' 						=> 'default-accessoriesUrl',
-					'label'					=> __('Accessories url', 'sospopsprompts'),
-					'description'			=> __('Accessories url that will be applied after user added an item on cart through customization process. It will redirect user to this url when user choose to purches accessories.', 'sospopsprompts'),
+					'id' 						=> 'stripe-currency',
+					'label'					=> __('Currency', 'domain'),
+					'description'		=> __('Default currency which will use to create payment link.', 'domain'),
 					'type'					=> 'text',
-					'default'				=> ''
+					'default'				=> 'usd'
+				],
+				[
+					'id' 						=> 'stripe-productname',
+					'label'					=> __('Product name text', 'domain'),
+					'description'		=> __('A text to show on product name place on checkout sanbox.', 'domain'),
+					'type'					=> 'text',
+					'default'				=> __('Subscription',   'domain')
+				],
+				[
+					'id' 						=> 'stripe-productdesc',
+					'label'					=> __('Product Description', 'domain'),
+					'description'		=> __('Some text to show on product description field.', 'domain'),
+					'type'					=> 'text',
+					'default'				=> __('Payment for',   'domain') . ' ' . get_option('blogname', 'We Make Content')
+				],
+				[
+					'id' 						=> 'stripe-productimg',
+					'label'					=> __('Product Image', 'domain'),
+					'description'		=> __('A valid image url for product. If image url are wrong or image doesn\'t detect by stripe, process will fail.', 'domain'),
+					'type'					=> 'url',
+					'default'				=> esc_url(SOSPOPSPROJECT_BUILD_URI . '/icons/Online payment_Flatline.svg')
+				],
+				[
+					'id' 						=> 'stripe-paymentmethod',
+					'label'					=> __('Payment Method', 'domain'),
+					'description'		=> __('Select which payment method you will love to get payment.', 'domain'),
+					'type'					=> 'select',
+					'default'				=> 'card',
+					'options'				=> apply_filters('sos/project/payment/stripe/payment_methods', [])
 				],
 			]
 		];

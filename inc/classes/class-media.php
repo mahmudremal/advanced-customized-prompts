@@ -15,8 +15,8 @@ class Media {
 		$this->setup_hooks();
 	}
 	protected function setup_hooks() {
-		add_action('wp_ajax_futurewordpress/project/teddybearpopupaddon/action/import_images_from_data', [$this, 'import_images_from_data'], 10, 0);
-		add_action('wp_ajax_futurewordpress/project/teddybearpopupaddon/action/import_image_from_blob', [$this, 'import_image_from_blob'], 10, 0);
+		add_action('wp_ajax_futurewordpress/project/sospopupaddon/action/import_images_from_data', [$this, 'import_images_from_data'], 10, 0);
+		add_action('wp_ajax_futurewordpress/project/sospopupaddon/action/import_image_from_blob', [$this, 'import_image_from_blob'], 10, 0);
 	}
 	public function import_images_from_data() {
 		$data = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode(isset($_POST['dataset'])?$_POST['dataset']:'{}'))), true);

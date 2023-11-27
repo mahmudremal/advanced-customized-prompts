@@ -60,7 +60,7 @@ const PROMPTS = {
                 let keyword = document.querySelector('#keyword_search');
                 keyword = (keyword)?keyword.value:'';
                 // Make the AJAX request to fetch suggestions
-                fetch(thisClass.ajaxUrl + '?action=futurewordpress/project/teddybearpopupaddon/action/get_autocomplete&term=location&query='+encodeURIComponent(query)+'&keyword='+encodeURIComponent(keyword))
+                fetch(thisClass.ajaxUrl + '?action=futurewordpress/project/sospopupaddon/action/get_autocomplete&term=location&query='+encodeURIComponent(query)+'&keyword='+encodeURIComponent(keyword))
                   .then(response => response.json())
                   .then(data => {
                     awesomplete.list = (data?.data??data).map((row)=>row?.name??row); // Update the suggestions list

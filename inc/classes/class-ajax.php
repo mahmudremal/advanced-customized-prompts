@@ -23,6 +23,9 @@ class Ajax {
 		add_action('wp_ajax_sospopsproject/ajax/submit/popup', [$this, 'submit_popup'], 10, 0);
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/submit/popup', [$this, 'submit_popup'], 10, 0);
 
+		add_action('wp_ajax_sospopsproject/ajax/suggested/categories', [$this, 'suggested_categories'], 10, 0);
+		add_action('wp_ajax_nopriv_sospopsproject/ajax/suggested/categories', [$this, 'suggested_categories'], 10, 0);
+
 		add_action('wp_ajax_sospopsproject/ajax/edit/product', [$this, 'edit_product'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/save/product', [$this, 'save_product'], 10, 0);
 
@@ -66,7 +69,7 @@ class Ajax {
 				break;
 		}
 		
-		// $res = [];for ($i=0; $i < 10; $i++) {$res[] = ['name'=>'Result '.$i,'value'=>'result_'.$i];}
+		// $res = [];for ($i=0; $i < 10; $i++) {$res[] = ['name'=>'Result '.$i, 'value'=>'result_'.$i];}
 		wp_send_json_success($res, 200);
 	}
 	public function hero_autocomplete() {
@@ -90,21 +93,24 @@ class Ajax {
 		wp_send_json_error($json);
 	}
 	public function search_product() {
-		global $wpdb;global  $woocommerce;global $teddyProduct;
-		// check_ajax_referer('sospopsproject/teddybearpopupaddon/verify/nonce', '_nonce', true);
+		global $wpdb;global  $woocommerce;global $SoS_Product;
+		// check_ajax_referer('sospopsproject/sospopupaddon/verify/nonce', '_nonce', true);
 		$dataset = $request = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode(isset($_POST['dataset'])?$_POST['dataset']:'{}'))), true);
 		
-		$_product = true; // wc_get_product($request['product_id']);
-		$productData = ($_product && !is_wp_error($_product))?[
-			'id'		=> '', // $_product->get_id(),
-			'type'		=> '', // $_product->get_type(),
-			'title'		=> '', // get_the_title($_product->get_id()),
-			'name'		=> '', // $_product->get_name(),
-			'slug'		=> '', // $_product->get_slug(),
-			'link'		=> '', // get_permalink($_product->get_id()),
-			'price'		=> '', // $_product->get_price(),
-			'currency'	=> '', // get_woocommerce_currency_symbol(),
-			'priceHtml'	=> '', // $_product->get_price_html()
+		$_post = get_post($dataset['product_id']);
+		$productData = ($_post && !is_wp_error($_post))?[
+			'id'		=> $_post->ID,
+			'type'		=> $_post->post_type,
+			'title'		=> $_post->post_title,
+			'name'		=> $_post->post_title,
+			'excerpt'	=> $_post->post_excerpt,
+			'slug'		=> get_the_permalink($_post),
+			'link'		=> get_the_permalink($_post),
+			'price'		=> get_post_meta($_post->ID, 'prices', true),
+			'currency'	=> get_post_meta($_post->ID, 'currency', true),
+			'priceHtml'	=> get_post_meta($_post->ID, 'currency', true),
+			'duration'	=> get_post_meta($_post->ID, 'duration', true),
+			'priceType'	=> get_post_meta($_post->ID, 'pricing_type', true),
 		]:[];
 
 		$json = [
@@ -118,18 +124,14 @@ class Ajax {
 			],
 			'country' => false,
 			'product' => [
-				'id'		=> $productData['id'],
-				'price'		=> $productData['price'],
-				'currency'	=> $productData['currency'],
-				'priceHtml'	=> $productData['priceHtml'],
-				'name'		=> $productData['name'],
-				'link'		=> $productData['link'],
-				'slug'		=> $productData['slug'],
-				'type'		=> $productData['type'],
+				...$productData,
+				'price'		=> floatval($productData['price']),
 				'is_parent' => false,
 				'toast'		=> false, // '<strong>' . count($requested) . '</strong> people requested this service in the last 10 minutes!',
-				'thumbnail'	=> ['1x' => '', '2x' => ''],
-				'custom_fields' => $teddyProduct->get_post_meta($dataset['product_id'],'_sos_custom_popup',true)
+				'thumbnail'	=> ['1x' => get_the_post_thumbnail($_post), '2x' => get_the_post_thumbnail($_post, 'full')],
+				'custom_fields' => $SoS_Product->get_post_meta($dataset['product_id'], '_sos_custom_popup', true),
+				'existing_data'	=> is_user_logged_in()?get_user_meta(get_current_user_id(), '__sos_userdata', true):[],
+				'service_variations' => get_post_meta($_post->ID, '_sos_custom_services', true)
 			],
 		];
 
@@ -166,7 +168,7 @@ class Ajax {
 		wp_send_json_success($json, 200);
 	}
 	public function submit_popup() {
-		// check_ajax_referer('sospopsproject/teddybearpopupaddon/verify/nonce', '_nonce', true);
+		// check_ajax_referer('sospopsproject/sospopupaddon/verify/nonce', '_nonce', true);
 		$request = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['dataset']))), true);
 		$json = [
 			'hooks' => ['popup_submitting_done'],
@@ -201,7 +203,7 @@ class Ajax {
 					}
 					
 				} else {
-					$random_password = __('User already exists.  Password inherited.', 'textdomain');
+					$random_password = __('User already exists.  Password inherited.', 'domain');
 				}
 				
 			}
@@ -212,17 +214,17 @@ class Ajax {
 	public function search_popup() {
 		global $wpdb;
 		$json = ['hooks' => ['popup_searching_done']];
-		// check_ajax_referer('sospopsproject/teddybearpopupaddon/verify/nonce', '_nonce', true);
+		// check_ajax_referer('sospopsproject/sospopupaddon/verify/nonce', '_nonce', true);
 		$request = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['formdata']))), true);
 		
 		wp_send_json_error($json);
 	}
 	public function search_category() {
-		global $SOS_Service;global $wpdb;$json = ['hooks' => ['categorylistsfalied'], 'parent' => []];
+		global $SoS_Service;global $wpdb;$json = ['hooks' => ['categorylistsfalied'], 'parent' => []];
 		if(isset($_POST['category_id'])) {
 			$category = get_term($_POST['category_id']);
 			if($category && ! is_wp_error($category)) {
-				$catChilds = get_term_children($category->term_id, $SOS_Service->taxonomy);
+				$catChilds = get_term_children($category->term_id, $SoS_Service->taxonomy);
 				if($catChilds && ! is_wp_error($catChilds)) {
 					$category->childrens = [];
 					foreach($catChilds as $term_id) {
@@ -248,15 +250,15 @@ class Ajax {
 		wp_send_json_error($json);
 	}
 	public function get_term_posts($term) {
-		global $SOS_Service;$posts = [];
+		global $SoS_Service;$posts = [];
 		$args = [
-			'post_type' => $SOS_Service->post_type,
+			'post_type' => $SoS_Service->post_type,
 			'orderby'	=> 'menu_order title',
 			'order'		=> 'DESC',
 			'nopaging'	=> true,
 			'tax_query' => [
 				[
-					'taxonomy'	=> $SOS_Service->taxonomy,
+					'taxonomy'	=> $SoS_Service->taxonomy,
 					'field'		=> 'term_id',
 					'terms'		=> $term->term_id
 				]
@@ -287,10 +289,13 @@ class Ajax {
 		wp_send_json_success($result, 200);
 	}
 	public function edit_product() {
-		global $teddyProduct;$json = [];
-		$json['product'] = $teddyProduct->get_post_meta($_POST['product_id'], '_sos_custom_popup', true);
+		global $SoS_Product;$json = [];
+		$json['product'] = $SoS_Product->get_post_meta($_POST['product_id'], '_sos_custom_popup', true);
 		$json['hooks'] = ['gotproductpopupresult'];
-		$json['product'] = ($json['product'] && !empty($json['product']))?(array)$json['product']:[];
+		$json['info'] = ['prod_title' => get_the_title($_POST['product_id'])];
+		$json['product'] = (isset($json['product']) && !empty($json['product']))?(array)$json['product']:[];
+		// $json['product'] = [];
+		// wp_send_json_success($json, 200);
 		foreach($json['product'] as $i => $_prod) {
 			$json['product'][$i]['headerbgurl'] = ($_prod['headerbg']=='')?false:wp_get_attachment_url($_prod['headerbg']);
 			if(isset($_prod['options'])) {
@@ -316,7 +321,6 @@ class Ajax {
 				}
 			}
 		}
-		$json['info'] = ['prod_title' => get_the_title($_POST['product_id'])];
 		wp_send_json_success($json, 200);
 	}
 	public function merge_customfields($fields) {
@@ -408,7 +412,7 @@ class Ajax {
 	}
 
 	public function update_orderitem() {
-		global $teddyProduct;
+		global $SoS_Product;
 		$json = ['hooks' => ['order_item_update_failed'], 'message' => __('Something went wrong. Please review your request again.', 'sospopsprompts')];
 		if(!isset($_GET['order_id']) || empty($_GET['order_id']) || !isset($_GET['item_id']) || empty($_GET['item_id']) || !isset($_GET['teddyname']) || empty($_GET['teddyname'])) {
 			wp_send_json_error($json);
@@ -420,7 +424,7 @@ class Ajax {
 		foreach($order->get_items() as $order_item_id => $order_item) {
 			if($order_item_id != $item_id) {continue;}
 			$product_id = $order_item->get_product_id();
-			$popup_meta = $teddyProduct->get_post_meta($product_id, '_sos_custom_popup', true);
+			$popup_meta = $SoS_Product->get_post_meta($product_id, '_sos_custom_popup', true);
 			foreach($popup_meta as $i => $field) {
 				if($field['type'] == 'info') {
 					$item_meta_data = $order_item->get_meta('custom_teddey_bear_data', true);
@@ -479,7 +483,8 @@ class Ajax {
 		if(isset($_POST['_zipcode']) && !empty($_POST['_zipcode'])) {
 			if(is_user_logged_in()) {
 				update_user_meta(get_current_user_id(), '_zip_code', $_POST['_zipcode']);
-				$args = ['message' => __('Zip code updated!', 'domain'), 'hooks' => ['zipcodeupdated']];
+				$args = ['message' => __('Zip code updated!', 'domain'), 'hooks' => ['zipcodeupdated'], 'zipcode' => $_POST['_zipcode']];
+				unset($args['message']);
 				wp_send_json_success($args);
 			}
 		}
@@ -495,6 +500,37 @@ class Ajax {
 			$json['redirectTo'] = wc_get_checkout_url();
 			$json['message'] = __('Successfully added your ninformation & in a while, you\'ll be redirected to order confirmation screen. Please hold on a couple of seconds.', 'domain');
 			$json['hooks'] = ['addedToCartSuccess'];
+			wp_send_json_success($json);
+		}
+		wp_send_json_error($json);
+	}
+	public function suggested_categories() {
+		global $SoS_Service;
+		$json = ['hooks' => ['suggested_categories_failed']];
+		$terms = get_terms([
+			'taxonomy'   => $SoS_Service->taxonomy,
+			'hide_empty' => true
+		]);
+		if($terms && !is_wp_error($terms)) {
+			$terms_data = [];
+			foreach($terms as $term) {
+				$posts = $this->get_term_posts($term);
+				$options = [];
+				foreach($posts as $post) {
+					$options[] = [
+						'text'		=> $post['title'],
+						'value'		=> $post['url']
+					];
+				}
+				$term_data = [
+					'closable'		=> 'close',
+					'label'			=> $term->name,
+					'options'		=> $options
+				];
+				$terms_data[] = $term_data;
+			}
+			$json['terms'] = $terms_data;
+			$json['hooks'] = ['suggested_categories_success'];
 			wp_send_json_success($json);
 		}
 		wp_send_json_error($json);

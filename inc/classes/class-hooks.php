@@ -28,7 +28,7 @@ class Hooks {
    */
   public function woocommerce_after_add_to_cart_button() {
     global $product;
-    if(!apply_filters('teddybear/project/system/isactive', 'standard-enable')) {return;}
+    if(!apply_filters('sos/project/system/isactive', 'standard-enable')) {return;}
     $config = ['id' => $product->get_id()];
     ?>
     <button type="button" class="init_cusomizeaddtocartbtn" data-config="<?php echo esc_attr(json_encode($config)); ?>"><?php esc_html_e('Customize', 'sospopsprompts'); ?></button>

@@ -51,72 +51,82 @@ class Meta_Boxes {
 		?>
 		<div class="fwp-tabs__container">
 			<button class="fwp-button fwppopspopup-open" type="button" <?php echo esc_attr(
-				apply_filters('teddybear/project/system/isactive', 'standard-forceglobal')?'disabled':''
+				apply_filters('sos/project/system/isactive', 'standard-forceglobal')?'disabled':''
 			); ?>><?php esc_html_e('Customize', 'sospopsprompts'); ?></button>
 		</div>
 		<?php
-		$this->options = (array) get_post_meta($post->ID, '_teddy_custom_data', true);
-		$fields = [
-			'title'						=> __('General', 'sospopsprompts'),
-			'description'				=> __('Generel fields comst commonly used to changed.', 'sospopsprompts'),
-			'fields'					=> [
-				[
-					'id' 					=> 'eye',
-					'label'					=> __('Eye color', 'sospopsprompts'),
-					'description'			=> __('Teddy\'s eye color', 'sospopsprompts'),
-					'type'					=> 'text',
-					'default'				=> apply_filters('teddybear/project/system/getoption', 'default-eye', '')
-				],
-				[
-					'id' 					=> 'brow',
-					'label'					=> __('Fur color', 'sospopsprompts'),
-					'description'			=> __('Teddy\'s Fur color.', 'sospopsprompts'),
-					'type'					=> 'text',
-					'default'				=> apply_filters('teddybear/project/system/getoption', 'default-brow', '')
-				],
-				[
-					'id' 					=> 'weight',
-					'label'					=> __('Weight', 'sospopsprompts'),
-					'description'			=> __('Product Weight. This will only effect on certificate', 'sospopsprompts'),
-					'type'					=> 'text',
-					'default'				=> apply_filters('teddybear/project/system/getoption', 'default-weight', '')
-				],
-				[
-					'id' 					=> 'height',
-					'label'					=> __('Height', 'sospopsprompts'),
-					'description'			=> __('Product Height with unit. This will only effect on certificate.', 'sospopsprompts'),
-					'type'					=> 'text',
-					'default'				=> apply_filters('teddybear/project/system/getoption', 'default-height', '')
-				],
-				[
-					'id' 					=> 'accessoriesUrl',
-					'label'					=> __('Accessories Url', 'sospopsprompts'),
-					'description'			=> __('Accessories url that will be displayed after product is added to the cart.', 'sospopsprompts'),
-					'type'					=> 'text',
-					'default'				=> apply_filters('teddybear/project/system/getoption', 'default-accessoriesUrl', '')
-				],
-				[
-					'id' 					=> 'isFeatured',
-					'label'					=> __('Featured', 'sospopsprompts'),
-					'description'			=> __('Mark to make it featured product. This won\'t effect search query.', 'sospopsprompts'),
-					'type'					=> 'checkbox',
-					'default'				=> false
-				],
-				[
-					'id' 					=> 'isBestSeller',
-					'label'					=> __('Best Seller', 'sospopsprompts'),
-					'description'			=> __('Mark to make it Best Seller product. This won\'t effect search query.', 'sospopsprompts'),
-					'type'					=> 'checkbox',
-					'default'				=> false
-				],
-			]
+		$this->options = (array) get_post_meta($post->ID, '_sos_custom_data', true);
+		$fields =[
+			[
+				'id' 					=> 'eye',
+				'label'					=> __('Eye color', 'sospopsprompts'),
+				'description'			=> __('Teddy\'s eye color', 'sospopsprompts'),
+				'type'					=> 'text',
+				'default'				=> apply_filters('sos/project/system/getoption', 'default-eye', '')
+			],
+			[
+				'id' 					=> 'brow',
+				'label'					=> __('Fur color', 'sospopsprompts'),
+				'description'			=> __('Teddy\'s Fur color.', 'sospopsprompts'),
+				'type'					=> 'text',
+				'default'				=> apply_filters('sos/project/system/getoption', 'default-brow', '')
+			],
+			[
+				'id' 					=> 'weight',
+				'label'					=> __('Weight', 'sospopsprompts'),
+				'description'			=> __('Product Weight. This will only effect on certificate', 'sospopsprompts'),
+				'type'					=> 'text',
+				'default'				=> apply_filters('sos/project/system/getoption', 'default-weight', '')
+			],
+			[
+				'id' 					=> 'height',
+				'label'					=> __('Height', 'sospopsprompts'),
+				'description'			=> __('Product Height with unit. This will only effect on certificate.', 'sospopsprompts'),
+				'type'					=> 'text',
+				'default'				=> apply_filters('sos/project/system/getoption', 'default-height', '')
+			],
+			[
+				'id' 					=> 'accessoriesUrl',
+				'label'					=> __('Accessories Url', 'sospopsprompts'),
+				'description'			=> __('Accessories url that will be displayed after product is added to the cart.', 'sospopsprompts'),
+				'type'					=> 'text',
+				'default'				=> apply_filters('sos/project/system/getoption', 'default-accessoriesUrl', '')
+			],
+			[
+				'id' 					=> 'isFeatured',
+				'label'					=> __('Featured', 'sospopsprompts'),
+				'description'			=> __('Mark to make it featured product. This won\'t effect search query.', 'sospopsprompts'),
+				'type'					=> 'checkbox',
+				'default'				=> false
+			],
+			[
+				'id' 					=> 'isBestSeller',
+				'label'					=> __('Best Seller', 'sospopsprompts'),
+				'description'			=> __('Mark to make it Best Seller product. This won\'t effect search query.', 'sospopsprompts'),
+				'type'					=> 'checkbox',
+				'default'				=> false
+			],
+		];
+		$repeatable_datas = [
+			...$this->optionaize_custom_services($post),
+			[
+				'id' 					=> 'do_repeater_service',
+				'label'					=> '',
+				'description'			=> false,
+				'type'					=> 'button',
+				'text'					=> __('Add another', 'domain'),
+				'default'				=> ''
+			],
 		];
 		?>
 		<div class="fwp-form">
+			<div class="variations">
+				<span class="variations__title"><?php esc_html_e('Service variations', 'domain'); ?></span>
+			</div>
 			<?php
-			// foreach($fields['fields'] as $field) {
-			// 	$this->display_field(['field' => $field]);
-			// }
+			foreach($repeatable_datas as $field) {
+				$this->display_field(['field' => $field, 'child' => '_sos_custom_services']);
+			}
 			?>
 		</div>
 		<?php
@@ -137,18 +147,23 @@ class Meta_Boxes {
 		if (! current_user_can('edit_post', $post_id)) {
 			return;
 		}
-		$_key = '_teddy_custom_data';
+		$_key = '_sos_custom_data';
 		if (array_key_exists($_key, $_POST)) {
+			update_post_meta($post_id, $_key, $_POST[$_key]);
+		}
+		$_key = '_sos_custom_services';
+		if(array_key_exists($_key, $_POST)) {
 			update_post_meta($post_id, $_key, $_POST[$_key]);
 		}
 	}
 	
 	public function display_field($args) {
-		$field = wp_parse_args($args['field'], [
-			'placeholder'	=> ''
+		$args = wp_parse_args($args, [
+			'field' => [], 'child' => '_sos_custom_data'
 		]);
+		$field = wp_parse_args($args['field'], ['placeholder' => '']);
 		$html = '';
-		$option_name = "_teddy_custom_data[". $field['id']. "]";
+		$option_name = ($args['child'])?$args['child']."[". $field['id']. "]":$field['id'];
 		$field['default'] = isset($field['default']) ? $field['default'] : '';
 		$data = (isset($this->options[$field['id']]))?$this->options[$field['id']]:$field['default'];
 		switch($field['type']) {
@@ -205,6 +220,11 @@ class Meta_Boxes {
 				}
 				$html .= '</select> ';
 			break;
+			case 'button':
+				$html .= '<button id="' . esc_attr($field['id']) . '" type="button" data-name="' . esc_attr($option_name) . '" data-value="' . esc_attr($data) . '"' . $this->attributes($field) . '>' . $field['text'] . '</button>' . "\n";
+			break;
+			default:
+			break;
 		}
 		switch($field['type']) {
 			case 'checkbox_multi':
@@ -225,5 +245,21 @@ class Meta_Boxes {
 			$html .= $attr . '="' . $value . '" ';
 		}
 		return $html;
+	}
+	
+	public function optionaize_custom_services($post) {
+		$args = [];$filteredData = [];
+		$custom_services = (array) get_post_meta($post->ID, '_sos_custom_services', true);
+		// print_r($custom_services);
+		foreach($custom_services as $key => $name) {
+			$args[] = [
+				'id' 					=> '',
+				'label'					=> sprintf('%s%s', __('#', 'domain'), number_format_i18n($key, 0)),
+				'description'			=> false,
+				'type'					=> 'text',
+				'default'				=> $name
+			];
+		}
+		return $args;
 	}
 }

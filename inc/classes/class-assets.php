@@ -18,7 +18,7 @@ class Assets {
 		add_action( 'wp_enqueue_scripts', [ $this, 'register_scripts' ] );
 		
 		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_scripts' ], 10, 1 );
-		add_filter( 'futurewordpress/project/teddybearpopupaddon/javascript/siteconfig', [ $this, 'siteConfig' ], 1, 1 );
+		add_filter( 'futurewordpress/project/sospopupaddon/javascript/siteconfig', [ $this, 'siteConfig' ], 1, 1 );
 		// add_filter( 'style_loader_src', [$this, 'style_loader_src'], 10, 2 );
 		// add_filter( 'script_loader_src', [$this, 'style_loader_src'], 10, 2 );
 	}
@@ -35,7 +35,7 @@ class Assets {
 		$version = $this->filemtime(SOSPOPSPROJECT_BUILD_JS_DIR_PATH.'/public.js');
 		wp_register_script( 'sospops-public', SOSPOPSPROJECT_BUILD_JS_URI . '/public.js', ['jquery'], $version.'.'.rand(0, 999), true );
 		wp_enqueue_script( 'sospops-public' );
-		wp_localize_script( 'sospops-public', 'fwpSiteConfig', apply_filters( 'futurewordpress/project/teddybearpopupaddon/javascript/siteconfig', [] ) );
+		wp_localize_script( 'sospops-public', 'fwpSiteConfig', apply_filters( 'futurewordpress/project/sospopupaddon/javascript/siteconfig', [] ) );
 	}
 	private function allow_enqueue() {
 		return ( function_exists( 'is_checkout' ) && ( is_checkout() || is_order_received_page() || is_wc_endpoint_url( 'order-received' ) ) );
@@ -91,7 +91,7 @@ class Assets {
 		// if(!in_array($curr_page, ['settings_page_sospopsprompts'])) {}
 		wp_enqueue_style('sospops-admin');wp_enqueue_script('sospops-admin');
 		wp_enqueue_style('sospops-public');wp_enqueue_script('sospops-admin');
-		wp_localize_script('sospops-admin','fwpSiteConfig',apply_filters('futurewordpress/project/teddybearpopupaddon/javascript/siteconfig',[
+		wp_localize_script('sospops-admin','fwpSiteConfig',apply_filters('futurewordpress/project/sospopupaddon/javascript/siteconfig',[
 			'config' => [
 				'product_id' => isset($_GET['post'])?(int) $_GET['post']:get_query_var('post',false)
 			]
@@ -103,7 +103,7 @@ class Assets {
 	public function siteConfig( $args ) {
 		return wp_parse_args( [
 			'ajaxUrl'    		=> admin_url( 'admin-ajax.php' ),
-			'ajax_nonce' 		=> wp_create_nonce( 'futurewordpress/project/teddybearpopupaddon/verify/nonce' ),
+			'ajax_nonce' 		=> wp_create_nonce( 'futurewordpress/project/sospopupaddon/verify/nonce' ),
 			'is_admin' 			=> is_admin(),
 			'buildPath'  		=> SOSPOPSPROJECT_BUILD_URI,
 			'audioDuration'  	=> SOSPOPSPROJECT_AUDIO_DURATION,

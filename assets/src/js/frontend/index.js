@@ -13,6 +13,7 @@ import Toastify from 'toastify-js';
 import popupCart from "./popupcart";
 import flatpickr from "flatpickr";
 import SlimSelect from 'slim-select';
+import icons from "./icons";
 
 ( function ( $ ) {
 	class FutureWordPress_Frontend {
@@ -45,10 +46,13 @@ import SlimSelect from 'slim-select';
 			this.init_pops_asks();
 			this.init_pro_regis();
 			this.init_category_pops();
+			this.init_single_service_sidebar();
 			// voiceRecord.i18n = this.i18n;
 			PROMPTS.i18n = this.i18n;
 			// voiceRecord.init_recorder(this);
 			// this.voiceRecord = voiceRecord;
+			CAT_PROMPTS.hero_autocomplete(this);
+			CAT_PROMPTS.remove_review_extra_text();
 		}
 		init_toast() {
 			const thisClass = this;
@@ -92,91 +96,10 @@ import SlimSelect from 'slim-select';
 			}
 		}
 		init_events() {
-			const thisClass = this;var template, html;
-			document.body.addEventListener('gotproductpopupresult', async (event) => {
+			const thisClass = this;
+			document.body.addEventListener('gotproductpopupresult', (event) => {
 				PROMPTS.lastJson = thisClass.lastJson;
-				thisClass.popupCart.additionalPrices = [];
-				thisClass.popupCart.setBasePrice(PROMPTS.lastJson.product.price);
-				thisClass.popupCart.priceSign = PROMPTS.lastJson.product.currency;
-				template = await PROMPTS.get_template(thisClass);
-				html = document.createElement('div');html.appendChild(template);
-				
-				var elem = document.createElement('div');elem.classList.add('popup_step', 'popup_step__heading');elem.dataset.step = 0;
-				elem.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Criteria Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
-				var firstStep = template.querySelector('.popup_body > .popup_step:first-child');
-				if(firstStep) {firstStep.parentElement.insertBefore(elem, firstStep);}
-				
-				// && json.header.product_photo
-				if(thisClass.Swal && thisClass.Swal.isVisible()) {
-					// PROMPTS.progressSteps = [...new Set(PROMPTS.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):row.steptitle))];
-					if(PROMPTS?.allStepsIn1Screen) {
-						// PROMPTS.freezedSteps = document.createElement('div');
-						PROMPTS.progressSteps = [
-							thisClass.i18n?.criteria??'Criteria',
-							thisClass.i18n?.contact??'Contact',
-							thisClass.i18n?.preview??'Preview'
-						];
-						var node = document.createElement('form'), fields = PROMPTS.secondStep(thisClass), step, foot;
-						node.action=thisClass.ajaxUrl;node.type='post';node.classList.add('popup_body', 'popup_body__row');node.dataset.id = 'contact';
-						fields.forEach((field, i) => {
-							step = PROMPTS.do_field(field);i++;
-							step.dataset.step = field.fieldID;
-							node.appendChild(step);
-							PROMPTS.totalSteps=(i+1);
-						});
-						var elem = document.createElement('div');elem.classList.add('popup_step', 'popup_step__heading');elem.dataset.step = 0;
-						elem.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Contact Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
-						var firstStep = node.querySelector('.popup_body > .popup_step:first-child');
-						if(firstStep) {firstStep.parentElement.insertBefore(elem, firstStep);}
-						
-						foot = html.querySelector('.dynamic_popup .popup_foot');
-						foot.parentElement?.insertBefore(node, foot);
-
-						var node = document.createElement('form');node.action=thisClass.ajaxUrl;
-						node.type='post';node.classList.add('popup_body', 'popup_body__row');node.dataset.id = 'preview';
-						var elem = document.createElement('div');elem.classList.add('popup_step', 'popup_step__heading');elem.dataset.step = 0;
-						elem.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Review Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
-						node.appendChild(elem);
-						foot.parentElement?.insertBefore(node, foot);
-					} else {
-						thisClass.prompts.progressSteps = [...new Set(
-							thisClass.prompts.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):(
-								`${(row?.stepicon)?`<div class="swal2-progress-step__icon">${row.stepicon}</div>`:``}
-								<span>${row.steptitle}</span>`
-							))
-						)];
-					}
-					
-					thisClass.Swal.update({
-						progressSteps: thisClass.prompts.progressSteps,
-						currentProgressStep: 0,
-						html: html.innerHTML
-					});
-					thisClass.prompts.lastJson = thisClass.lastJson;
-					if(thisClass.lastJson.product && thisClass.lastJson.product.toast) {
-						thisClass.toastify({
-							text: thisClass.lastJson.product.toast.replace(/(<([^>]+)>)/gi, ""),
-							duration: 45000,
-							close: true,
-							gravity: "top", // `top` or `bottom`
-							position: "left", // `left`, `center` or `right`
-							stopOnFocus: true, // Prevents dismissing of toast on hover
-							style: {background: 'linear-gradient(to right, #4b44bc, #8181be)'},
-							onClick: function(){} // Callback after click
-						}).showToast();
-					}
-					setTimeout(() => {
-						var fields = thisClass.prompts.get_data(thisClass);
-						var voice = fields.find((row)=>row.type=='voice');
-						if(voice) {
-							voice.cost = (voice.cost == '')?0:voice.cost;
-							// voiceRecord.meta_tag = voice.steptitle;
-							// voiceRecord.duration = parseFloat((voice.duration == '')?'20':voice.duration);
-							// popupCart.addAdditionalPrice(voice.steptitle, parseFloat(voice.cost));
-						}
-						thisClass.prompts.init_events(thisClass);
-					}, 300);
-				}
+				PROMPTS.on_gotproductpopupresult(thisClass);
 			});
 			document.body.addEventListener('popup_submitting_done', async (event) => {
 				var submit = document.querySelector('.popup_foot .button[data-react="continue"]');
@@ -242,13 +165,11 @@ import SlimSelect from 'slim-select';
 			});
 			document.body.addEventListener('zipcodeupdated', async (event) => {
 				if(thisClass.Swal.isVisible()) {thisClass.Swal.close();}
-			});
-			document.body.addEventListener('addedToCartSuccess', async (event) => {
-				if((thisClass.lastJson?.redirectTo) && (thisClass.prompts?.toSearchQuery)) {
-					var href = thisClass.lastJson.redirectTo;
-					href += '?' + thisClass.prompts.toSearchQuery.map((row) => row.name + '=' + row.value).join('&')
-					location.href = href;
-				}
+				document.querySelectorAll('.sos_zip_preview').forEach((el) => {
+					if(thisClass.lastJson?.zipcode) {
+						el.innerHTML = thisClass.lastJson.zipcode;
+					}
+				});
 			});
 			document.body.addEventListener('categorylistsfalied', async (event) => {
 				if(!(CAT_PROMPTS?.lastCategoryLink)) {return;}
@@ -256,6 +177,29 @@ import SlimSelect from 'slim-select';
 			});
 			document.body.addEventListener('categorylistsloaded', async (event) => {
 				CAT_PROMPTS.load_template(thisClass);
+			});
+			document.body.addEventListener('addedToCartSuccess', (event) => {
+				Swal.fire({
+					icon: "question", width: 600,
+					iconHtml: icons.firework,
+					title: thisClass.i18n?.thanks_for_order??'Thanks for Order',
+					text: thisClass.i18n?.uhvsuccessfullytext??'You\'ve successfully completed your order with Super of the Suburbs.',
+					customClass: {popup: 'fwp-confirm_popup'},
+					showLoaderOnConfirm: true,
+					confirmButtonText: thisClass.i18n?.okay??'Okay',
+					allowOutsideClick: () => !Swal.isLoading(),
+					didOpen: async () => {},
+					preConfirm: async (login) => {return PROMPTS.on_Closed(thisClass);}
+				}).then(async (result) => {
+					if(result.isConfirmed) {}
+				})
+			});
+			document.body.addEventListener('addedToCartToCheckout', async (event) => {
+				if((thisClass.lastJson?.redirectTo) && (PROMPTS?.toSearchQuery)) {
+					var href = thisClass.lastJson.redirectTo;
+					// href += '?' + PROMPTS.toSearchQuery.map((row) => row.name + '=' + row.value).join('&')
+					location.href = href;
+				}
 			});
 		}
 		init_i18n() {
@@ -290,8 +234,8 @@ import SlimSelect from 'slim-select';
 							thisClass.toastify({text: message,className: "info", duration: 3000, stopOnFocus: true, style: {background: (json.success)?'linear-gradient(to right, rgb(255 197 47), rgb(251 229 174))':'linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))'}}).showToast();
 						}
 						if( json.data.hooks ) {
-							json.data.hooks.forEach(( hook ) => {
-								document.body.dispatchEvent( new Event( hook ) );
+							json.data.hooks.forEach((hook) => {
+								document.body.dispatchEvent(new Event(hook));
 							});
 						}
 					}
@@ -425,8 +369,7 @@ import SlimSelect from 'slim-select';
 					html = PROMPTS.zip_template(thisClass);
 					Swal.fire({
 						title: thisClass.i18n?.findsupersrvcinarea??'Discover Local Services',
-						html: html,
-						width: 600,
+						html: html, width: 600,
 						showConfirmButton: false,
 						showCancelButton: false,
 						showCloseButton: true,
@@ -505,7 +448,7 @@ import SlimSelect from 'slim-select';
 								locationIcon?.click();
 							});
 						},
-						preConfirm: async (login) => {return thisClass.prompts.on_Closed(thisClass);}
+						preConfirm: async (login) => {return PROMPTS.on_Closed(thisClass);}
 					}).then( async (result) => {
 						if( result.isConfirmed ) {
 							if( typeof result.value === 'undefined') {
@@ -581,9 +524,9 @@ import SlimSelect from 'slim-select';
 							formdata.append('_nonce', thisClass.ajaxNonce);
 
 							thisClass.sendToServer(formdata);
-							thisClass.prompts.init_prompts(thisClass);
+							PROMPTS.init_prompts(thisClass);
 						},
-						preConfirm: async (login) => {return thisClass.prompts.on_Closed(thisClass);}
+						preConfirm: async (login) => {return PROMPTS.on_Closed(thisClass);}
 					}).then( async (result) => {
 						PROMPTS.freezedSteps = 0;
 						if( result.isConfirmed ) {
@@ -616,13 +559,19 @@ import SlimSelect from 'slim-select';
 			el.previousElementSibling.classList.remove('button');
 		}
 		init_pro_regis() {
+			const thisClass = this;thisClass.proRegFormContainer = false;
 			document.querySelectorAll('.professional_registration_btn').forEach((btn) => {
 				btn.addEventListener('click', (event) => {
 					event.preventDefault();
-					const wrap = document.querySelector('.professional_registration_wrap');
-					if(! wrap) {return;}
-					const container = wrap.querySelector('.uael-cf7-container');
-					if(! container) {return;}
+					if(! thisClass.proRegFormContainer) {
+						const wrap = document.querySelector('.professional_registration_wrap');
+						if(! wrap) {return;}
+						const container = wrap.querySelector('.uael-cf7-container');
+						if(! container) {return;}
+						thisClass.proRegFormContainer = document.createElement('div');
+						thisClass.proRegFormContainer.appendChild(container);
+					}
+					
 					thisClass.Swal.fire({
 						title: false, width: 1000, padding: '1em',
 						background: 'rgb(255 255 255)',
@@ -636,10 +585,11 @@ import SlimSelect from 'slim-select';
 						html: `<div class="pro_reg_cf7"></div>`,
 						customClass: {popup: 'fwp-pro_reg'},
 						didOpen: async () => {
-							document.querySelector('.pro_reg_cf7')?.appendChild(container);
+							document.querySelector('.pro_reg_cf7')?.appendChild(thisClass.proRegFormContainer.childNodes[0]);
 						},
 						allowOutsideClick: () => !Swal.isLoading(),
 					}).then((res) => {
+						thisClass.proRegFormContainer.appendChild(document.querySelector('.pro_reg_cf7')?.querySelector('.uael-cf7-container'));
 					});
 				});
 			});
@@ -653,6 +603,54 @@ import SlimSelect from 'slim-select';
 		}
 		esc_attr(text) {
 			return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		}
+		findPosY(obj) {
+			var curtop = 0;
+			if (typeof (obj.offsetParent) != 'undefined' && obj.offsetParent) {
+			  while (obj.offsetParent) {
+				curtop += obj.offsetTop;
+				obj = obj.offsetParent;
+			  }
+			  curtop += obj.offsetTop;
+			}
+			else if (obj.y)
+			  curtop += obj.y;
+			return curtop;
+		}
+
+		init_single_service_sidebar() {
+			const thisClass = this;
+			var leftSideBar = document.querySelector('#single-service-leftsidebar');
+			if(!leftSideBar) {return;}
+			var leftSideBarFromTop = thisClass.findPosY(leftSideBar);
+			var leftSideBarHeight = leftSideBar.offsetHeight;
+			var leftSideBarList = leftSideBar.querySelector('#sidebar_menus .elementor-icon-list-items')
+			var leftSideBarListHeight = leftSideBarList.offsetHeight;
+			leftSideBarList.style.position = 'relative';
+			window.onscroll = function() {
+				var currentPosition = window.scrollY;
+				if(
+					currentPosition > leftSideBarFromTop && 
+					currentPosition < (leftSideBarFromTop + (leftSideBarHeight - leftSideBarListHeight - 40))
+				) {
+					// if((currentPosition - leftSideBarFromTop) >= leftSideBarFromTop) {
+						leftSideBarList.style.top = (currentPosition - leftSideBarFromTop) + 'px';
+					// }
+					
+				}
+			};
+			document.querySelectorAll('#sidebar_menus .elementor-icon-list-items').forEach((ul, ulI) => {
+				ul.classList.add('initiated');
+				[...ul.children].forEach((li) => {
+					li.children[0].addEventListener('click', (event) => {
+						[...ul.children].forEach((cli) => {cli.children[0].classList.remove('visiblly-active');});
+						li.children[0].classList.add('visiblly-active');
+					});
+				});
+				if(ulI == 0) {
+					ul.children[0].children[0].classList.add('visiblly-active');
+				}
+			});
 		}
 		
 	}

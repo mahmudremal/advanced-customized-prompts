@@ -114,7 +114,78 @@ const CAT_PROMPTS = {
     },
 
     hero_autocomplete: (thisClass) => {
-        // 
+        var formdata = new FormData();
+        formdata.append('action', 'sospopsproject/ajax/suggested/categories');
+        formdata.append('category_id', CAT_PROMPTS.lastCategoryID);
+        formdata.append('_nonce', thisClass.ajaxNonce);
+        thisClass.sendToServer(formdata);
+
+        document.body.addEventListener('suggested_categories_success', (event) => {
+            document.querySelectorAll('.sos_hero__searchable__select:not([data-select-handled])').forEach((select) => {
+                select.dataset.selectHandled = true;
+                CAT_PROMPTS.autocomplete = new thisClass.SlimSelect({
+                    select: select,
+                    settings: {
+                        // alwaysOpen: false,
+                        showSearch: true,
+                        openPosition: 'auto',
+                        searchHighlight: true,
+                        placeholderText: thisClass.i18n?.whtsnurtdlist??'What’s on your to-do list?',
+                        searchText: thisClass.i18n?.srctext??'Sorry nothing to see here',
+                        searchPlaceholder: thisClass.i18n?.srcurtdlist??'Search your to-do list.'
+                    },
+                    events: {
+                        beforeChange: (newVal, oldVal) => {
+                            // console.log(newVal);
+                            if(newVal[0] && newVal[0]?.value) {
+                                document.querySelectorAll('.sos_hero__wrap').forEach((el) => el.action = newVal[0]?.value??'');
+                            }
+                        }
+                    },
+                    data: thisClass.lastJson?.terms??[],
+                });
+            });
+        });
+    },
+    remove_review_extra_text: () => {
+        var reviewText = document.querySelector("#glsr_9c0e218b > .glsr-summary-wrap > .my-reviews-summary > .glsr-summary-text > .glsr-tag-value");
+        if(reviewText) {
+            var star = document.createElement('star');
+            star.classList.add('glsr-star', 'glsr-star-full');
+            star.setAttribute('aria-hidden', true);
+            star.style.marginRight = '10px';
+            reviewText.parentElement.insertBefore(star, reviewText);
+            reviewText.parentElement.classList.add('glsr-star-rating');
+            reviewText.innerHTML = reviewText.innerHTML.slice(0, reviewText.innerHTML.indexOf(' (based'));
+            reviewText.classList.add('visible');
+        }
     }
 };
 export default CAT_PROMPTS;
+
+
+
+
+// [
+//     {
+//     closable: 'close',
+//     label: 'Label 1',
+//     selectAll: false,
+//     selectAllText: 'Select them all!',
+//     options: [
+//         { text: 'Option 1', value: '1' },
+//         { text: 'Option 2', value: '2' },
+//         { text: 'Option 3', value: '3' },
+//     ],
+//     },
+//     {
+//     closable: 'close',
+//     label: 'Label 2',
+//     selectAll: false,
+//     options: [
+//         { text: 'Option 4', value: '4' },
+//         { text: 'Option 5', value: '5' },
+//         { text: 'Option 6', value: '6' },
+//     ],
+//     },
+// ]

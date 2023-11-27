@@ -21,8 +21,6 @@ class Cart {
 		$this->setup_hooks();
 	}
 	protected function setup_hooks() {
-		// add_action('wp_ajax_nopriv_add_to_cart', [$this, 'ajax_add_to_cart'], 10, 0);
-		// add_action('wp_ajax_add_to_cart', [$this, 'ajax_add_to_cart'], 10, 0);
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/cart/add', [$this, 'ajax_add_to_cart'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/cart/add', [$this, 'ajax_add_to_cart'], 10, 0);
 
@@ -37,11 +35,12 @@ class Cart {
 	}
 
 	public function ajax_add_to_cart() {
+		global $SoS_Email;
 		if(!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
 			wp_send_json_error('Missing required data.');
 		}
 		$json = [
-			'hooks' => ['popup_submitting_failed'],
+			'hooks' => ['popup_submitting_failed'], 'email_sent' => false,
 			'message' => __('Something went wrong. Please try again.', 'sospopsprompts')
 		];
 		$product_id = intval($_POST['product_id']);
@@ -51,24 +50,9 @@ class Cart {
 		// 	wp_send_json_error('Invalid product or product is not purchasable.');
 		// }
 		
-		
 		try {
 			$dataset = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['dataset']))), true);
 			$charges = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['charges']))), true);
-			if(isset($_FILES['voice'])) {
-				$is_uploaded = $this->custom_upload_audio_video($_FILES['voice']);
-			}
-			// $cart_item_key = WC()->cart->add_to_cart($product_id, $quantity);
-			// $json['hooks'] = ['popup_submitting_done'];
-			// // $json['redirectedTo'] = wc_get_checkout_url();
-			// // $json['message'] = __('Product added to cart successfully. Please hold on until you\'re redirected to checkout page.', 'sospopsprompts');
-			// $json['message'] = false;
-			// $custom_data = (array) get_post_meta($product_id, '_teddy_custom_data', true);
-			// $json['confirmation'] = [
-			// 	'title'				=> sprintf(__('%s added to your cart successfully', 'sospopsprompts'), get_the_title($product_id)),
-			// 	'accessoriesUrl'	=> isset($custom_data['accessoriesUrl'])?esc_url($custom_data['accessoriesUrl']):false,
-			// 	'checkoutUrl'		=> wc_get_checkout_url()
-			// ];
 
 			$is_updated = true;
 			if(is_user_logged_in()) {
@@ -79,11 +63,59 @@ class Cart {
 					}
 				}
 			}
-			
-			// $json['redirectTo'] = wc_get_checkout_url();
-			if($is_updated) {
+			if(isset($_POST['product_type'])) {
+				if($_POST['product_type'] == 'get_quotation') {
+					$args = [
+						'dataset' => $dataset,
+						'charges' => $charges,
+						'request_type' => $_POST['product_type'],
+						'product_id'	=> $_POST['product_id'],
+					];
+					try {
+						$email_sent = apply_filters('sos_send_email', '', $args);
+
+						if($email_sent !== false && !empty($email_sent)) {
+							$json['email_sent'] = true;
+							$json['email_template'] = $email_sent;
+							// $json['redirectTo'] = site_url('/contact-us/');
+						}
+					} catch (\ErrorException $th) {
+						//throw $th;
+						$json['message'] = $th->getMessage;
+					}
+				// } elseif($_POST['product_type'] == 'add') {
+					// $json['redirectTo'] = wc_get_checkout_url();
+				} else {
+					$json['email_sent'] = true;
+					$payment_link = apply_filters('sos/project/payment/stripe/paymentlink', [
+						'quantity'	=> 1,
+						'price_data' => [
+						  'currency' => apply_filters('sos/project/system/getoption', 'stripe-currency', 'usd'),
+						  'unit_amount' => (int) ($SoS_Email->get_calculation([
+							'charges' => $charges,
+							'product_id' => $_POST['product_id']
+						  ])->total * 100), // Unit amount in cent | number_format($calculated_amount, 2 ),
+						  'product_data' => [
+							'name' => apply_filters('sos/project/system/getoption', 'stripe-productname', __('SoS Charges', 'domain')),
+							'description' => apply_filters('sos/project/system/getoption', 'stripe-productdesc', __('Payment for', 'domain') . ' ' . get_option('blogname', 'SoS')),
+							'images' => [
+								apply_filters('sos/project/system/getoption', 'stripe-productimg', esc_url(SOSPOPSPROJECT_BUILD_URI . '/icons/Online payment_Flatline.svg'))
+							],
+						  ],
+						]
+					], true);
+					if($payment_link && !empty($payment_link)) {
+						$json['payment_link'] = $payment_link;
+						$json['redirectTo'] = $payment_link;
+					}
+				}
+			}
+			if($is_updated && $json['email_sent']) {
 				$json['message'] = __('Successfully updated your information.', 'domain');
 				$json['hooks'] = ['addedToCartSuccess'];
+				if(isset($json['payment_link']) && $json['payment_link'] && !empty($json['payment_link'])) {
+					$json['hooks'] = ['addedToCartToCheckout'];
+				}
 				wp_send_json_success($json);
 			}
 		} catch (\Exception $e) {
@@ -91,7 +123,7 @@ class Cart {
 			$json['message'] = 'Error: ' . $e->getMessage();
 			wp_send_json_error($json);
 		}
-		
+		wp_send_json_error($json);
 	}
 	public function woocommerce_add_cart_item_data($cart_item_data, $product_id, $variation_id, $quantity) {
 		if(!isset($_POST['dataset']) || !isset($_POST['dataset'])) {return $cart_item_data;}

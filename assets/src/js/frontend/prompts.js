@@ -17,7 +17,7 @@ const PROMPTS = {
         <div class="swal2-html-container__form">
             <div class="location-picker">
                 <div class="icon-container">
-                    <i class="fas fa-bullseye" map-marker-alt></i>
+                    <i class="fas fa-map-marker-alt" fa-bullseye></i>
                 </div>
                 <div class="input-container">
                     <input type="text" class="zip-code" placeholder="${enterZipCode}" value="${thisClass.config?.userzip??''}">
@@ -36,7 +36,7 @@ const PROMPTS = {
         html = document.createElement('div');html.classList.add('dynamic_popup');
         if(PROMPTS?.allStepsIn1Screen) {html.classList.add('allsteps1screen');}
         if(PROMPTS.lastJson) {
-            html.innerHTML = PROMPTS.generate_template(thisClass);
+            html = PROMPTS.generate_template(thisClass);
         } else {
             html.classList.add('dynamic_popup__preload');
             html.innerHTML = `<div class="spinner-material"></div><h3>${PROMPTS.i18n?.pls_wait??'Please wait...'}</h3>`;
@@ -80,7 +80,7 @@ const PROMPTS = {
                 }
             });
         });
-        document.querySelectorAll('.form-control[name="field.9000"]:not([data-handled])').forEach((input)=>{
+        document.querySelectorAll('.form-control[name="field.9000"]:not([data-handled])').forEach((input) => {
             input.dataset.handled = true;
             let awesomplete = new Awesomplete(input, {
                 minChars: 3,
@@ -103,9 +103,9 @@ const PROMPTS = {
                   });
             });
         });
-        document.querySelectorAll('.popup_close:not([data-handled])').forEach((el)=>{
+        document.querySelectorAll('.popup_close:not([data-handled])').forEach((el) => {
             el.dataset.handled = true;
-            el.addEventListener('click', (event)=>{
+            el.addEventListener('click', (event) => {
                 event.preventDefault();
                 if(confirm(PROMPTS.i18n?.rusure2clspopup??'Are you sure you want to close this popup?')) {
                     thisClass.Swal.close();
@@ -113,33 +113,31 @@ const PROMPTS = {
             });
         });
 
-        document.querySelectorAll('.dynamic_popup').forEach((popup)=>{
-            if(popup) {
-                var fields = document.querySelector('.tc-extra-product-options.tm-extra-product-options');
-                if(!fields) {return;}
-                if(!document.querySelector('.tc-extra-product-options-parent')) {
-                    var node = document.createElement('div');
-                    node.classList.add('tc-extra-product-options-parent');
-                    fields.parentElement.insertBefore(node, fields);
-                }
-                popup.innerHTML = '';popup.appendChild(fields);// jQuery(fields).clone().appendTo(popup);
-                
-                setTimeout(() => {
-                    popup.querySelectorAll('[id]').forEach((el)=>{el.id = el.id+'_popup';});
-                    popup.querySelectorAll('label[for]').forEach((el)=>{el.setAttribute('for', el.getAttribute('for')+'_popup');});
-                }, 200);
-
-                document.querySelectorAll('.dynamic_popup .tm-collapse').forEach((el)=>{
-                    var head = el.firstChild;var body = el.querySelector('.tm-collapse-wrap');
-                    head.classList.remove('toggle-header-closed');head.classList.add('toggle-header-open');
-                    head.querySelector('.tcfa.tm-arrow').classList.add('tcfa-angle-up');
-                    head.querySelector('.tcfa.tm-arrow').classList.remove('tcfa-angle-down');
-                    body.classList.remove('closed');body.classList.add('open', 'tm-animated', 'fadein');
-                });
+        document.querySelectorAll('.dynamic_popup').forEach((popup) => {
+            var fields = document.querySelector('.tc-extra-product-options.tm-extra-product-options');
+            if(!fields) {return;}
+            if(!document.querySelector('.tc-extra-product-options-parent')) {
+                var node = document.createElement('div');
+                node.classList.add('tc-extra-product-options-parent');
+                fields.parentElement.insertBefore(node, fields);
             }
+            popup.innerHTML = '';popup.appendChild(fields);// jQuery(fields).clone().appendTo(popup);
+            
+            setTimeout(() => {
+                popup.querySelectorAll('[id]').forEach((el) => {el.id = el.id+'_popup';});
+                popup.querySelectorAll('label[for]').forEach((el) => {el.setAttribute('for', el.getAttribute('for')+'_popup');});
+            }, 200);
+
+            document.querySelectorAll('.dynamic_popup .tm-collapse').forEach((el) => {
+                var head = el.firstChild;var body = el.querySelector('.tm-collapse-wrap');
+                head.classList.remove('toggle-header-closed');head.classList.add('toggle-header-open');
+                head.querySelector('.tcfa.tm-arrow').classList.add('tcfa-angle-up');
+                head.querySelector('.tcfa.tm-arrow').classList.remove('tcfa-angle-down');
+                body.classList.remove('closed');body.classList.add('open', 'tm-animated', 'fadein');
+            });
         });
-        document.querySelectorAll('.dynamic_popup input[type="checkbox"], .dynamic_popup input[type="radio"]').forEach((el)=>{
-            el.addEventListener('change', (event)=>{
+        document.querySelectorAll('.dynamic_popup input[type="checkbox"], .dynamic_popup input[type="radio"]').forEach((el) => {
+            el.addEventListener('change', (event) => {
                 if(el.parentElement) {
                     if(el.parentElement.classList.contains('form-control-checkbox__image')) {
                         if(el.checked) {
@@ -148,7 +146,7 @@ const PROMPTS = {
                             el.parentElement.classList.remove('checked_currently');
                         }
                     } else if(el.parentElement.classList.contains('form-control-radio__image')) {
-                        document.querySelectorAll('input[name="'+el.name+'"]').forEach((radio)=>{
+                        document.querySelectorAll('input[name="'+el.name+'"]').forEach((radio) => {
                             radio.parentElement.classList.remove('checked_currently');
                         });
                         if(el.checked) {
@@ -161,8 +159,8 @@ const PROMPTS = {
         /**
          * .form-fields__group__outfit instead of .popup_body
          */
-        document.querySelectorAll('.dynamic_popup .popup_body input[type=checkbox][data-cost], .dynamic_popup .popup_body input[type=radio][data-cost]').forEach((el)=>{
-            el.addEventListener('change', (event)=>{
+        document.querySelectorAll('.dynamic_popup .popup_body input[type=checkbox][data-cost], .dynamic_popup .popup_body input[type=radio][data-cost]').forEach((el) => {
+            el.addEventListener('change', (event) => {
                 var img, frame, title, identity, frameHeight, frameWidth;
                 frameHeight = 400;frameWidth = 350;
                 frame = document.querySelector('.dynamic_popup .header_image');
@@ -180,13 +178,13 @@ const PROMPTS = {
                     if((el.dataset?.layer??false) && el.dataset.layer != '') {img.style.zIndex = parseInt(el.dataset.layer);}
                     
                     if(el.type == 'radio') {
-                        frame.querySelectorAll('img[data-name="'+el.name+'"').forEach((images)=>{images.remove();});
+                        frame.querySelectorAll('img[data-name="'+el.name+'"').forEach((images) => {images.remove();});
                     }
                     if((el.dataset?.preview??'false') == 'true') {frame.appendChild(img);}
                     if(el.dataset?.cost??false) {
                         switch(el.type) {
                             case 'radio':
-                                document.querySelectorAll('.dynamic_popup input[type="radio"][name="'+el.name+'"][data-cost]').forEach((radio)=>{
+                                document.querySelectorAll('.dynamic_popup input[type="radio"][name="'+el.name+'"][data-cost]').forEach((radio) => {
                                     if(radio.dataset?.calculated??false) {
                                         thisClass.popupCart.removeAdditionalPrice(radio.value, parseFloat(radio.dataset.cost));// radio.checked = false;
                                         radio.removeAttribute('data-calculated');
@@ -211,34 +209,57 @@ const PROMPTS = {
                         }
                     }
                 } else {
-                    frame.querySelectorAll('#'+identity.replaceAll('.', '')).forEach((images)=>{images.remove();});
+                    frame.querySelectorAll('#'+identity.replaceAll('.', '')).forEach((images) => {images.remove();});
                     thisClass.popupCart.removeAdditionalPrice(el.value, parseFloat(el.dataset.cost));
                 }
             });
         });
-        document.querySelectorAll('.dynamic_popup .popup_body select').forEach((el)=>{
-            el.addEventListener('change', (event)=>{
-                const selectedOption = event.target.options[event.target.selectedIndex];
-                Object.values(event.target.options).forEach((option) => {
-                    if((selectedOption.dataset?.cost??'')?.trim() != '') {
-                        thisClass.popupCart.removeAdditionalPrice(option.value, parseFloat(option.dataset.cost));
-                    }
-                });
-                if((selectedOption.dataset?.cost??'')?.trim() != '') {
-                    thisClass.popupCart.addAdditionalPrice(selectedOption.value, parseFloat(selectedOption.dataset.cost), false);
-                }
-            });
-        });
-        document.querySelectorAll('.dynamic_popup input[type="date"]').forEach((el)=>{
+        // document.querySelectorAll('.dynamic_popup .popup_body select').forEach((el) => {
+        //     el.addEventListener('change', (event) => {
+        //         const selectedOption = event.target.options[event.target.selectedIndex];
+        //         Object.values(event.target.options).forEach((option) => {
+        //             if((selectedOption.dataset?.cost??'')?.trim() != '') {
+        //                 thisClass.popupCart.removeAdditionalPrice(option.innerText + ' - ' + option.value, parseFloat(option.dataset.cost));
+        //             }
+        //         });
+        //         if((selectedOption.dataset?.cost??'')?.trim() != '') {
+        //             thisClass.popupCart.addAdditionalPrice(selectedOption.innerText + ' - ' + selectedOption.value, parseFloat(selectedOption.dataset.cost), false);
+        //         }
+        //     });
+        // });
+        document.querySelectorAll('.dynamic_popup input[type="date"]').forEach((el) => {
             el.type = 'text';thisClass.flatpickr(el, {enableTime: false, dateFormat: "d M, Y"});
         });
-        document.querySelectorAll('.dynamic_popup select').forEach((el)=>{
-            new thisClass.SlimSelect({select: el, settings: {
-                showSearch: (el.childElementCount >= 10)
-            }});
+        document.querySelectorAll('.dynamic_popup select').forEach((el) => {
+            var theSelect = new thisClass.SlimSelect({
+                select: el,
+                events: {
+                    beforeChange: (newVal, oldVal) => {
+                        oldVal.forEach((option) => {
+                            var option_name = option.text + ' - ' + option.id;var cost = (option?.dataset)?.cost??(option.data?.cost);
+                            thisClass.popupCart.removeAdditionalPrice(option_name, parseFloat(cost));
+                        });
+                        newVal.forEach((option) => {
+                            var option_name = option.text + ' - ' + option.id;var cost = (option?.dataset)?.cost??(option.data?.cost);
+                            thisClass.popupCart.addAdditionalPrice(option_name, parseFloat(cost));
+                        });
+                        return true;
+                    },
+                    afterChange: (newVal) => {}
+                },
+                settings: {
+                    showSearch: (el.childElementCount >= 10)
+                }
+            });
+            if(el?.options && el.options?.selectedIndex) {
+                var selectedOption = el.options[el.options.selectedIndex];
+                if(selectedOption && selectedOption.dataset?.cost) {
+                    thisClass.popupCart.addAdditionalPrice(selectedOption.innerText + ' - ' + selectedOption?.id??'', parseFloat(selectedOption.dataset.cost));
+                }
+            }
         });
 
-        document.querySelectorAll('.dynamic_popup button[data-type="done"]:not([data-handled])').forEach((done)=>{
+        document.querySelectorAll('.dynamic_popup button[data-type="done"]:not([data-handled])').forEach((done) => {
             done.dataset.handled = true;
             done.addEventListener('click', (event) => {
                 done.parentElement.classList.add('d-none');
@@ -260,7 +281,7 @@ const PROMPTS = {
         });
         const fieldInfos = '.popup_step__info .form-fields__group__info > div:nth-child';
         thisClass.config.lastTeddyName = '';
-        document.querySelectorAll(fieldInfos+'(-n+2) input').forEach((field)=>{
+        document.querySelectorAll(fieldInfos+'(-n+2) input').forEach((field) => {
             field.addEventListener('change', (event) => {
                 switch(field.type) {
                     case 'text':
@@ -288,7 +309,7 @@ const PROMPTS = {
                 field.removeAttribute('name');// field.checked = true;
             }
         });
-        document.querySelectorAll('.popup_body .popup_step__info .form-fields__group__info input[type="button"]').forEach((btn)=>{
+        document.querySelectorAll('.popup_body .popup_step__info .form-fields__group__info input[type="button"]').forEach((btn) => {
             var nthStep = 1;
             btn.addEventListener('click', (event) => {
                 var wrap = ((btn?.parentElement)?.parentElement)?.parentElement;
@@ -314,13 +335,13 @@ const PROMPTS = {
         //     document.querySelector('.popup_foot .button[data-react="continue"]')?.click();
         // });
         
-        PROMPTS.currentStep=0;// PROMPTS.do_pagination(true, thisClass);
+        PROMPTS.currentStep = 1;
+        PROMPTS.do_pagination(false, thisClass, 0);
     },
     generate_template: (thisClass) => {
-        var json, html;
-        json = PROMPTS.lastJson;
-        html = '';
-        html += (json.header)?`
+        var json = PROMPTS.lastJson;
+        var html = document.createElement('div');
+        html.innerHTML = (json.header)?`
             ${(json.header.product_photo)?`
             <div class="dynamic_popup__header">
                 <span class="back2previous_step fa fa-arrow-left" type="button" data-react="back">${thisClass.i18n?.back??'Back'}</span>
@@ -334,14 +355,22 @@ const PROMPTS = {
             </div>
             <div class="header_image" ${(json.header.product_photo != 'empty')?`style="background-image: url('${json.header.product_photo}');"`:``}></div>`:''}
         `:'';
-        html += PROMPTS.generate_fields(thisClass);
+        var fields = PROMPTS.generate_fields(thisClass);
+        // console.log(fields);
+        html.appendChild(fields);
+        html.classList.add('dynamic_popup');
+        html.querySelectorAll('.popup_body').forEach((popBody, i) => {
+            popBody.style.display = 'none';
+            // if(i == 0){} else {}
+        });
         return html;
     },
     generate_fields: (thisClass, secStep = false) => {
         var div, node, step, foot, footwrap, btn, back, prices, fields;
         fields = (secStep)?secStep:PROMPTS.get_data(thisClass);
         if(!fields && (thisClass.config?.buildPath??false)) {
-            return '<img src="'+thisClass.config.buildPath+'/icons/undraw_file_bundle_re_6q1e.svg">';
+            var img = document.createElement('img');img.src = thisClass.config.buildPath+'/icons/undraw_file_bundle_re_6q1e.svg';img.alt = 'Dataset not found';
+            return img;
         }
         div = document.createElement('div');node = document.createElement('form');
         node.action=thisClass.ajaxUrl;node.type='post';node.classList.add('popup_body');
@@ -380,7 +409,7 @@ const PROMPTS = {
         footwrap.appendChild(btn);
         
         div.appendChild(node);foot.appendChild(footwrap);div.appendChild(foot);
-        return div.innerHTML;
+        return div;
     },
     str_replace: (str) => {
         var data = PROMPTS.lastJson,
@@ -397,6 +426,21 @@ const PROMPTS = {
         return fields;
     },
     secondStep: (thisClass) => {
+        const service = secondStepInputFields.find((row) => row.fieldID == 7);
+        if(service && service?.options) {
+            service.options = Object.values(PROMPTS.lastJson.product.service_variations).map((opt) => {return {label: opt};});
+        }
+        PROMPTS.lastJson.product.existing_data.forEach((field) => {
+            var stepField = secondStepInputFields.find((row) => (field.title).replace('*', '').trim().toLowerCase() == (row.steptitle).replace('*', '').trim().toLowerCase());
+            console.log(stepField, field);
+            if(stepField && ['text'].includes(stepField?.type)) {
+                if(field?.value && field.value != '') {
+                    // stepField.value = field.value;
+                    stepField.default = field.value;
+                }
+            }
+        });
+        
         return secondStepInputFields;
     },
     do_field: (field, child = false) => {
@@ -435,26 +479,29 @@ const PROMPTS = {
         
         switch (field.type) {
             case 'textarea':
-                input = document.createElement('textarea');input.classList.add('form-control');
+                field.nodeEl = input = document.createElement('textarea');input.classList.add('form-control');
                 input.name = 'field.'+field.fieldID;
                 input.placeholder = PROMPTS.str_replace(field?.placeholder??'');
-                input.id = `field_${field?.fieldID??i}`;input.innerHTML = field?.value??'';
+                input.id = `field_${field?.fieldID??i}`;input.innerHTML = field?.value??(field?.default??'');
                 // if(field?.dataset??false) {input.dataset = field.dataset;}
                 input.dataset.fieldId = field.fieldID;
                 break;
             case 'input':case 'text':case 'button':case 'number':case 'date':case 'time':case 'local':case 'color':case 'range':
-                input = document.createElement('input');input.classList.add('form-control');
+                field.nodeEl = input = document.createElement('input');
+                input.classList.add('form-control');
                 input.name = 'field.'+field.fieldID;
                 input.placeholder = PROMPTS.str_replace(field?.placeholder??'');
-                input.id = `field_${field?.fieldID??i}`;input.type = (field.type=='input')?'text':field.type;
+                input.id = `field_${field?.fieldID??i}`;
+                input.setAttribute('value', field?.value??(field?.default??''));
+                input.type = (field.type=='input')?'text':field.type;
                 // if(field?.dataset??false) {input.dataset = field.dataset;}
-                input.value = field?.value??'';input.dataset.fieldId = field.fieldID;
+                input.dataset.fieldId = field.fieldID;
                 if(level) {fieldset.appendChild(level);}
                 if(input) {fieldset.appendChild(input);}
                 if(input || level) {div.appendChild(fieldset);}
                 break;
             case 'select':
-                input = document.createElement('select');input.classList.add('form-control');
+                field.nodeEl = input = document.createElement('select');input.classList.add('form-control');
                 input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
                 if((field?.name??'')?.trim() != '') {input.dataset.name = field?.name;}
                 // if(field?.dataset??false) {input.dataset = field.dataset;}
@@ -530,12 +577,12 @@ const PROMPTS = {
                 break;
             case 'password':
                 group = document.createElement('div');group.classList.add('input-group', 'mb-3');
-                input = document.createElement('input');input.classList.add('form-control');
-                input.name = 'field.'+field.fieldID;
+                field.nodeEl = input = document.createElement('input');input.classList.add('form-control');
+                input.name = 'field.'+field.fieldID;input.setAttribute('value', field?.value??(field?.default??''));
                 input.placeholder = PROMPTS.str_replace(field?.placeholder??'');
                 input.id = `field_${field?.fieldID??i}`;input.type = (field.type=='input')?'text':field.type;
                 // if(field?.dataset??false) {input.dataset = field.dataset;}
-                input.value = field?.value??'';input.dataset.fieldId = field.fieldID;
+                input.dataset.fieldId = field.fieldID;
                 var eye = document.createElement('div');
                 eye.classList.add('input-group-append', 'toggle-password');
                 eye.innerHTML = '<i class="fa fa-eye"></i>';
@@ -545,18 +592,18 @@ const PROMPTS = {
                 if(input || level) {div.appendChild(fieldset);}
                 break;
             case 'confirm':
-                input = document.createElement('div');input.classList.add('the-success-icon');
+                field.nodeEl = input = document.createElement('div');input.classList.add('the-success-icon');
                 input.innerHTML = field?.icon??'';
                 fieldset.appendChild(input);div.appendChild(fieldset);
                 break;
             case 'voice':
-                input = document.createElement('div');input.classList.add('do_recorder');
+                field.nodeEl = input = document.createElement('div');input.classList.add('do_recorder');
                 // if(field?.dataset??false) {input.dataset = field.dataset;}
                 input.innerHTML = field?.icon??'';input.dataset.cost = field?.cost??0;
                 fieldset.appendChild(input);div.appendChild(fieldset);
                 break;
             case 'outfit':
-                fields = document.createElement('div');fields.classList.add('form-fields', 'form-fields__group', 'form-fields__group__'+(field.type).replaceAll(' ', ''));
+                field.nodeEl = fields = document.createElement('div');fields.classList.add('form-fields', 'form-fields__group', 'form-fields__group__'+(field.type).replaceAll(' ', ''));
                 (field?.groups??[]).forEach((group, groupI)=> {
                     group.fieldID = (field?.fieldID??0)+'.'+(group?.fieldID??groupI);
                     fields.appendChild(PROMPTS.do_field(group, true));
@@ -564,7 +611,7 @@ const PROMPTS = {
                 fieldset.appendChild(fields);div.appendChild(fieldset);
                 break;
             case 'info':
-                fields = document.createElement('div');fields.dataset.visibility = 1;
+                field.nodeEl = fields = document.createElement('div');fields.dataset.visibility = 1;
                 fields.classList.add('form-fields', 'form-fields__group', 'form-fields__group__'+(field.type).replaceAll(' ', ''));
                 // field.groups = field.groups.reverse();
                 var inputsArgs = {}, inputs = {
@@ -600,7 +647,7 @@ const PROMPTS = {
                         dataset: {title: PROMPTS.i18n?.sendersname??'Created with love by'}
                     }
                 };
-                Object.keys(inputs).forEach((type, typeI)=>{
+                Object.keys(inputs).forEach((type, typeI) => {
                     inputsArgs = {
                         fieldID: (field?.fieldID??0)+'.'+(type?.fieldID??typeI),
                         ...inputs[type]
@@ -636,7 +683,7 @@ const PROMPTS = {
         }
         i++;
         if((field?.extra_fields??false)) {
-            field.extra_fields.forEach((extra)=>{
+            field.extra_fields.forEach((extra) => {
                 div.appendChild(PROMPTS.do_field(extra, true));
             });
         }
@@ -662,7 +709,7 @@ const PROMPTS = {
             thisClass.openai_error(error);
         }
     },
-    do_pagination: async (plus, thisClass) => {
+    do_pagination: async (plus, thisClass, staticView = false) => {
         var step, root, header, field, back, data, error, submit;PROMPTS.currentStep = PROMPTS?.currentStep??0;
         if(PROMPTS?.allStepsIn1Screen) {
             const continueBtn = document.querySelector('.popup_foot .button[data-react="continue"]');
@@ -670,6 +717,7 @@ const PROMPTS = {
             setTimeout(async () => {
                 const popupBodys = document.querySelectorAll('.dynamic_popup .popup_body');
                 if(plus) {PROMPTS.freezedSteps++;} else {PROMPTS.freezedSteps--;}
+                if(staticView !== false && popupBodys[staticView]) {PROMPTS.freezedSteps = staticView;}
                 if(popupBodys[PROMPTS.freezedSteps]) {
                     popupBodys.forEach((popBody) => {popBody.style.display = 'none';});
                     if(popupBodys[PROMPTS.freezedSteps].dataset.id == 'preview') {
@@ -677,66 +725,135 @@ const PROMPTS = {
                         document.querySelectorAll('.popup_body').forEach((form) => {
                             var formdata = thisClass.generate_formdata(form), changedata = [];
                             Object.keys(formdata).forEach((key) => {
+                                var elem = form.querySelector('[name="'+key+'"]');
                                 changedata.push({
-                                    key: form.querySelector('[name="'+key+'"]').parentElement.previousElementSibling.previousElementSibling.innerHTML,
+                                    key: elem.parentElement.previousElementSibling.innerHTML,
+                                    type: elem?.nodeName,
                                     val: formdata[key]
                                 });
                             });
                             data.push(changedata);
                         });
                         PROMPTS.lastFormsData = data;
+                        var formentry = [];
+                        PROMPTS.lastFormsData.forEach((group, gI) => {
+                            group.forEach((row) => {
+                                row.group = gI;
+                                // row.group = thisClass.prompts.progressSteps[gI];
+                                formentry.push(row)
+                            });
+                        });
+                        var chunkSize = 2;var chunks = [];
+                        for (let i = 0; i < formentry.length; i += chunkSize) {
+                            var chunk = formentry.slice(i, i + chunkSize);
+                            chunks.push(chunk);
+                        }
+                        PROMPTS.lastFormsData = chunks;
+
+                        popupBodys[PROMPTS.freezedSteps].querySelector('.review-informations')?.remove();
                         popupBodys[PROMPTS.freezedSteps].innerHTML += `
-                        <div class="form-groups">
-                            <div class="form-row">
-                                ${[1, 2, 3, 4, 5, 6].map((row) => `
-                                <div class="form-col">
-                                    <div class="form-col-8">
-                                        <h3 class="">Bedroom & Washroom</h3>
-                                        <a class="" href="#">Add/Change</a>
+                        <div class="review-informations">
+                            <div class="form-groups">
+                                <div class="form-row">
+                                    ${PROMPTS.lastFormsData.map((group) => `
+                                        <div class="form-col">
+                                            <div class="form-col-8">
+                                                <h3 class="">${group.map((row) => `${row.key.trim().replaceAll('*', '')}`).join(' & ')}</h3>
+                                                <a class="" href="#" data-add-change="${group[0].group}">${['select'].includes(group[0].type.toLowerCase())?'Add/Change':'Edit'}</a>
+                                            </div>
+                                            <div class="form-col-4">
+                                                ${group.map((row) => `
+                                                    <span class="d-block">${row.val}</span>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <table class="pricing_table">
+                                <tbody>
+                                    <tr>
+                                        <th>SubTotal</th>
+                                        <td class="subtotal">${thisClass.popupCart.getSubTotalHtml(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Taxes and Fees</th>
+                                        <td class="fees">${thisClass.popupCart.getTEXnFeesHtml(2)}</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Total Amount</th>
+                                        <td class="total">${thisClass.popupCart.getTotalHtml(2)}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <table style="display: none;">
+                                <tr>
+                                    <th>Key</th>
+                                    <th></th>
+                                    <th>Value</th>
+                                </tr>
+                                ${data.map((row) => {
+                                    return row.map((item) => `
+                                    <tr>
+                                        <td>${item.key.trim()}</td>
+                                        <td>:</td>
+                                        <td>${item.val.trim()}</td>
+                                    </tr>`).join('')
+                                }).join('')}
+                            </table>
+                            ${(['flat_rate'].includes(PROMPTS.lastJson.product?.priceType))?`
+                                ${
+                                // condition made here to apear instruction insetad of using credit card information.
+                                (true)?`
+                                <div class="payment_instruction">
+                                    <h3>${PROMPTS.i18n?.paymentinstructions??'Payment Instructions'}</h3>
+                                    <p>${PROMPTS.i18n?.paymentinstructions_subtitle??'Follow these steps to complete your purchase:'}</p>
+                                    <ol>
+                                        <li>${PROMPTS.i18n?.payinstruct_1??'Click the "Buy Now" button below.'}</li>
+                                        <li>${PROMPTS.i18n?.payinstruct_2??'You will be redirected to the Stripe payment screen.'}</li>
+                                        <li>${PROMPTS.i18n?.payinstruct_3??'Complete your payment on the Stripe secure checkout page.'}</li>
+                                        <li>${PROMPTS.i18n?.payinstruct_4??'Once your payment is successful, your form will be approved.'}</li>
+                                    </ol>
+                                </div>
+                                `:`
+                                <div class="payment_table">
+                                    <h3>${PROMPTS.i18n?.chooseurservice??'Choose Your Card'}</h3>
+                                    <p>${PROMPTS.i18n?.entrurcardinforest??'Enter your card information below. You will be charged after service has been rendered.'}</p>
+                                    <div class="form-row">
+                                        <div class="form-col form-col__card">
+                                            <input name="" type="text" placeholder="${PROMPTS.i18n?.cardnumber??'Card Number'}" pattern="[0-9]"/>
+                                        </div>
+                                        <div class="form-col form-col__expiration">
+                                            <input name="" type="text" placeholder="${PROMPTS.i18n?.mm_yyyy??'MM/YYYY'}" pattern="[0-9]"/>
+                                        </div>
+                                        <div class="form-col form-col__cvc">
+                                            <input name="" type="text" placeholder="${PROMPTS.i18n?.cvc??'CVC'}" pattern="[0-9]"/>
+                                        </div>
                                     </div>
-                                    <div class="form-col-4">
-                                        <span class="d-block">2 Bedroom</span>
-                                        <span class="d-block">4 Washroom</span>
+                                    <div class="form-row form-row__foot">
+                                        <div class="form-col form-col__card">
+                                            <!-- <img src="payments methods" alt="" /> -->
+                                            ${icons.cards}
+                                        </div>
+                                        <div class="form-col form-col__cvc">
+                                            ${icons.lock}
+                                            <p class="text-dark">${PROMPTS.i18n?.paymentsecuritymsg??'Safe and secure 256-BITSSL encrypted payment.'}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                `).join('')}
-                            </div>
+                                `
+                                }
+                            `:``}
+                            
                         </div>
-
-                        <table class="pricing_table">
-                            <tbody>
-                                <tr>
-                                    <th>SubTotal</th>
-                                    <td>${thisClass.popupCart.getSubTotalHtml(2)}</td>
-                                </tr>
-                                <tr>
-                                    <th>Taxes and Fees</th>
-                                    <td>${thisClass.popupCart.getTEXnFeesHtml(2)}</td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>Total Amount</th>
-                                    <td>${thisClass.popupCart.getTotalHtml(2)}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <table style="display: none;">
-                            <tr>
-                                <th>Key</th>
-                                <th></th>
-                                <th>Value</th>
-                            </tr>
-                            ${data.map((row) => {
-                                return row.map((item) => `
-                                <tr>
-                                    <td>${item.key.trim()}</td>
-                                    <td>:</td>
-                                    <td>${item.val.trim()}</td>
-                                </tr>`).join('')
-                            }).join('')}
-                        </table>
                         `;
+                        
+                        PROMPTS.change_submit_btn_text(
+                            ['flat_rate'].includes(PROMPTS.lastJson.product?.priceType)?'booknow':'get_quotation'
+                        );
+                        
                         setTimeout(() => {
                             const checkoutForm = document.querySelector('#checkout-form-container');
                             if(checkoutForm) {
@@ -744,7 +861,26 @@ const PROMPTS = {
                                 popupBodys[PROMPTS.freezedSteps].appendChild(checkoutForm);
                             }
                             window.popupBodys = popupBodys[PROMPTS.freezedSteps];
+
+                            setTimeout(() => {
+                                document.querySelectorAll('[data-add-change]').forEach((link) => {
+                                    link.addEventListener('click', (event) => {
+                                        event.preventDefault();
+                                        // PROMPTS.progressStepsIed = PROMPTS.progressSteps.map((step, i) => {return {i: i, text: step};});
+                                        // var toStep = PROMPTS.progressStepsIed.find((step) => step.text.toLowerCase() == link.dataset.addChange.toLowerCase());
+                                        if(link.dataset?.addChange) {
+                                            // PROMPTS.currentStep = (toStep.i - 0);
+                                            PROMPTS.do_pagination(false, thisClass, 
+                                                parseInt(link.dataset.addChange)
+                                                // ((toStep.i - 1) < 0)?0:(toStep.i - 1)
+                                            );
+                                        }
+                                    });
+                                });
+                            }, 500);
                         }, 500);
+                    } else {
+                        PROMPTS.change_submit_btn_text('continue');
                     }
 
                     popupBodys[PROMPTS.freezedSteps].style.display = 'flex';
@@ -776,7 +912,7 @@ const PROMPTS = {
                                 input = form.querySelector('[name="'+key+'"]')
                                 changedata.push({
                                     key: key, name: input.dataset?.name,
-                                    title: ((input.parentElement?.previousElementSibling)?.previousElementSibling)?.innerHTML,
+                                    title: (input.parentElement?.previousElementSibling)?.innerHTML,
                                     value: formdata[key]
                                 });
                             });
@@ -791,6 +927,10 @@ const PROMPTS = {
                         formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
                         formdata.append('dataset', JSON.stringify(changedata));
                         formdata.append('product_id', PROMPTS.lastJson.product.id);
+                        formdata.append('product_type', 
+                            ['flat_rate'].includes(PROMPTS.lastJson.product?.priceType)?'add':'get_quotation'
+                        );
+                        formdata.append('calculated', thisClass.popupCart.getTotal());
                         formdata.append('quantity', 1);
                         thisClass.sendToServer(formdata);
                     }
@@ -839,6 +979,10 @@ const PROMPTS = {
                         formdata.append('charges', JSON.stringify(thisClass.popupCart.additionalPrices));
                         formdata.append('dataset', JSON.stringify(generated));
                         formdata.append('product_id', PROMPTS.lastJson.product.id);
+                        formdata.append('product_type', 
+                            ['flat_rate'].includes(PROMPTS.lastJson.product?.priceType)?'add':'get_quotation'
+                        );
+                        formdata.append('calculated', thisClass.popupCart.getTotal());
                         formdata.append('quantity', 1);
                         thisClass.sendToServer(formdata);
                         PROMPTS.global_cartBtn = false;
@@ -848,7 +992,7 @@ const PROMPTS = {
                     // if(PROMPTS.validateField(step, data, thisClass)) {
                     // } else {console.log('Didn\'t Submit');}
                 } else {
-                    document.querySelectorAll('.popup_foot .button[data-react="back"], .back2previous_step[data-react="back"]').forEach((back)=>{
+                    document.querySelectorAll('.popup_foot .button[data-react="back"], .back2previous_step[data-react="back"]').forEach((back) => {
                         if(!plus && PROMPTS.currentStep<=1) {back.classList.add('invisible');}
                         else {back.classList.remove('invisible');}
                     });
@@ -861,12 +1005,12 @@ const PROMPTS = {
                             // header.innerHTML = '';
                         }
                     }
-                    document.querySelectorAll(root+'.step_visible').forEach((el)=>{el.classList.add('d-none');el.classList.remove('step_visible');});
+                    document.querySelectorAll(root+'.step_visible').forEach((el) => {el.classList.add('d-none');el.classList.remove('step_visible');});
                     step = document.querySelector(root+'[data-step="'+(field?.fieldID??PROMPTS.currentStep)+'"]');
                     if(step) {
                         if(!plus) {step.classList.add('popup2left');}
-                        step.classList.remove('d-none');setTimeout(()=>{step.classList.add('step_visible');},300);
-                        if(!plus) {setTimeout(()=>{step.classList.remove('popup2left');},1500);}
+                        step.classList.remove('d-none');setTimeout(() => {step.classList.add('step_visible');},300);
+                        if(!plus) {setTimeout(() => {step.classList.remove('popup2left');},1500);}
                     }
 
                     // Change swal step current one.
@@ -916,7 +1060,7 @@ const PROMPTS = {
             if(!step) {return (PROMPTS.currentStep<=0);}
             if(!PROMPTS.validateField(step, data, thisClass)) {return false;}
 
-            step.querySelectorAll('input, select').forEach((el,ei)=>{
+            step.querySelectorAll('input, select').forEach((el,ei) => {
                 // el is the element input
                 if(!prev.includes(el.name) && data[el.name] && data[el.name]==el.value) {
                     // item is the fieldset
@@ -966,7 +1110,7 @@ const PROMPTS = {
         
         return true;
         // return (!plus || PROMPTS.currentStep < PROMPTS.totalSteps);
-        // setTimeout(()=>{return true;},100);
+        // setTimeout(() => {return true;},100);
     },
     validateField: (step, data, thisClass) => {
         // data = thisClass.generate_formdata(document.querySelector('.popup_body'));
@@ -1025,7 +1169,7 @@ const PROMPTS = {
     },
     get_formdata: async (thisClass, formdata = false) => {
         var form = thisClass.generate_formdata(document.querySelector('.popup_body'));
-        Object.keys(form).forEach((name)=>{
+        Object.keys(form).forEach((name) => {
             var elem = document.querySelector('[name="'+name+'"]');
             if(elem.value.trim().toLocaleLowerCase() == form[name].trim().toLocaleLowerCase()) {
                 var split = name.split('.');split[1] = parseInt(split[1]);
@@ -1114,6 +1258,8 @@ const PROMPTS = {
 
 
 
+    generate_contact_step: (thisClass) => {
+    },
     work_with_pagination: (thisClass) => {
         var steps = document.querySelector('.swal2-progress-steps');
         var pagin = document.querySelector('.pagination_list');
@@ -1159,7 +1305,139 @@ const PROMPTS = {
                 })
             });
         }, 300);
+    },
+    on_gotproductpopupresult: async (thisClass) => {
+        var template, html;PROMPTS.filtering_dataset(thisClass);
+        thisClass.popupCart.additionalPrices = [];
+        // if(PROMPTS.lastJson.product?.priceType == 'flat_rate') {}
+        thisClass.popupCart.priceSign = PROMPTS.lastJson.product.currency;
+        thisClass.popupCart.setBasePrice(PROMPTS.lastJson.product.price);
+        
+        template = await PROMPTS.get_template(thisClass);
+        html = document.createElement('div');html.appendChild(template);
+        
+        var step1 = document.createElement('div');step1.classList.add('popup_step', 'popup_step__heading');step1.dataset.step = 0;
+        step1.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Criteria Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
+        var firstStep = template.querySelector('.popup_body > .popup_step:first-child');
+        if(firstStep) {firstStep.parentElement.insertBefore(step1, firstStep);}
+        
+        // && json.header.product_photo
+        if(thisClass.Swal && thisClass.Swal.isVisible()) {
+            // PROMPTS.progressSteps = [...new Set(PROMPTS.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):row.steptitle))];
+            if(PROMPTS?.allStepsIn1Screen) {
+                // PROMPTS.freezedSteps = document.createElement('div');
+                PROMPTS.progressSteps = [
+                    thisClass.i18n?.criteria??'Criteria',
+                    thisClass.i18n?.contact??'Contact',
+                    thisClass.i18n?.preview??'Preview'
+                ];
+                
+                /** Contact Step */
+                var step2 = document.createElement('form'), fields = PROMPTS.secondStep(thisClass), step, foot;
+                step2.action=thisClass.ajaxUrl;step2.type='post';step2.classList.add('popup_body', 'popup_body__row');step2.dataset.id = 'contact';
+
+                /** Heading fields */
+                var heading = document.createElement('div');heading.classList.add('popup_step', 'popup_step__heading');heading.dataset.step = 0;
+                heading.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Contact Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
+                step2.appendChild(heading);
+
+                /** Fields field */
+                fields.forEach((field, i) => {
+                    step = PROMPTS.do_field(field);i++;
+                    step.dataset.step = field.fieldID;
+                    step2.appendChild(step);
+                    PROMPTS.totalSteps=(i+1);
+                });
+                
+                /** Preview Step */
+                // foot.parentElement?.insertBefore(node, foot);
+                var step3 = document.createElement('form');step3.action = thisClass.ajaxUrl;
+                step3.type='post';step3.classList.add('popup_body', 'popup_body__row');step3.dataset.id = 'preview';
+                var heading = document.createElement('div');heading.classList.add('popup_step', 'popup_step__heading');heading.dataset.step = 0;
+                heading.innerHTML = `<h2>${thisClass.i18n?.criteriainfo??'Review Information'}</h2><p class="text-muted">${thisClass.i18n?.criteriainfosubtitle??'We are available 24/7 to answer your questions?'}</p>`;
+                step3.appendChild(heading);
+
+                var foot = template?.querySelector('.popup_foot');
+                if(foot) {
+                    foot.parentElement.insertBefore(step2, foot);
+                    foot.parentElement.insertBefore(step3, foot);
+                    // setTimeout(() => {}, 200);
+                }
+            } else {
+                PROMPTS.progressSteps = [...new Set(
+                    PROMPTS.lastJson.product.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):(
+                        `${(row?.stepicon)?`<div class="swal2-progress-step__icon">${row.stepicon}</div>`:``}
+                        <span>${row.steptitle}</span>`
+                    ))
+                )];
+            }
+            thisClass.Swal.update({
+                progressSteps: PROMPTS.progressSteps,
+                currentProgressStep: 0,
+                html: html.innerHTML
+            });
+            PROMPTS.lastJson = thisClass.lastJson;
+            if(thisClass.lastJson?.product && thisClass.lastJson.product?.toast) {
+                thisClass.toastify({
+                    text: thisClass.lastJson.product.toast.replace(/(<([^>]+)>)/gi, ""),
+                    duration: 45000, close: true,
+                    gravity: "top", // `top` or `bottom`
+                    position: "left", // `left`, `center` or `right`
+                    stopOnFocus: true, // Prevents dismissing of toast on hover
+                    style: {background: 'linear-gradient(to right, #4b44bc, #8181be)'},
+                    onClick: () => {} // Callback after click
+                }).showToast();
+            }
+            setTimeout(() => {
+                var fields = PROMPTS.get_data(thisClass);
+                var voice = fields.find((row)=>row.type=='voice');
+                if(voice) {
+                    voice.cost = (voice.cost == '')?0:voice.cost;
+                    // voiceRecord.meta_tag = voice.steptitle;
+                    // voiceRecord.duration = parseFloat((voice.duration == '')?'20':voice.duration);
+                    // popupCart.addAdditionalPrice(voice.steptitle, parseFloat(voice.cost));
+                }
+                PROMPTS.init_events(thisClass);
+            }, 300);
+        }
+    },
+    change_submit_btn_text: (type) => {
+        document.querySelectorAll('.popup_foot .button[data-react="continue"]  > span:first-child').forEach((span) => {
+            switch(type.toLowerCase()) {
+                case 'continue':
+                    span.innerHTML = PROMPTS.i18n?.continue??'Continue';
+                    span.parentElement.parentElement.dataset.current = 'continue';
+                    break;
+                case 'booknow':
+                    span.innerHTML = PROMPTS.i18n?.booknow??'Book Now';
+                    span.parentElement.parentElement.dataset.current = 'booknow';
+                    break;
+                case 'get_quotation':
+                    span.innerHTML = PROMPTS.i18n?.get_quotation??'Get Quotation';
+                    span.parentElement.parentElement.dataset.current = 'get_quotation';
+                    break;
+                default:
+                    break;
+            }
+        });
+    },
+    filtering_dataset: (thisClass) => {
+        PROMPTS.lastJson.product.custom_fields.forEach((field, i) => {
+            if(field?.type == 'select' && field?.options) {
+                if(
+                    field.options[0] && field.options[0]?.cost && field.options[0].cost != ''
+                ) {
+                    PROMPTS.lastJson.product.custom_fields[i].options = [
+                        {
+                            image: '', thumb: '',
+                            next: false, cost: '',
+                            label: PROMPTS.i18n?.selecturservice??'Select Your Service'
+                        },
+                        ...field.options
+                    ];
+                }
+            }
+        });
     }
-    
 };
 export default PROMPTS;

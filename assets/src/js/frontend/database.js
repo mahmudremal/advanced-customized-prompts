@@ -87,12 +87,7 @@ export const secondStepInputFields = [
         subtitle: false,
         placeholder: 'Select Service',
         options: [
-            {label: 'Example service'},
-            {label: 'Example service'},
-            {label: 'Example service'},
-            {label: 'Example service'},
-            {label: 'Example service'},
-            {label: 'Example service'},
+            // {label: 'Example service'},
         ],
         headerbgurl: false,
         orderAt: 7,

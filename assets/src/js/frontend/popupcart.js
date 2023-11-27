@@ -6,12 +6,15 @@ const popupCart = {
     setBasePrice: (price) => {
         if(parseFloat(price)) {
             popupCart.basePrice = parseFloat(price);
-            if(popupCart.basePrice >= 0) {
+            if(popupCart.basePrice < 0) {
                 popupCart.basePrice = 0;
             }
         }
     },
     addAdditionalPrice: (item, price, unique = true) => {
+
+        if(!price || typeof price === NaN) {return;}
+        
         const existingIndex = popupCart.additionalPrices.findIndex(p => p.item === item);
         if(!unique || existingIndex === -1) {
             popupCart.additionalPrices.push({ item, price });
