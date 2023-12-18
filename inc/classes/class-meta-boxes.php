@@ -48,6 +48,9 @@ class Meta_Boxes {
 	 * @return void
 	 */
 	public function custom_meta_box_html($post) {
+		// print_r([
+		// 	wp_get_post_terms( $post->ID, 'area', ['fields' => 'ids'] )
+		// ]);wp_die();
 		?>
 		<div class="fwp-tabs__container">
 			<button class="fwp-button fwppopspopup-open" type="button" <?php echo esc_attr(

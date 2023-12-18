@@ -27,9 +27,6 @@ class Myaccount {
 		$user_meta = get_user_meta(get_current_user_id(), '__sos_userdata', true);
 		if(!$user_meta || !is_array($user_meta)) {$user_meta = [];}
 		if(count($user_meta) <= 0) {return;}
-		// print_r(
-		// 	get_user_meta(get_current_user_id(), null, true)
-		// );
 		?>
 		<div class="woomyac">
 			<table class="woomyac__table">

@@ -28,6 +28,7 @@ class Shortcodes {
 		add_shortcode('sos_single_service_price', [$this, 'sos_single_service_price']);
 		add_shortcode('sos_single_service_review_form', [$this, 'sos_single_service_review_form']);
 		add_shortcode('sos_single_service_reviews', [$this, 'sos_single_service_reviews']);
+		add_shortcode('sos_single_service_in_area', [$this, 'sos_single_service_in_area']);
 
 		add_shortcode('sos_stripe_info_print', [$this, 'sos_stripe_info_print']);
 
@@ -205,12 +206,12 @@ class Shortcodes {
 	public function sos_single_service_price($args) {
 		$args = (object) wp_parse_args($args, [
 			'post_id'		=> get_the_ID(),
-			'format'		=> '%currency%%prices%%text_after%',
+			'format'		=> '%currency%%prices%%price_after%',
 			'prices'		=> '',
 			'result'		=> '',
 		]);
 		$args->pricing_type = get_post_meta($args->post_id, 'pricing_type', true);
-		$args->text_after = get_post_meta($args->post_id, 'text_after', true);
+		$args->price_after = get_post_meta($args->post_id, 'price_after', true);
 		$args->currency = get_post_meta($args->post_id, 'currency', true);
 		$args->prices = get_post_meta($args->post_id, 'prices', true);
 
@@ -220,6 +221,22 @@ class Shortcodes {
 		
 		$args->result = str_replace($replace4, $replace2, $args->format);
 		return $args->result;
+	}
+	public function sos_single_service_in_area($args) {
+		global $post;global $SoS_Faqs;
+		$args = (object) wp_parse_args($args, ['post_id' => get_the_ID()]);
+
+		$zip_code = get_query_var('zip_code');
+		if(
+			($zip_code && !empty($zip_code))
+				|| 
+			(is_user_logged_in() && $zip_code = get_user_meta(get_current_user_id(), '_zip_code', true))
+		) {
+			if(!has_term($zip_code, 'area', $post)) {
+				return do_shortcode('[elementor-template id="1876"]');
+			}
+		}
+		return '';
 	}
 	public function sos_single_service_review_form($args) {
 		// $args = (object) wp_parse_args($args, []);

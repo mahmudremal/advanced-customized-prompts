@@ -4,7 +4,7 @@
  * 
  * @package SOSPOPSPROJECT
  */
-global $SoS_Shortcodes;
+global $SoS_Shortcodes;global $SoS_Order;
 $session_id = get_query_var('session_id');
 $payment_status = get_query_var('payment_status');
 $result = apply_filters('sos/project/payment/stripe/handlesuccess', $session_id);
@@ -21,7 +21,6 @@ $userInfo = (object) wp_parse_args($userInfo, ['meta' => (object) wp_parse_args(
 
 get_header();
 
-// print_r([$result]);
 $SoS_Shortcodes->payment_stripe_info = $result;
 
 if(isset($result['payment_status'])) {
@@ -30,6 +29,7 @@ if(isset($result['payment_status'])) {
       /**
        * Payment succussfully made.
        */
+      $SoS_Order->handle_payment_success($result);
       echo do_shortcode('[elementor-template id="1528"]');
       break;
     case 'unpaid':
@@ -42,6 +42,7 @@ if(isset($result['payment_status'])) {
       /**
        * Payment Still UnPaid made.
        */
+      $SoS_Order->handle_payment_canceled($result);
       echo do_shortcode('[elementor-template id="1547"]');
       break;
     default:

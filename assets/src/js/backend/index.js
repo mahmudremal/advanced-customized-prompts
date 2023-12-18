@@ -6,6 +6,7 @@ import Sortable from 'sortablejs';
 import mediaImages from "./media";
 import WaveSurfer from 'wavesurfer.js';
 import tippy from 'tippy.js';
+import Exim from "./exim";
 
 ( function ( $ ) {
 	class FWPListivoBackendJS {
@@ -28,6 +29,7 @@ import tippy from 'tippy.js';
 			this.prompts = PROMPTS;
 			PROMPTS.i18n = this.i18n;
 			this.Sortable = Sortable;
+			new Exim(this); // Init Export & Import function.
 			this.Swal = Swal;
 			this.init_i18n();
 			this.init_toast();
@@ -100,7 +102,7 @@ import tippy from 'tippy.js';
 					}, 300);
 				}
 			});
-			document.body.addEventListener('product_updated', (event) => {
+			document.body.addEventListener('product_updated', async (event) => {
 				var button = document.querySelector('.save-this-popup');
 				if(button) {button.removeAttribute('disabled');}
 

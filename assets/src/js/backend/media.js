@@ -62,12 +62,15 @@ const mediaImages = {
         title: thisClass.i18n?.chooseimage??'Choose Image',
         button: {
           text: thisClass.i18n?.chooseimage??'Choose Image'
-        }, multiple: false });
+        }, multiple: false
+      });
       mediaImages.mediaUploader.on('select', function() {
         var attachment = mediaImages.mediaUploader.state().get('selection').first().toJSON();
         console.log(attachment);
-        document.querySelector('input[name="texonomy_featured_image"]').val(attachment.url);
-        $('#image-url').val(attachment.url);
+        var idInput = document.querySelector('input[name="texonomy_featured_image"]');
+        if(idInput) {idInput.value = attachment.id;}
+        var prevImage = document.querySelector('img[data-handle="texonomy_featured_image"]');
+        if(prevImage) {prevImage.src = attachment.url;}
       });
       mediaImages.mediaUploader.open();
     });

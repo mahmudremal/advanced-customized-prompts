@@ -141,6 +141,7 @@ class Option {
 			case 'number':
 			case 'date':
 			case 'time':
+			case 'file':
 			case 'color':
 			case 'url':
 				$html .= '<input id="' . esc_attr($field['id']) . '" type="' . $field['type'] . '" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '"' . $this->attributes($field) . '/>' . "\n";

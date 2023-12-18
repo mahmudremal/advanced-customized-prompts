@@ -41,6 +41,9 @@ const CAT_PROMPTS = {
     },
     load_template: (thisClass) => {
         CAT_PROMPTS.loadedCategories = thisClass.lastJson?.parent;
+        if(! CAT_PROMPTS.validate_categories_n_childs()) {
+            return;
+        }
         document.querySelectorAll('.sos-catpops__body').forEach((popsBody) => {
             var services = CAT_PROMPTS.loadedCategories?.services;
             services = (services && typeof services === 'object')?services:[];
@@ -53,7 +56,7 @@ const CAT_PROMPTS = {
                                 <a class="sos-catpops__catlink" href="${cat?.url}" data-category="${cat?.term_id}" target="_self" data-count="${cat?.count??0}" data-parent="${cat?.parent??0}" data-index="${i}">
                                     <div class="sos-catpops__catitem">
                                         <div class="sos-catpops__catitem__image">
-                                            ${((cat?.thumbnail??'').trim() != '')?(cat?.thumbnail??''):(icons?.blank)}
+                                            ${((cat?.thumbnail) && (cat?.thumbnail??'').trim() != '')?(cat?.thumbnail??''):(icons?.blank)}
                                         </div>
                                         <div class="sos-catpops__catitem__label">
                                             ${cat?.name??''}
@@ -159,6 +162,22 @@ const CAT_PROMPTS = {
             reviewText.innerHTML = reviewText.innerHTML.slice(0, reviewText.innerHTML.indexOf(' (based'));
             reviewText.classList.add('visible');
         }
+    },
+    validate_categories_n_childs: () => {
+        /**
+         * Redirect user to the category if nothing left.
+         */
+        
+        if(
+            CAT_PROMPTS.loadedCategories?.services
+            || 
+            CAT_PROMPTS.loadedCategories?.childrens
+        ) {} else {
+            if(CAT_PROMPTS?.lastCategoryLink && CAT_PROMPTS.lastCategoryLink?.trim() != '') {
+                location.href = CAT_PROMPTS.lastCategoryLink;
+            }
+        }
+        return true;
     }
 };
 export default CAT_PROMPTS;

@@ -97,9 +97,27 @@ import icons from "./icons";
 		}
 		init_events() {
 			const thisClass = this;
-			document.body.addEventListener('gotproductpopupresult', (event) => {
+			document.body.addEventListener('gotproductpopupresult', async (event) => {
 				PROMPTS.lastJson = thisClass.lastJson;
-				PROMPTS.on_gotproductpopupresult(thisClass);
+				if(PROMPTS.lastJson.product?.not_in_area) {
+					if(thisClass.Swal.isVisible()) {
+						thisClass.Swal.update({
+							html: await PROMPTS.not_in_area_template(thisClass).outerHTML
+						});
+					}
+				} else {
+					PROMPTS.on_gotproductpopupresult(thisClass);
+				}
+				
+			});
+			document.body.addEventListener('error_getting_service', async (event) => {
+				thisClass.prompts.lastJson = thisClass.lastJson;
+				// && json.header.product_photo
+				if(thisClass.Swal.isVisible()) {
+					thisClass.Swal.update({
+						html: await PROMPTS.error_template(thisClass).outerHTML
+					});
+				}
 			});
 			document.body.addEventListener('popup_submitting_done', async (event) => {
 				var submit = document.querySelector('.popup_foot .button[data-react="continue"]');
@@ -362,7 +380,7 @@ import icons from "./icons";
 		 */
 		init_zip_picker() {
 			const thisClass = this;var form, html, config, json, card, node, error;
-			document.querySelectorAll('.custom_zip_btn:not([data-handled])').forEach((el)=>{
+			document.querySelectorAll(thisClass.classes_zip_picker()).forEach((el)=>{
 				el.dataset.handled = true;
 				el.addEventListener('click', (event) => {
 					event.preventDefault();
@@ -468,6 +486,10 @@ import icons from "./icons";
 				});
 			});
 		}
+		classes_zip_picker() {
+			var classes = ['#header-menu-zip-pops-launch', '.custom_zip_btn'];
+			return classes.map((clas) => clas + ':not([data-handled])').join(', ');
+		}
 		/**
 		 * From service single page, there will be a popup with three steps.
 		 * 
@@ -520,6 +542,7 @@ import icons from "./icons";
 							
 							var formdata = new FormData();
 							formdata.append('action', 'sospopsproject/ajax/search/product');
+							formdata.append('zip_code', thisClass.config?.zipCode);
 							formdata.append('dataset', await JSON.stringify(json));
 							formdata.append('_nonce', thisClass.ajaxNonce);
 

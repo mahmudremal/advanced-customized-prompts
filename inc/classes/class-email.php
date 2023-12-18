@@ -42,19 +42,22 @@ class Email {
 				unset($args->attachments[$i]);
 			}
 		}
-		
+		if(empty($args->subject)) {
+			$args->subject = __('A new quotation request sent by...', 'domain');
+		}
 		// if(count($args->attachments) <= 0) {
 		// 	throw new \ErrorException(__('Certificate not found or this could happens probably if path not matching or permission issue.', 'sossprompts'));
 		// }
 		$email_sent = wp_mail($args->to, $args->subject, $args->message, $args->headers, $args->attachments);
 		if($email_sent) {
-			return $args->message;
+			return $email_sent;
 		} else {
 			throw new \ErrorException(__('Something went wrong. Email not sent.', 'sossprompts'));
 		}
 		return false;
 	}
 	private function generate_template($args) {
+		$isHTML = ($args->contentType == 'html');
 		if($args->request_type == 'get_quotation') {
 			include SOSPOPSPROJECT_DIR_PATH . '/templates/email/quotation-request.php';
 		} else {
@@ -63,7 +66,7 @@ class Email {
 		/**
 		 * Invoice Table area.
 		 */
-		$all_fields = '';
+		$all_fields = ($isHTML)?'<table border="0">':'';
 		foreach($args->dataset as $_i => $_row) {
 			if($_row->value == __('Select Your Service', 'domain')) {
 				$_row->value = '';
@@ -79,10 +82,11 @@ class Email {
 				$all_fields .= "$_row->title : $_row->value \n";
 			}
 		}
+		$all_fields .= ($isHTML)?'</table>':'';
 		/**
 		 * Invoice Table area.
 		 */
-		$invoice_table = '';
+		$invoice_table = ($isHTML)?'<table border="0">':'';
 		foreach($args->charges as $_key => $_value) {
 			if($_value == __('Select Your Service', 'domain')) {
 				$_value = '';
@@ -98,19 +102,21 @@ class Email {
 				$invoice_table .= "$_key : $_value \n";
 			}
 		}
+		$invoice_table .= ($isHTML)?'</table>':'';
 		/**
 		 * Invoice Table area.
 		 */
 		$calculated = $this->get_calculation($args);
-		$invoice_calculations = '';
 		if($args->contentType == 'html') {
-			$invoice_calculations .= '
-			<tr><th>' . esc_html__('Subtotal', 'domain') . '</th><td>:</td><td>' . $calculated->subtotal . '</td></tr>
-			<tr><th>' . esc_html__('Tax', 'domain') . '</th><td>:</td><td>' . $calculated->tax . '</td></tr>
-			<tr><th>' . esc_html__('Total', 'domain') . '</th><td>:</td><td>'. $calculated->total . '</td></tr>
+			$invoice_calculations = '
+			<table border="0">
+				<tr><th>' . esc_html__('Subtotal', 'domain') . '</th><td>:</td><td>' . $calculated->subtotal . '</td></tr>
+				<tr><th>' . esc_html__('Tax', 'domain') . '</th><td>:</td><td>' . $calculated->tax . '</td></tr>
+				<tr><th>' . esc_html__('Total', 'domain') . '</th><td>:</td><td>'. $calculated->total . '</td></tr>
+			</table>
 			';
 		} else {
-			$invoice_calculations .= "Subtotal: ${$calculated->subtotal} \nTax: ${$calculated->tax}\nTotal: ${$calculated->total}";
+			$invoice_calculations = "Subtotal: $calculated->subtotal \nTax: $calculated->tax\nTotal: $calculated->total";
 		}
 		$payment_info = '';
 		// Payment info table goes here.
@@ -119,7 +125,6 @@ class Email {
 		} else {
 			$payment_info = __('Payment has been done before request sent. Transection ID# 12345678', 'domain');
 		}
-
 		$allStrings = [
 			'{{print_all_fields}}'              => $all_fields,
 			'{{print_invoice_table}}'           => $invoice_table,

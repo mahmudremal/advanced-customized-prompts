@@ -20,8 +20,8 @@ class Post_Types {
 	}
 	// Register Custom Post Type Product service
 	public function create_service_product_cpt() {
-		$icon = untrailingslashit(SOSPOPSPROJECT_BUILD_PATH.'/icons/contract-document-svgrepo-com.svg');
-		$icon = (file_exists($icon)&&!is_dir($icon))?esc_url(SOSPOPSPROJECT_DIR_URI.'/icons/contract-document-svgrepo-com.svg'):'dashicons-superhero';
+		$icon = untrailingslashit(SOSPOPSPROJECT_BUILD_PATH.'/ico-ns/contract-document-svgrepo-com.svg');
+		$icon = (file_exists($icon)&&!is_dir($icon))?esc_url(SOSPOPSPROJECT_BUILD_URI.'/icons/contract-document-svgrepo-com.svg'):'dashicons-superhero';
 
 		$labels = [
 			'name'                  => _x('Product services', 'Post Type General Name', 'domain'),

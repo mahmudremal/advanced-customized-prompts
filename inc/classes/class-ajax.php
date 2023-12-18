@@ -96,76 +96,94 @@ class Ajax {
 		global $wpdb;global  $woocommerce;global $SoS_Product;
 		// check_ajax_referer('sospopsproject/sospopupaddon/verify/nonce', '_nonce', true);
 		$dataset = $request = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode(isset($_POST['dataset'])?$_POST['dataset']:'{}'))), true);
-		
+		$json = ['hooks' => ['error_getting_service'], 'message' => __('Something error happening. Failed to load service data.', 'domain')];
 		$_post = get_post($dataset['product_id']);
-		$productData = ($_post && !is_wp_error($_post))?[
-			'id'		=> $_post->ID,
-			'type'		=> $_post->post_type,
-			'title'		=> $_post->post_title,
-			'name'		=> $_post->post_title,
-			'excerpt'	=> $_post->post_excerpt,
-			'slug'		=> get_the_permalink($_post),
-			'link'		=> get_the_permalink($_post),
-			'price'		=> get_post_meta($_post->ID, 'prices', true),
-			'currency'	=> get_post_meta($_post->ID, 'currency', true),
-			'priceHtml'	=> get_post_meta($_post->ID, 'currency', true),
-			'duration'	=> get_post_meta($_post->ID, 'duration', true),
-			'priceType'	=> get_post_meta($_post->ID, 'pricing_type', true),
-		]:[];
-
-		$json = [
-			'hooks' => ['gotproductpopupresult'],
-			'header' => ['product_photo' => 'empty'],
-			'user' => [
-				'sellerLoggedIn' => is_user_logged_in(),
-				'telephone' => null,
-				'userLoggedIn' => is_user_logged_in(),
-				'userName' => is_user_logged_in()?wp_get_current_user()->display_name:null
-			],
-			'country' => false,
-			'product' => [
-				...$productData,
-				'price'		=> floatval($productData['price']),
-				'is_parent' => false,
-				'toast'		=> false, // '<strong>' . count($requested) . '</strong> people requested this service in the last 10 minutes!',
-				'thumbnail'	=> ['1x' => get_the_post_thumbnail($_post), '2x' => get_the_post_thumbnail($_post, 'full')],
-				'custom_fields' => $SoS_Product->get_post_meta($dataset['product_id'], '_sos_custom_popup', true),
-				'existing_data'	=> is_user_logged_in()?get_user_meta(get_current_user_id(), '__sos_userdata', true):[],
-				'service_variations' => get_post_meta($_post->ID, '_sos_custom_services', true)
-			],
-		];
-
-
-		$json['product']['custom_fields'] = ($json['product']['custom_fields'] && !empty($json['product']['custom_fields']))?(array)$json['product']['custom_fields']:[];
-		foreach($json['product']['custom_fields'] as $i => $_prod) {
-			$json['product']['custom_fields'][$i]['headerbgurl'] = ($_prod['headerbg']=='')?false:wp_get_attachment_url($_prod['headerbg']);
-			if(isset($_prod['options'])) {
-				$_prod['options'] = (!empty($_prod['options']))?(array)$_prod['options']:[];
-				foreach($_prod['options'] as $j => $option) {
-					if(isset($option['image']) && !empty($option['image'])) {
-						$json['product']['custom_fields'][$i]['options'][$j]['imageUrl'] = wp_get_attachment_url($option['image']);
-					}
-					if(isset($option['thumb']) && !empty($option['thumb'])) {
-						$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
-					}
+		if($_post && !is_wp_error($_post)) {
+			$service = [
+				'id'		=> $_post->ID,
+				'type'		=> $_post->post_type,
+				'title'		=> $_post->post_title,
+				'name'		=> $_post->post_title,
+				'excerpt'	=> $_post->post_excerpt,
+				'slug'		=> get_the_permalink($_post),
+				'link'		=> get_the_permalink($_post),
+				'price'		=> get_post_meta($_post->ID, 'prices', true),
+				'currency'	=> get_post_meta($_post->ID, 'currency', true),
+				'priceHtml'	=> get_post_meta($_post->ID, 'currency', true),
+				'duration'	=> get_post_meta($_post->ID, 'duration', true),
+				'priceType'	=> get_post_meta($_post->ID, 'pricing_type', true),
+			];
+			$zip_code = isset($_POST['zip_code'])?$_POST['zip_code']:false;
+			if(
+				($zip_code && !empty($zip_code))
+					|| 
+				(is_user_logged_in() && $zip_code = get_user_meta(get_current_user_id(), '_zip_code', true))
+			) {
+				$terms = wp_get_post_terms($_post->ID, 'area', ['fields' => 'names']);
+				if(! has_term($zip_code, 'area', $_post)) {
+					$service['not_in_area'] = true;
+					$service['not_in_area_message'] = sprintf(
+						__('This Service not available in your location %s while this service only available on these following locations %s.', 'domain'),
+						'<b>' . $zip_code . '</b>',
+						'<b>' . implode('</b>, <b>', $terms) . '</b>'
+					);
 				}
 			}
-			if(isset($_prod['groups'])) {
-				foreach($_prod['groups'] as $k => $group) {
-					if(isset($group['options'])) {
-						foreach($group['options'] as $l => $option) {
-							if(isset($option['image']) && !empty($option['image'])) {
-								$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['imageUrl'] = wp_get_attachment_url($option['image']);
-							}
-							if(isset($option['thumb']) && !empty($option['thumb'])) {
-								$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
+			$json = [
+				'hooks' => ['gotproductpopupresult'],
+				'header' => ['product_photo' => 'empty'],
+				'user' => [
+					'sellerLoggedIn' => is_user_logged_in(),
+					'telephone' => null,
+					'userLoggedIn' => is_user_logged_in(),
+					'userName' => is_user_logged_in()?wp_get_current_user()->display_name:null
+				],
+				'country' => false,
+				'product' => [
+					...$service,
+					'price'		=> floatval($service['price']),
+					'is_parent' => false,
+					'toast'		=> false, // '<strong>' . count($requested) . '</strong> people requested this service in the last 10 minutes!',
+					'thumbnail'	=> ['1x' => get_the_post_thumbnail($_post), '2x' => get_the_post_thumbnail($_post, 'full')],
+					'custom_fields' => $SoS_Product->get_post_meta($dataset['product_id'], '_sos_custom_popup', true),
+					'existing_data'	=> is_user_logged_in()?get_user_meta(get_current_user_id(), '__sos_userdata', true):[],
+					'service_variations' => get_post_meta($_post->ID, '_sos_custom_services', true)
+				],
+			];
+			$json['product']['custom_fields'] = ($json['product']['custom_fields'] && !empty($json['product']['custom_fields']))?(array)$json['product']['custom_fields']:[];
+			foreach($json['product']['custom_fields'] as $i => $_prod) {
+				$json['product']['custom_fields'][$i]['headerbgurl'] = ($_prod['headerbg']=='')?false:wp_get_attachment_url($_prod['headerbg']);
+				if(isset($_prod['options'])) {
+					$_prod['options'] = (!empty($_prod['options']))?(array)$_prod['options']:[];
+					foreach($_prod['options'] as $j => $option) {
+						if(isset($option['image']) && !empty($option['image'])) {
+							$json['product']['custom_fields'][$i]['options'][$j]['imageUrl'] = wp_get_attachment_url($option['image']);
+						}
+						if(isset($option['thumb']) && !empty($option['thumb'])) {
+							$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
+						}
+					}
+				}
+				if(isset($_prod['groups'])) {
+					foreach($_prod['groups'] as $k => $group) {
+						if(isset($group['options'])) {
+							foreach($group['options'] as $l => $option) {
+								if(isset($option['image']) && !empty($option['image'])) {
+									$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['imageUrl'] = wp_get_attachment_url($option['image']);
+								}
+								if(isset($option['thumb']) && !empty($option['thumb'])) {
+									$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
+								}
 							}
 						}
 					}
 				}
 			}
+			wp_send_json_success($json);
+		} else {
+			$json['message'] = __('Service not found. It seems service stagged or removed.', 'domain');
 		}
-		wp_send_json_success($json, 200);
+		wp_send_json_error($json);
 	}
 	public function submit_popup() {
 		// check_ajax_referer('sospopsproject/sospopupaddon/verify/nonce', '_nonce', true);
@@ -229,6 +247,8 @@ class Ajax {
 					$category->childrens = [];
 					foreach($catChilds as $term_id) {
 						$term = get_term($term_id);
+						$image_meta = get_term_meta($term_id, 'texonomy_featured_image', true);
+						$image_url = ($image_meta && !is_wp_error($image_meta) && !empty($image_meta))?wp_get_attachment_thumb_url($image_meta):false;
 						$category->childrens[] = [
 							'term_id'	=> $term->term_id,
 							'name'		=> $term->name,
@@ -236,7 +256,7 @@ class Ajax {
 							'parent'	=> $term->parent,
 							'url'		=> get_term_link($term),
 							'services'	=> $this->get_term_posts($term),
-							'thumbnail'	=> get_term_meta($term->term_id, 'texonomy_featured_image', true)
+							'thumbnail'	=> $image_url
 						];
 					}
 				}

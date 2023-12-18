@@ -35,7 +35,7 @@ class Cart {
 	}
 
 	public function ajax_add_to_cart() {
-		global $SoS_Email;
+		global $SoS_Email;global $SoS_Order;
 		if(!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
 			wp_send_json_error('Missing required data.');
 		}
@@ -64,16 +64,15 @@ class Cart {
 				}
 			}
 			if(isset($_POST['product_type'])) {
+				$args = [
+					'dataset' => $dataset,
+					'charges' => $charges,
+					'request_type' => $_POST['product_type'],
+					'product_id'	=> $_POST['product_id'],
+				];
 				if($_POST['product_type'] == 'get_quotation') {
-					$args = [
-						'dataset' => $dataset,
-						'charges' => $charges,
-						'request_type' => $_POST['product_type'],
-						'product_id'	=> $_POST['product_id'],
-					];
 					try {
 						$email_sent = apply_filters('sos_send_email', '', $args);
-
 						if($email_sent !== false && !empty($email_sent)) {
 							$json['email_sent'] = true;
 							$json['email_template'] = $email_sent;
@@ -86,31 +85,33 @@ class Cart {
 				// } elseif($_POST['product_type'] == 'add') {
 					// $json['redirectTo'] = wc_get_checkout_url();
 				} else {
-					$json['email_sent'] = true;
-					$payment_link = apply_filters('sos/project/payment/stripe/paymentlink', [
-						'quantity'	=> 1,
-						'price_data' => [
-						  'currency' => apply_filters('sos/project/system/getoption', 'stripe-currency', 'usd'),
-						  'unit_amount' => (int) ($SoS_Email->get_calculation([
-							'charges' => $charges,
-							'product_id' => $_POST['product_id']
-						  ])->total * 100), // Unit amount in cent | number_format($calculated_amount, 2 ),
-						  'product_data' => [
-							'name' => apply_filters('sos/project/system/getoption', 'stripe-productname', __('SoS Charges', 'domain')),
-							'description' => apply_filters('sos/project/system/getoption', 'stripe-productdesc', __('Payment for', 'domain') . ' ' . get_option('blogname', 'SoS')),
-							'images' => [
-								apply_filters('sos/project/system/getoption', 'stripe-productimg', esc_url(SOSPOPSPROJECT_BUILD_URI . '/icons/Online payment_Flatline.svg'))
-							],
-						  ],
-						]
-					], true);
-					if($payment_link && !empty($payment_link)) {
-						$json['payment_link'] = $payment_link;
-						$json['redirectTo'] = $payment_link;
+					$order_id = $SoS_Order->createOrder($args);
+					if($order_id) {
+						$json['order_created'] = $order_id;
+						$json['email_sent'] = true;
+						$payment_link = apply_filters('sos/project/payment/stripe/paymentlink', [
+							'order_id'	=> $order_id,
+							'quantity'	=> 1,
+							'price_data' => [
+								'currency' => apply_filters('sos/project/system/getoption', 'stripe-currency', 'usd'),
+								'unit_amount' => (int) ($SoS_Email->get_calculation(['charges' => $charges, 'product_id' => $_POST['product_id']])->total * 100), // Unit amount in cent | number_format($calculated_amount, 2 ),
+								'product_data' => [
+									'name' => apply_filters('sos/project/system/getoption', 'stripe-productname', __('SoS Charges', 'domain')),
+									'description' => apply_filters('sos/project/system/getoption', 'stripe-productdesc', __('Payment for', 'domain') . ' ' . get_option('blogname', 'SoS')),
+									'images' => [
+										apply_filters('sos/project/system/getoption', 'stripe-productimg', esc_url(SOSPOPSPROJECT_BUILD_URI . '/icons/Online payment_Flatline.svg'))
+									],
+								],
+							]
+						], true);
+						if($payment_link && !empty($payment_link)) {
+							$json['payment_link'] = $payment_link;
+							$json['redirectTo'] = $payment_link;
+						}
 					}
 				}
 			}
-			if($is_updated && $json['email_sent']) {
+			if($is_updated || $json['email_sent']) {
 				$json['message'] = __('Successfully updated your information.', 'domain');
 				$json['hooks'] = ['addedToCartSuccess'];
 				if(isset($json['payment_link']) && $json['payment_link'] && !empty($json['payment_link'])) {
@@ -121,7 +122,6 @@ class Cart {
 		} catch (\Exception $e) {
 			// Handle the exception here
 			$json['message'] = 'Error: ' . $e->getMessage();
-			wp_send_json_error($json);
 		}
 		wp_send_json_error($json);
 	}

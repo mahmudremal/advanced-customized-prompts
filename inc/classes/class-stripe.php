@@ -15,6 +15,7 @@ class Stripe {
 	private $userInfo;
 	private $theTable;
 	private $cancelUrl;
+	private $productID;
 	private $lastResult;
 	private $successUrl;
 	private $stripeSecretKey;
@@ -156,22 +157,28 @@ class Stripe {
 	}
 
 	public function thePaymentlink($args, $default = false) {
-		// $product_id = "prod_NJj26vTpYGKnfA"; // Your Stripe product/plan ID
-		$session = $this->create_stripe_checkout_session($args);
-		// print_r($session);
-    	// $payment_link = "https://checkout.stripe.com/pay/" . $session_id;
+		if(isset($args['order_id'])) {$order_id = $args['order_id'];unset($args['order_id']);} else {$order_id = false;}
+		$session = $this->create_stripe_checkout_session($args, $order_id);
+		// print_r([$session, $args]);wp_die();
 		if(isset($session['error'])) {
-			// print_r($session);return false;
+			return false;
 		} else {
-			$payment_link = isset($session['url']) ? $session['url'] : 'https://checkout.stripe.com/pay/'  . $session['id'];return $payment_link;
+			if(isset($order_id) && $order_id && isset($session['id'])) {
+				update_post_meta($order_id, 'payment_id', $session['id']);
+			}
+			if(isset($order_id) && $order_id && isset($session['url'])) {
+				update_post_meta($order_id, 'payment_url', $session['url']);
+			}
+			$payment_link = isset($session['url'])?$session['url']:'https://checkout.stripe.com/pay/'.$session['id'];
+			return $payment_link;
 		}
 	}
-	public function create_stripe_checkout_session($args = false) {
+	public function create_stripe_checkout_session($args = false, $client_reference_id = false) {
     	$curl = curl_init();
 		$param = [
 			'success_url'								=> $this->successUrl,
 			'cancel_url'								=> $this->cancelUrl,
-			'payment_method_types'			=> [apply_filters('sos/project/system/getoption', 'stripe-paymentmethod', 'card')],
+			'payment_method_types'						=> [apply_filters('sos/project/system/getoption', 'stripe-paymentmethod', 'card')],
 			'line_items'								=> [
 				// [
 				// 	'quantity'	=> 1,
@@ -186,9 +193,9 @@ class Stripe {
 				// 	]
 				//]
 			],
-			'mode'											=> 'payment',
+			'mode'										=> 'payment',
 		];
-		$param['line_items'] = false;
+		if($client_reference_id) {$param['client_reference_id'] = $client_reference_id;}
 		if($args) {$param['line_items'] = [$args];}
 		// if($param['line_items'] === false) {return false;}
 
@@ -212,8 +219,8 @@ class Stripe {
 		curl_close($curl);
 
 		$result = json_decode($result, true);
-			$this->lastResult = $result;
-			// if($result['error']) {return false;}
+		$this->lastResult = $result;
+		// if($result['error']) {return false;}
 		// $session_id = isset($result['id']) ? $result['id'] : false;
 		return $result;
 	}
@@ -286,7 +293,7 @@ class Stripe {
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 		curl_setopt($ch, CURLOPT_HTTPHEADER, [
-			"Authorization: Bearer ${$this->stripeSecretKey}",
+			"Authorization: Bearer $this->stripeSecretKey",
 			"Content-Type: application/x-www-form-urlencoded",
 		]);
 		$response = curl_exec($ch);

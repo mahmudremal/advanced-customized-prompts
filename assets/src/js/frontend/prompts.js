@@ -43,6 +43,32 @@ const PROMPTS = {
         }
         return html;
     },
+    error_template: (thisClass) => {
+        var html = document.createElement('div');html.classList.add('dynamic_popup');
+        if(PROMPTS?.lastJson) {
+            html.innerHTML = `
+            <div class="dynamic_popup__error">
+                <img src="${thisClass.config.buildPath}/icons/undraw_page_not_found_re_e9o6.svg" alt="Error"/>
+            </div>
+            `;
+        }
+        return html;
+    },
+    not_in_area_template: (thisClass) => {
+        var html = document.createElement('div');html.classList.add('dynamic_popup');
+        if(PROMPTS?.lastJson) {
+            var error = document.createElement('div');error.classList.add('dynamic_popup__error');
+            // linear-gradient(0deg, rgb(233 233 233 / 30%), rgb(247 247 247 / 30%)), url(...
+            error.style.backgroundImage = `url(${thisClass.config.buildPath}/icons/undraw_navigator_a479.svg)`;
+            error.alt = PROMPTS.i18n?.outofrange??'Out of Range';
+
+            var message = document.createElement('h3');message.classList.add('dynamic_popup__error__title');
+            message.innerHTML = PROMPTS.lastJson.product?.not_in_area_message??'';
+            
+            error.appendChild(message);html.appendChild(error);
+        }
+        return html;
+    },
     init_prompts: (thisClass) => {
         PROMPTS.core = thisClass;
     },
@@ -432,7 +458,7 @@ const PROMPTS = {
         }
         PROMPTS.lastJson.product.existing_data.forEach((field) => {
             var stepField = secondStepInputFields.find((row) => (field.title).replace('*', '').trim().toLowerCase() == (row.steptitle).replace('*', '').trim().toLowerCase());
-            console.log(stepField, field);
+            // console.log(stepField, field);
             if(stepField && ['text'].includes(stepField?.type)) {
                 if(field?.value && field.value != '') {
                     // stepField.value = field.value;
@@ -799,7 +825,9 @@ const PROMPTS = {
                                     <tr>
                                         <td>${item.key.trim()}</td>
                                         <td>:</td>
-                                        <td>${item.val.trim()}</td>
+                                        <td>${(
+                                            (typeof item.val == 'object')?item.val.map((str) => str).join(''):item.val
+                                            ).trim()}</td>
                                     </tr>`).join('')
                                 }).join('')}
                             </table>
@@ -902,8 +930,8 @@ const PROMPTS = {
                     
                 } else {
                     if(plus) {PROMPTS.freezedSteps--;} else {PROMPTS.freezedSteps++;}
-                    error = thisClass.i18n?.nxtstepundrdev??'Next step under develpment.';
-                    thisClass.toastify({text: error, style: {background: "linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))"}}).showToast();
+                    // error = thisClass.i18n?.nxtstepundrdev??'Next step under develpment.';
+                    // thisClass.toastify({text: error, style: {background: "linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))"}}).showToast();
                     if(plus) {
                         const changedata = [];
                         document.querySelectorAll('.popup_body').forEach((form) => {
@@ -1345,6 +1373,7 @@ const PROMPTS = {
                 fields.forEach((field, i) => {
                     step = PROMPTS.do_field(field);i++;
                     step.dataset.step = field.fieldID;
+                    // field.fieldID++;
                     step2.appendChild(step);
                     PROMPTS.totalSteps=(i+1);
                 });

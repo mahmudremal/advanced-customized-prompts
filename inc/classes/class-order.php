@@ -11,12 +11,14 @@ use SOSPOPSPROJECT\inc\Traits\Singleton;
  */
 class Order {
 	use Singleton;
+	private $post_type;
 	private $lastCustomData;
 	protected $confirmMailTrack = false;
 	/**
 	 * Construct method.
 	 */
 	protected function __construct() {
+		$this->post_type = 'product_services';
 		$this->lastCustomData = false;
 		$this->setup_hooks();
 	}
@@ -29,109 +31,137 @@ class Order {
 		/**
 		 * Actions
 		 */
-		// add_shortcode( 'checkout_video', [ $this, 'checkout_video' ] );
 		add_action('add_meta_boxes',[$this, 'add_custom_meta_box']);
 	}
 	public function add_custom_meta_box() {
-		$screens = ['shop_order'];
+		$screens = ['product_services'];
 		foreach($screens as $screen) {
 			add_meta_box(
-				'sos_meta_data',           				// Unique ID
-				__( 'Appearances', 'sospopsprompts' ),  // Box title
-				[ $this, 'custom_meta_box_html' ],  		// Content callback, must be of type callable
-				$screen,                   							// Post type
-				'side'                   								// context
+				'sos_order_details',           				// Unique ID
+				__('Order Details', 'sospopsprompts'),  	// Box title
+				[$this, 'order_details_meta_box_html'],		// Content callback, must be of type callable
+				$screen,									// Post type
+				'normal',                   				// Context
+				'high'										// Priority
+			);
+			add_meta_box(
+				'sos_payment_details',           			// Unique ID
+				__('Payment Details', 'sospopsprompts'),  	// Box title
+				[$this, 'payment_details_meta_box_html'],	// Content callback, must be of type callable
+				$screen,									// Post type
+				'normal',                   				// Context
+				'high'										// Priority
 			);
 		}
 	}
-	public function custom_meta_box_html($post) {
+	public function order_details_meta_box_html($post) {
 		$order_id = $post->ID;
-		$order = wc_get_order($order_id);
-		$target_dir = SOSPOPSPROJECT_UPLOAD_DIR;
 		?>
 		<div class="fwp-outfit__container">
-			<div class="fwp-outfit__header">
-				<span class="fwp-outfit__title"><?php esc_html_e('Customized order', 'sospopsprompts'); ?></span>
-			</div>
+			<!-- <div class="fwp-outfit__header">
+				<span class="fwp-outfit__title"><?php esc_html_e('Order details', 'sospopsprompts'); ?></span>
+			</div> -->
 			<div class="fwp-outfit__body">
 				<?php
-				$teddyNameRequired = [];
-				foreach($order->get_items() as $order_item_id => $order_item) {
-					$item_name = $order_item->get_name();
-					$item_meta_data = $order_item->get_meta_data();
-					$name_required = $this->is_name_required($order, $order_item);
-					if($name_required) {
-						$teddyNameRequired[] = [
-							'prod_name'			=> $item_name,
-							'order_id'			=> $order_id,
-							'item_id'			=> $order_item_id,
-						];
-					}
-					if(!empty($item_meta_data)) {
+				$args = (object) get_post_meta($order_id, 'order_infos', true);
+				if(!empty($args)) {
+					if(isset($args->charges)) {
 						?>
-						<span class="fwp-outfit__product"><?php echo esc_html(sprintf('Item: %s', $item_name)); ?></span>
+						<span class="fwp-outfit__product"><?php echo esc_html(__('Charges', 'doamin')); ?></span>
 						<ul class="fwp-outfit__list">
+							<li class="fwp-outfit__items">
+								<span class="fwp-outfit__title"><?php esc_html_e('Product :', 'domain'); ?> :</span>
+								<span class="fwp-outfit__price">
+									<a class="fwp-outfit__link" href="<?php echo esc_url(get_the_permalink($args->product_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($args->product_id)); ?></a>
+								</span>
+							</li>
 						<?php
-						foreach($item_meta_data as $meta) {
-							if(is_array($meta->value)) {continue;}
-							$thumbnailImage = false;
-							
-							// Getting Icons.
-							$custom_data = (array) $this->get_order_item_meta($order_item->get_id(), 'custom_teddey_bear_data');
-							if($custom_data && isset($custom_data['field'])) {
-								foreach((array) $custom_data['field'] as $i => $iRow) {
-									if(is_array($iRow)) {
-										foreach($iRow as $j => $jRow) {
-											$jRow = (object) $jRow;
-											if(
-												isset($jRow->value) && isset($jRow->price) && isset($jRow->image) && 
-												!empty($jRow->image) && 
-												$jRow->value == $meta->key // && $jRow->price == $meta->value
-											) {
-												$thumbnailImage = $jRow->image;
-												$attachment_id = attachment_url_to_postid($thumbnailImage);
-												if($attachment_id) {
-													$thumbnailImage = wp_get_attachment_thumb_url($attachment_id);
-												} else {
-													// print_r('Not found');
-												}
-											}
-										}
-									}
-								}
+							foreach($args->charges as $_i => $_row) {
+								$_row = (object) $_row;
+								if(!isset($_row->item)) {continue;}
+								$_row->item = substr(
+									$_row->item,
+									0,
+									(strlen($_row->item) - (strlen(end(explode('-', $_row->item))) + 2))
+								);
+								
+								?>
+								<li class="fwp-outfit__items">
+									<span class="fwp-outfit__title"><?php echo esc_html($_row->item); ?> :</span>
+									<span class="fwp-outfit__price"><?php echo esc_html($_row->price); ?></span>
+								</li>
+								<?php
 							}
-							
-							$target_file = (file_exists($target_dir.$meta->value) && !is_dir($target_dir.$meta->value))?$target_dir.$meta->value:false;
-							?>
-							<li class="fwp-outfit__items <?php echo esc_attr(($target_file)?'fwp-outfit__audio':''); ?>">
-								<?php if(!$target_file): ?>
-									<?php if($thumbnailImage): ?><img src="<?php echo esc_url($thumbnailImage); ?>" alt="<?php echo esc_attr($meta->value); ?>" class="fwp-outfit__image" data-product="<?php echo esc_attr($item_name); ?>" data-item="<?php echo esc_attr($meta->key); ?>" data-price="<?php echo esc_attr($meta->value); ?>"><?php endif; ?>
-									<span class="fwp-outfit__title"><?php echo esc_html($meta->key); ?></span>
-									<span class="fwp-outfit__price"><?php echo wp_kses_post($meta->value); ?></span>
-								<?php else: ?>
-									<div class="fwp-outfit__player" data-audio="<?php echo esc_url(site_url(str_replace([ABSPATH], [''], $target_file))); ?>" title="<?php echo esc_attr($meta->value); ?>"></div>
-								<?php endif; ?>
-							</li>
-							<?php
-						}
 						?>
-						<?php if($custom_data): ?>
-							<li class="fwp-outfit__items <?php echo esc_attr(($target_file)?'fwp-outfit__certificate':''); ?>">
-								<a href="<?php echo esc_url(home_url('?certificate_preview='. $order_id .'-'.$order_item_id)); ?>" class="btn button link" target="_blank"><?php esc_html_e('Certificate', 'sospopsprompts'); ?></a>
-							</li>
-						<?php endif; ?>
 						</ul>
 						<?php
-					} else {
-						echo '<p>No custom meta data found for this item.</p>';
 					}
-				}
-				if(count($teddyNameRequired) >= 1) {
-					?>
-					<script>window.teddyNameRequired = <?php echo json_encode($teddyNameRequired); ?>;</script>
-					<?php
-				}
-				?>
+					if(isset($args->dataset)) {
+						?>
+						<span class="fwp-outfit__product"><?php echo esc_html(__('Dataset', 'doamin')); ?></span>
+						<ul class="fwp-outfit__list">
+						<?php
+							foreach($args->dataset as $_i => $_row) {
+								$_row = (object) $_row;
+								if(!isset($_row->value)) {continue;}
+								if($_row->value == __('Select Your Service', 'domain')) {
+									$_row->value = 'N/A';
+								}
+								?>
+								<li class="fwp-outfit__items">
+									<span class="fwp-outfit__title"><?php echo esc_html($_row->title); ?> :</span>
+									<span class="fwp-outfit__price"><?php echo esc_html($_row->value); ?></span>
+								</li>
+								<?php
+							}
+						?>
+						</ul>
+						<?php
+					}
+					//  else {}
+				} ?>
+			</div>
+			<div class="fwp-outfit__footer"></div>
+		</div>
+		<?php
+	}
+	public function payment_details_meta_box_html($post) {
+		$order_id = $post->ID;
+
+		$payment_status = get_post_meta($order_id, 'payment_status', true);
+		$payment_result = get_post_meta($order_id, 'payment_result', true);
+		// print_r($payment_result);
+		?>
+		<div class="fwp-outfit__container">
+			<!-- <div class="fwp-outfit__header">
+				<span class="fwp-outfit__title"><?php // echo esc_html(get_post_meta($order_id, 'payment_status', true)); ?></span>
+			</div> -->
+			<div class="fwp-outfit__body">
+				<ul class="fwp-outfit__list">
+					<li class="fwp-outfit__items">
+						<span class="fwp-outfit__title"><?php echo esc_html(__('Subtotal', 'domain')); ?> :</span>
+						<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($payment_result['amount_subtotal'] / 100); ?></span>
+					</li>
+					<li class="fwp-outfit__items">
+						<span class="fwp-outfit__title"><?php echo esc_html(__('Total', 'domain')); ?> :</span>
+						<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($payment_result['amount_total'] / 100); ?></span>
+					</li>
+					<li class="fwp-outfit__items">
+						<span class="fwp-outfit__title"><?php echo esc_html(__('Payment ID#', 'domain')); ?> :</span>
+						<?php
+						$link_before = '';$link_after = '';
+						if(! in_array(strtolower($payment_status), ['complete'])) {
+							$link_before = '<a href="' . esc_url(get_post_meta($order_id, 'payment_url', true)) . '" class="fwp-outfit__link" target="_blank">;';
+							$link_after = '</a>';
+						}
+						?>
+						<span class="fwp-outfit__price"><?php echo $link_before . esc_html(get_post_meta($order_id, 'payment_id', true)) . $link_after; ?></span>
+					</li>
+					<li class="fwp-outfit__items">
+						<span class="fwp-outfit__title"><?php echo esc_html(__('Payment Status', 'domain')); ?> :</span>
+						<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($payment_status); ?></span>
+					</li>
+				</ul>
 			</div>
 			<div class="fwp-outfit__footer"></div>
 		</div>
@@ -140,7 +170,71 @@ class Order {
 
 
 	/**
-	 * Work on wooommerce order email.
+	 * Create an Order
 	 */
-	public function woocommerce_email_order_meta($order, $sent_to_admin, $plain_text) {}
+	public function createOrder($args) {
+		$args = (object) wp_parse_args($args, ['request_type' => 'get_quotation']);
+		$order_id = wp_insert_post([
+			'post_title'			=> wp_date('M d, Y H:i:s'),
+			'post_status'			=> ($args->request_type == 'get_quotation')?'publish':'draft', // pending
+			'post_type'				=> $this->post_type,
+			'comment_status'		=> 'closed'
+		], true);
+		if($order_id && !is_wp_error($order_id)) {
+			$is_updated = add_post_meta($order_id, 'order_infos', $args);
+			return $order_id;
+		} else {
+			return false;
+		}
+	}
+	public function handle_payment_success($result) {
+		
+		/**
+		 * Update Order status from Draft to Publish.
+		 * Adding some meta data.
+		 */
+		if(isset($result['client_reference_id']) && $result['client_reference_id'] && !empty($result['client_reference_id'])) {
+			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_status', $result['status']);
+			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_result', $result);
+			$is_updated = wp_update_post([
+			'ID'           => $result['client_reference_id'],
+			'post_status' => 'publish'
+			], true);
+			if($meta_updated && $is_updated && !is_wp_error($is_updated)) {
+				try {
+					$args = get_post_meta($result['client_reference_id'], 'order_infos', true);
+					if($args && !empty($args)) {
+						$email_sent = apply_filters('sos_send_email', '', $args);
+						if($email_sent !== false && !empty($email_sent)) {
+							/**
+							 * Successfully Updated order status.
+							 */
+							return true;
+						}
+					}
+					
+				} catch (\ErrorException $th) {
+					//throw $th;
+				}
+			}
+		}
+		return false;
+	}
+	public function handle_payment_canceled($result) {
+		
+		/**
+		 * Update Order status from Draft to Publish.
+		 * Adding some meta data.
+		 */
+		if(isset($result['client_reference_id']) && $result['client_reference_id'] && !empty($result['client_reference_id'])) {
+			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_status', $result['status']);
+			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_result', $result);
+			$is_updated = wp_update_post([
+				'ID'           	=> $result['client_reference_id'],
+				'post_status'	=> 'trash'
+			], true);
+			if($meta_updated && $is_updated && !is_wp_error($is_updated)) {}
+		}
+		return false;
+	}
 }

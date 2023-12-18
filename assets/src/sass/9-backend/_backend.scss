@@ -270,7 +270,7 @@
           .field_id {
             background: none;
             border: none;
-            /* text-align: center; */
+            /* text-align: center;*/
             max-width: 50px;
             font-size: 20px;
             color: #333;
@@ -613,11 +613,11 @@
   &__header {
     padding: 5px 10px;
     text-transform: uppercase;
-    border: 1px solid #dedede;
+    // border: 1px solid #dedede;
   }
   &__body {
     padding: 10px 5px;
-    border: 1px solid #dedede;
+    // border: 1px solid #dedede;
     border-top: none;
   }
   &__product {
@@ -773,5 +773,111 @@
     position: absolute;
     border-radius: 10px;
     background: #0000001f;
+  }
+}
+
+.exim_popup {
+  width: 80%;
+  height: 80%;
+  min-height: 480px;
+  max-height: 480px;
+  border-radius: 48px;
+  box-sizing: border-box;
+  border: 16px solid #ebf0f4;
+  background-color: #dfe6ed;
+  overflow: hidden;
+  box-shadow: 16px 16px 48px rgba(46, 54, 67, 0.1882352941);
+
+  gap: 10px;
+  border: 0px;
+  width: 100%;
+  display: flex;
+  padding: unset;
+  position: relative;
+  border-radius: unset;
+  &__tabs {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    max-width: 170px;
+    position: relative;
+    flex-direction: column;
+    justify-content: space-around;
+    label {
+      font-size: 24px;
+      font-weight: 700; 
+      cursor: pointer; 
+      color: #525d6f; 
+      opacity: .4; 
+      transition: opacity .4s ease-in-out;
+      display: block; 
+      width: calc(100% - 48px) ;
+      text-align: right; 
+      z-index: 100; 
+      user-select: none;
+    }
+    input[type="radio"] {
+      display: none;
+      width: 0;
+    }
+    label:hover, input[type="radio"]:checked+label {
+      opacity: 1; 
+    }
+  }
+  &__marker {
+    position: absolute; 
+    width: 100%;
+    height: 200%;
+    display: flex; 
+    flex-direction: column;
+    top: calc(-100% );
+    left: 0;
+    transition: transform .2s ease-in-out; 
+    &__top, &__bottom {
+      background-color: #ebf0f4;
+      box-shadow: 32px 32px 48px #2e364315; 
+    }
+    &__top {
+      height: calc(50%);
+      margin-bottom: auto; 
+      border-radius: 0 0 20px 0; 
+    }
+    &__bottom {
+      height: calc(50% - 72px);
+      border-radius: 0 20px 0 0;
+    }
+  }
+  &__content {
+    // top: 0;
+    // right: 0;
+    display: flex;
+    // position: absolute;
+    flex-direction: column;
+    width: calc(100% - 170px);
+    &__single {
+      display: none;
+      flex-direction: column;
+      &.visible {
+        display: flex;
+      }
+    }
+    &__form {}
+  }
+}
+.swal2-html-container {
+  .debug_info {
+    text-align: left;
+    border: 1px solid #ddd;
+    list-style: inside;
+    padding: 10px;
+    li {
+      font-size: 14px;
+      &[data-status="success"] {
+        color: #22bb33;
+      }
+      &[data-status="error"] {
+        color: #bb2124;
+      }
+    }
   }
 }

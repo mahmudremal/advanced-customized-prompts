@@ -99,6 +99,23 @@ class Menus {
 		return $args;
 	}
 	public function menus($args) {
+		$args['import'] 		= [
+			'title'							=> __('Import', 'sospopsprompts'),
+			'description'					=> __('Import / Export Data from here. Make sure you upload valid CSV file with proper format. Proceed with risk, because if you execute a bulk session with wrong format, that could effect your database.', 'sospopsprompts'),
+			'fields'						=> [
+				[
+					'id' 					=> 'do_import',
+					'label'					=> 'Import CSV',
+					'description'			=> __('Select a CSV file to execute a bulk import sessions.', 'sospopsprompts'),
+					'type'					=> 'button',
+					'default'				=> __('Bulk Import', 'sospopsprompts'),
+					'attr'					=> [
+						// 'accept'			=> '.csv',
+						'type'				=> 'button'
+					]
+				],
+			]
+		];
 		$args['standard']	= [
 			'title'							=> __('General', 'sospopsprompts'),
 			'description'					=> __('General settings for teddy-bear customization popup.', 'sospopsprompts'),
@@ -122,6 +139,13 @@ class Menus {
 					'id' 					=> 'standard-forceglobal',
 					'label'					=> __('Force global', 'sospopsprompts'),
 					'description'			=> __('Forcefully globalize this product for all products whether there are customization exists or not.', 'sospopsprompts'),
+					'type'					=> 'checkbox',
+					'default'				=> false
+				],
+				[
+					'id' 					=> 'standard-zipfilter',
+					'label'					=> __('Enable Area filter', 'sospopsprompts'),
+					'description'			=> __('Mark to enable area filter method based on user\'s given Postal code.', 'sospopsprompts'),
 					'type'					=> 'checkbox',
 					'default'				=> false
 				],
