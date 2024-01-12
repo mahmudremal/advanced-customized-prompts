@@ -7,6 +7,7 @@ import mediaImages from "./media";
 import WaveSurfer from 'wavesurfer.js';
 import tippy from 'tippy.js';
 import Exim from "./exim";
+import Post from "./post";
 
 ( function ( $ ) {
 	class FWPListivoBackendJS {
@@ -15,6 +16,7 @@ import Exim from "./exim";
 			this.ajaxNonce = fwpSiteConfig?.ajax_nonce??'';
 			var i18n = fwpSiteConfig?.i18n??{};this.cssImported = false;
 			this.config = fwpSiteConfig?.config??{};
+			this.config = {...this.config, ...fwpSiteConfig};
 			this.WaveSurfer = WaveSurfer;this.tippy = tippy;
 			this.i18n = {
 				submit:			'Submit',
@@ -23,15 +25,16 @@ import Exim from "./exim";
 			this.setup_hooks();
 		}
 		setup_hooks() {
-			const thisClass = this;
-			window.thisClass = this;
-			this.mediaImages = mediaImages;
-			this.prompts = PROMPTS;
-			PROMPTS.i18n = this.i18n;
-			this.Sortable = Sortable;
-			new Exim(this); // Init Export & Import function.
-			this.Swal = Swal;
-			this.init_i18n();
+			const thisClass = this; // Definign This Class as thisClass
+			window.thisClass = this; // Globalizing This Class for access.
+			this.Post = new Post(this); // Init Server request function.
+			this.mediaImages = mediaImages; // Registering Media Scripts.
+			this.prompts = PROMPTS; // Registering Prompts Scripts.
+			PROMPTS.i18n = this.i18n; // Registering I18n Datasets.
+			this.Sortable = Sortable; // Registering Jquery Sortable Library.
+			this.Exim = new Exim(this);// Init Export & Import function.
+			this.Swal = Swal; // Registewring Sweetalert2 Library.
+			this.init_i18n(); // Initializing I18n Functions.
 			this.init_toast();
 			this.init_events();
 			this.init_button();
@@ -154,7 +157,7 @@ import Exim from "./exim";
 						}
 						if( json.data.hooks ) {
 							json.data.hooks.forEach(( hook ) => {
-								document.body.dispatchEvent( new Event( hook ) );
+								document.body.dispatchEvent(new Event(hook));
 							});
 						}
 					}

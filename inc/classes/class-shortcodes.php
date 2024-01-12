@@ -123,12 +123,16 @@ class Shortcodes {
 
 		$currentTerm = get_queried_object();
 		$args = (object) wp_parse_args((array) $args, [
-			'hide_empty'		=> true,
+			'hide_empty' 	=> true,
+			'parent'		=> false,
+			'limit'		 	=> 24
 		]);
 		$terms = get_terms([
 			'taxonomy'		=> $SoS_Service->taxonomy,
 			'post_type'		=> $SoS_Service->post_type,
-			'hide_empty'	=> $args->hide_empty
+			'hide_empty'	=> $args->hide_empty,
+			'number'		=> $args->limit,
+			// 'parent'		=> $args->parent,
 		]);
 		ob_start();
 		try {
@@ -141,7 +145,9 @@ class Shortcodes {
 					<ul class="service_catlist__list">
 						<?php foreach($terms as $term) : ?>
 							<li class="service_catlist__list__item <?php echo esc_attr(($term->term_id == $currentTerm->term_id)?'service_catlist__list__item__active':''); ?>">
-								<a href="<?php echo esc_url(get_term_link($term)); ?>" class="service_catlist__list__link" data-category="<?php echo esc_attr($term->term_id); ?>" data-count="<?php echo esc_attr($term->count); ?>"><?php echo esc_html($term->name); ?></a>
+								<a href="<?php echo esc_url(get_term_link($term)); ?>" class="service_catlist__list__link" data-category="<?php echo esc_attr($term->term_id); ?>" data-count="<?php echo esc_attr($term->count); ?>"><?php echo esc_html(
+									strlen($term->name) >= 30?substr($term->name, 0, 27) . '...':$term->name
+								); ?></a>
 							</li>
 						<?php endforeach; ?>
 					</ul>
@@ -154,10 +160,13 @@ class Shortcodes {
 	}
 	public function sos_hero_search_suggestions($args) {
 		global $SoS_Service;
-		$args = wp_parse_args($args, [
-			'zip'		=> true,
-			'grouped'	=> true,
-			'closable'	=> true
+		$args = (object) wp_parse_args($args, [
+			'zip'		 => true,
+			'grouped'	 => true,
+			'closable'	 => true,
+			'hide_empty' => true,
+			'parent'	=> false,
+			'limit'		 => 6
 		]);
 		ob_start();
 		?>
@@ -169,9 +178,11 @@ class Shortcodes {
 							<option value=""><?php esc_html_e('What’s on your to-do list?', 'sospopsprompts'); ?></option>
 						</select>
 					</div>
-					<div class="sos_hero__zip">
-						<?php echo do_shortcode('[sos_zip_popup input=true]'); ?>
-					</div>
+					<?php if ($args->zip) : ?>
+						<div class="sos_hero__zip">
+							<?php echo do_shortcode('[sos_zip_popup input=true]'); ?>
+						</div>
+					<?php endif; ?>
 					<div class="sos_hero__submit">
 						<button class="sos_hero__submit__btn" type="submit"><?php esc_html_e('Search', 'sospopsprompts'); ?></button>
 					</div>
@@ -180,13 +191,17 @@ class Shortcodes {
 					<ul class="sos_hero__suggestion__list">
 						<?php
 						$terms = get_terms([
-							'taxonomy'   => $SoS_Service->taxonomy,
-							'hide_empty' => false
+							'taxonomy'   		=> $SoS_Service->taxonomy,
+							'hide_empty' 		=> $args->hide_empty,
+							'number'			=> $args->limit,
+							// 'parent'			=> $args->parent,
 						]);
 						foreach($terms as $term) :
 							?>
 							<li class="sos_hero__suggestion__list__item">
-								<a href="<?php echo esc_url(get_term_link($term)); ?>" class="sos_hero__suggestion__list__link"><?php echo esc_html($term->name); ?></a>
+								<a href="<?php echo esc_url(get_term_link($term)); ?>" class="sos_hero__suggestion__list__link"><?php echo esc_html(
+									strlen($term->name) >= 30?substr($term->name, 0, 27) . '...':$term->name
+								); ?></a>
 							</li>
 						<?php endforeach; ?>
 					</ul>
@@ -212,11 +227,13 @@ class Shortcodes {
 		]);
 		$args->pricing_type = get_post_meta($args->post_id, 'pricing_type', true);
 		$args->price_after = get_post_meta($args->post_id, 'price_after', true);
+		$args->text_after = get_post_meta($args->post_id, 'text_after', true);
 		$args->currency = get_post_meta($args->post_id, 'currency', true);
 		$args->prices = get_post_meta($args->post_id, 'prices', true);
 
 		$replace4 = array_keys((array) $args);
 		foreach($replace4 as $i => $item) {$replace4[$i] = '%'.$item.'%';}
+		foreach($args as $key => $value) {$args->{$key} = ($value === false)?'':$value;}
 		$replace2 = array_values((array) $args);
 		
 		$args->result = str_replace($replace4, $replace2, $args->format);

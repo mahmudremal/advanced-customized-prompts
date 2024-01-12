@@ -37,6 +37,7 @@ class Project {
 		global $SoS_Shortcodes;$SoS_Shortcodes = Shortcodes::get_instance();
 		global $SoS_Post_Types;$SoS_Post_Types = Post_Types::get_instance();
 		global $SoS_Meta_Boxes;$SoS_Meta_Boxes = Meta_Boxes::get_instance();
+		global $SoS_Eventstream;$SoS_Eventstream = Eventstream::get_instance();
 
 		$this->setup_hooks();
 	}

@@ -42,6 +42,7 @@ const plugins = ( argv ) => [
 		patterns: [
 			{from: LIB_DIR, to: BUILD_DIR + '/library'},
 			{from: SRC_DIR + '/icons', to: BUILD_DIR + '/icons'},
+			{from: SRC_DIR + '/csv', to: BUILD_DIR + '/csv'},
 		]
 	} ),
 	new DependencyExtractionWebpackPlugin( {

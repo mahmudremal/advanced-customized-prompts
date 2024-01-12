@@ -14,6 +14,7 @@ import popupCart from "./popupcart";
 import flatpickr from "flatpickr";
 import SlimSelect from 'slim-select';
 import icons from "./icons";
+import Post from "../backend/post"
 
 ( function ( $ ) {
 	class FutureWordPress_Frontend {
@@ -52,6 +53,8 @@ import icons from "./icons";
 			// voiceRecord.init_recorder(this);
 			// this.voiceRecord = voiceRecord;
 			CAT_PROMPTS.hero_autocomplete(this);
+			// this.AutoCom = AutoCom;
+			this.Post = new Post(this);
 			CAT_PROMPTS.remove_review_extra_text();
 		}
 		init_toast() {

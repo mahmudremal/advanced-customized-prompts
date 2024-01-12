@@ -2171,7 +2171,7 @@ $frameWidth: 500px;
       width: 100%;
       height: 100%;
       padding-left: 10px;
-      border-radius: 7px 0 0 7px;
+      border-radius: 7px 0 0 7px !important;
       .ss-arrow {
         margin-right: 10px;
       }
@@ -2191,12 +2191,15 @@ $frameWidth: 500px;
   }
   &__submit {
     width: 20%;
+    height: 50px;
     &__btn {
       width: 100%;
+      height: 50px;
       display: flex;
       max-height: 50px;
       overflow: hidden;
       flex-wrap: nowrap;
+      line-height: 20px;
       background: $primaryColor;
       border-radius: 0 7px 7px 0;
       justify-content: space-around;
@@ -2274,4 +2277,9 @@ button.btn.button.custom_pops_btn {
       }
     }
   }
+}
+
+.ss-content .ss-list .ss-optgroup .ss-option {
+  font-size: 14px;
+  line-height: 18px;
 }

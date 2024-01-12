@@ -1,3 +1,9 @@
+/**
+ * Export & Import Functionality on admin screen.
+ */
+
+import icons from "../frontend/icons";
+
 class Exim {
   constructor(thisClass) {
     this.setup_hooks(thisClass);
@@ -16,12 +22,38 @@ class Exim {
           title: thisClass.i18n?.bulk_import??'Bulk Import',
           html: EximClass.import_form_template(thisClass),
           showConfirmButton: false,
+          allowOutsideClick: false,
           width: 600,
           didOpen: async () => {
             document.querySelectorAll('#sos_import').forEach((button) => {
               button.addEventListener('change', (event) => {
                 const files = event.target.files;
                 EximClass.fileContents = files;
+              });
+            });
+            document.querySelectorAll('.clean_execution').forEach((button) => {
+              button.addEventListener('click', (event) => {
+                event.preventDefault();
+                button.disabled = true;
+                var counter = document.createElement('span');
+                counter.classList.add('counter');
+                thisClass.Post.on('event-progress', counter, (event) => {
+                  if (event?.percentComplete) {
+                    counter.innerHTML = event.percentComplete.toFixed(0) + '%';
+                  }
+                });
+                thisClass.Post.on('event-finish', counter, (event) => {
+                  counter.remove();button.disabled = false;
+                });
+                button.appendChild(counter);
+                var formdata = new FormData();
+                formdata.append('action', 'sospopsproject/ajax/import/clean');
+                formdata.append('taxonomy', button.dataset.taxonomy);
+                formdata.append('clean', button.dataset.target);
+                formdata.append('_nonce', thisClass.ajaxNonce);
+                thisClass.Post.sendToServer(formdata, thisClass, {
+                  // eventStream: true, url: thisClass.ajaxUrl+`?action=sospopsproject/ajax/import/clean&clean=${button.dataset.target}&taxonomy=${button.dataset.taxonomy}`
+                });
               });
             });
             document.querySelectorAll('.exim_popup__tabs input[type=radio][name=tab]').forEach((radio) => {
@@ -34,36 +66,25 @@ class Exim {
             });
             document.querySelectorAll('.exim_popup__content__form').forEach((form) => {
               form.addEventListener('submit', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                
+                event.preventDefault();event.stopPropagation();
                 if(EximClass?.fileContents && EximClass.fileContents.length >= 1) {
                   /**
                    * Initializing form data.
                    */
                   var formdata = new FormData(form);
-                  // formdata.append('action', 'sospopsproject/ajax/import/bulks');
-                  // formdata.append('_nonce', thisClass.ajaxNonce);
+                  formdata.append('action', 'sospopsproject/ajax/import/bulks');
+                  formdata.append('_nonce', thisClass.ajaxNonce);
+                  EximClass.mute_unmute_form(true);
                   
-                  // [...EximClass.fileContents].forEach((file) => {
-                  //   // EximClass.readFile(file).then((file_content) => {
-                  //   //   console.log(file_content);
-                  //   //   EximClass.fileContents.push(file_content);
-                  //   //   // Send Single Bulk data to server.
-                  //   // });
-  
-                  //   /**
-                  //    * Adding file to request.
-                  //    */
-                  //   formdata.append('csv', file, file?.name);
-                  // });
-                  
-                  /**
-                   * Send files to server
-                   */
-                  // const json = Array.from(formdata).reduce((obj, [k, v]) => ({...obj, [k]: v}), {});
-                  // console.log('formdata', formdata, json);
-                  thisClass.sendToServer(formdata);
+                  var args = {
+                    // eventStream: true,
+                  };
+                  thisClass.Post.sendToServer(formdata, thisClass, args).then((response) => {
+                    console.log('Success:', response);
+                  }).catch(err => {
+                    EximClass.mute_unmute_form(false);
+                    console.error('Error:', err);
+                  });
                 }
               });
             });
@@ -91,7 +112,6 @@ class Exim {
     const EximClass = this;
     document.body.addEventListener('sos_imports_response', (event) => {
       EximClass.lastJson = thisClass.lastJson;
-      // ! 
       if(!EximClass.lastJson?.message) {EximClass.lastJson.message = [];}
       
       if(true) {
@@ -112,6 +132,11 @@ class Exim {
           showConfirmButton: _has_message,
           timer: _has_message?false:4500
         });
+      } else {
+        /**
+         * If Swal updates without removing import pops, then Unmute previously muted form.
+         */
+        EximClass.mute_unmute_form(false);
       }
     });
   }
@@ -119,31 +144,39 @@ class Exim {
     var message = 'Select a valid JSON file. Make sure you upload the correct file either it could harm your database that might recover manually by expert.';
     var tabs = [
       {
+        name: 'services',
+        desc: message,
+        tab:  'Service',
+        clean: 'services',
+        taxonomy: 'n/a'
+      },
+      {
         name: 'pops',
         desc: message,
         tab:  'Popup',
+        clean: 'pops',
+        taxonomy: 'n/a'
       },
       {
         name: 'cats',
         desc: message,
         tab:  'Category',
+        clean: 'terms',
+        taxonomy: 'services'
       },
       {
         name: 'areas',
         desc: message,
         tab:  'Areas',
-      },
-      {
-        name: 'services',
-        desc: message,
-        tab:  'Service',
+        clean: 'terms',
+        taxonomy: 'area'
       },
     ];
     return `
     <div class="exim_popup">
       <div class="exim_popup__tabs" style="height: ${(60 * tabs.length)}px;">
         ${tabs.map((row, i) => `
-            <input type="radio" id="tab${i}" name="tab" data-index="${i}" ${(i == 0)?`checked="true"`:''}>
+          <input type="radio" id="tab${i}" name="tab" data-index="${i}" ${(i == 0)?`checked="true"`:''}>
           <label for="tab${i}">${row.tab}</label>
         `).join('')}
         <div class="exim_popup__marker">
@@ -155,10 +188,12 @@ class Exim {
       <div class="exim_popup__content">
         ${tabs.map((row, i) => `
         <div class="exim_popup__content__single ${(i == 0)?'visible':''}" data-index="${i}">
-          <h4 class="h4">${row.desc}</h4>
+          <p class="h4">${row.desc}</p>
+          <div class="exim_popup__content__actions">
+            <a class="btn button link" href="${thisClass.config.buildPath}/csv/import-template-${row.name}.csv" download="Sample Format ${row.name}.csv">${thisClass.i18n?.sampleformat??'Sample format'}</a>
+            <button class="btn button clean_execution" data-target="${row.clean}" data-taxonomy="${row.taxonomy}">${thisClass.i18n?.clean??'Clean'} ${row.name}</button>
+          </div>
           <form class="exim_popup__content__form" action="" method="post">
-            <input type="hidden" name="action" value="sospopsproject/ajax/import/bulks">
-            <input type="hidden" name="_nonce" value="${thisClass.ajaxNonce}">
             <input type="hidden" name="import_type" value="${row.name}">
             <input id="sos_import" type="file" name="sos_import" placeholder="" value="" accept=".csv" required="required">
             <input class="btn button submit" type="submit" value="Submit" />
@@ -179,6 +214,81 @@ class Exim {
         (EximClass.lastJson.success[i])?'success':'error'
       }">${msg}</li>`).join('')}
     <ul>`;
+  }
+  mute_unmute_form(mute = true) {
+    const EximClass = this;
+    document.querySelectorAll('.exim_popup__content__form').forEach((form) => {
+      form.querySelectorAll('[type="submit"]').forEach((button) => {
+        if(mute) {
+          button.disabled = true;
+        } else {
+          button.removeAttribute('disabled');
+        }
+      });
+    });
+    document.querySelectorAll('.exim_popup').forEach((popup) => {
+      if(mute) {
+        popup.dataset.loading = true;
+        var preloader = document.createElement('div');
+        var loader = document.createElement('div');
+        var counter = document.createElement('div');
+        preloader.classList.add('preloader');
+        counter.classList.add('counter');
+        loader.classList.add('loader');
+        counter.innerHTML = '0%';
+
+        ['upload-progress', 'event-progress', 'success', 'error', 'event-finish', 'event-error'].forEach((hook, i) => {
+          thisClass.Post.on(hook, counter, (event) => {
+            if (event?.detail && event.detail?.event) {
+              event = event.detail.event;
+            }
+            
+            switch (i) {
+              case 0:
+                if (event?.percentComplete) {
+                  // icons?.upload??'' + 
+                  counter.innerHTML = event.percentComplete.toFixed(0) + '%';
+                }
+                break;
+              case 1:
+                if (event?.percentComplete) {
+                  // icons?.download??'' + 
+                  counter.innerHTML = event.percentComplete.toFixed(0) + '%';
+                }
+                break;
+              // case 2:
+              // case 3:
+              case 4:
+                EximClass.mute_unmute_form(false);
+                if (event?.json && event.json?.response) {
+                  if (event.json.response?.success && thisClass.lastJson?.success) {
+                    thisClass.lastJson.success = [...thisClass.lastJson?.success, ...event.json.response?.success];
+                  }
+                  if (event.json.response?.message && thisClass.lastJson?.message) {
+                    thisClass.lastJson.message = [...thisClass.lastJson?.message, ...event.json.response?.message];
+                  }
+                  if (event.json.response?.imported_data && thisClass.lastJson?.imported_data) {
+                    thisClass.lastJson.imported_data = [...thisClass.lastJson?.imported_data, ...event.json.response?.imported_data];
+                  }
+
+                  document.body.dispatchEvent(new Event('sos_imports_response'));
+                }
+              // case 5:
+                break;
+              default:
+                break;
+            }
+          });
+        });
+        
+        loader.appendChild(counter);
+        preloader.appendChild(loader);
+        popup.appendChild(preloader);
+      } else {
+        popup.removeAttribute('data-loading');
+        popup.querySelectorAll('.preloader').forEach(el => el.remove());
+      }
+    });
   }
 }
 export default Exim;

@@ -74,7 +74,7 @@ class Ajax {
 	}
 	public function hero_autocomplete() {
 		$json = ['hooks' => ['hero_autocomplete_failed']];
-		if(isset($_POST['query'])) {
+		if (isset($_POST['query'])) {
 			$posts = get_posts([
 				's' => $_POST['query']
 			]);
@@ -98,7 +98,7 @@ class Ajax {
 		$dataset = $request = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode(isset($_POST['dataset'])?$_POST['dataset']:'{}'))), true);
 		$json = ['hooks' => ['error_getting_service'], 'message' => __('Something error happening. Failed to load service data.', 'domain')];
 		$_post = get_post($dataset['product_id']);
-		if($_post && !is_wp_error($_post)) {
+		if ($_post && !is_wp_error($_post)) {
 			$service = [
 				'id'		=> $_post->ID,
 				'type'		=> $_post->post_type,
@@ -114,13 +114,13 @@ class Ajax {
 				'priceType'	=> get_post_meta($_post->ID, 'pricing_type', true),
 			];
 			$zip_code = isset($_POST['zip_code'])?$_POST['zip_code']:false;
-			if(
+			if (
 				($zip_code && !empty($zip_code))
 					|| 
 				(is_user_logged_in() && $zip_code = get_user_meta(get_current_user_id(), '_zip_code', true))
 			) {
 				$terms = wp_get_post_terms($_post->ID, 'area', ['fields' => 'names']);
-				if(! has_term($zip_code, 'area', $_post)) {
+				if (! has_term($zip_code, 'area', $_post)) {
 					$service['not_in_area'] = true;
 					$service['not_in_area_message'] = sprintf(
 						__('This Service not available in your location %s while this service only available on these following locations %s.', 'domain'),
@@ -153,25 +153,25 @@ class Ajax {
 			$json['product']['custom_fields'] = ($json['product']['custom_fields'] && !empty($json['product']['custom_fields']))?(array)$json['product']['custom_fields']:[];
 			foreach($json['product']['custom_fields'] as $i => $_prod) {
 				$json['product']['custom_fields'][$i]['headerbgurl'] = ($_prod['headerbg']=='')?false:wp_get_attachment_url($_prod['headerbg']);
-				if(isset($_prod['options'])) {
+				if (isset($_prod['options'])) {
 					$_prod['options'] = (!empty($_prod['options']))?(array)$_prod['options']:[];
 					foreach($_prod['options'] as $j => $option) {
-						if(isset($option['image']) && !empty($option['image'])) {
+						if (isset($option['image']) && !empty($option['image'])) {
 							$json['product']['custom_fields'][$i]['options'][$j]['imageUrl'] = wp_get_attachment_url($option['image']);
 						}
-						if(isset($option['thumb']) && !empty($option['thumb'])) {
+						if (isset($option['thumb']) && !empty($option['thumb'])) {
 							$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
 						}
 					}
 				}
-				if(isset($_prod['groups'])) {
+				if (isset($_prod['groups'])) {
 					foreach($_prod['groups'] as $k => $group) {
-						if(isset($group['options'])) {
+						if (isset($group['options'])) {
 							foreach($group['options'] as $l => $option) {
-								if(isset($option['image']) && !empty($option['image'])) {
+								if (isset($option['image']) && !empty($option['image'])) {
 									$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['imageUrl'] = wp_get_attachment_url($option['image']);
 								}
-								if(isset($option['thumb']) && !empty($option['thumb'])) {
+								if (isset($option['thumb']) && !empty($option['thumb'])) {
 									$json['product']['custom_fields'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
 								}
 							}
@@ -193,27 +193,27 @@ class Ajax {
 			'message' => __('Popup submitted successfully. Hold on unil you\'re redirecting to searh results.', 'sospopsprompts')
 		];
 		
-		if(isset($request['product']) && !empty($request['product'])) {
+		if (isset($request['product']) && !empty($request['product'])) {
 			$request['product'] = (int) $request['product'];
 			$term_link = get_term_link($request['product'], 'listing_product');
-			if(!$term_link || is_wp_error($term_link)) {$term_link = false;}
+			if (!$term_link || is_wp_error($term_link)) {$term_link = false;}
 			$json['redirectedTo'] = $term_link;
 		}
-		if(isset($request['field']["9002"]) && ! is_user_logged_in()) {
+		if (isset($request['field']["9002"]) && ! is_user_logged_in()) {
 			$user_email = $request['field']["9002"];
 			$user_name = $request['field']["9003"];
 			$user_pass = $request['field']["9004"];
 			$user = get_user_by_email($user_email);
-			if($user) {
+			if ($user) {
 				$user_id = $user->ID;
 				wp_set_current_user($user_id, $user->user_login);
 				wp_set_auth_cookie($user_id);
 				do_action('wp_login', $user->user_login, $user);
 			} else {
 				$user_id = username_exists($user_name);
-				if(!$user_id && false == email_exists($user_email)) {
+				if (!$user_id && false == email_exists($user_email)) {
 					$user_id = wp_create_user($user_name, $user_pass, $user_email);
-					if(!is_wp_error($user_id)) {
+					if (!is_wp_error($user_id)) {
 						$user = get_user_by('id', $user_id);
 						wp_set_current_user($user_id, $user->user_login);
 						wp_set_auth_cookie($user_id);
@@ -239,11 +239,11 @@ class Ajax {
 	}
 	public function search_category() {
 		global $SoS_Service;global $wpdb;$json = ['hooks' => ['categorylistsfalied'], 'parent' => []];
-		if(isset($_POST['category_id'])) {
+		if (isset($_POST['category_id'])) {
 			$category = get_term($_POST['category_id']);
-			if($category && ! is_wp_error($category)) {
+			if ($category && ! is_wp_error($category)) {
 				$catChilds = get_term_children($category->term_id, $SoS_Service->taxonomy);
-				if($catChilds && ! is_wp_error($catChilds)) {
+				if ($catChilds && ! is_wp_error($catChilds)) {
 					$category->childrens = [];
 					foreach($catChilds as $term_id) {
 						$term = get_term($term_id);
@@ -272,26 +272,30 @@ class Ajax {
 	public function get_term_posts($term) {
 		global $SoS_Service;$posts = [];
 		$args = [
-			'post_type' => $SoS_Service->post_type,
-			'orderby'	=> 'menu_order title',
-			'order'		=> 'DESC',
-			'nopaging'	=> true,
-			'tax_query' => [
+			'order'				=> strtoupper($_REQUEST['order']??'desc'),
+			'post_type' 		=> $SoS_Service->post_type,
+			's'					=> $_REQUEST['search']??false,
+			// 'numberposts'		=> $_REQUEST['per_page']??12,
+			'posts_per_page'	=> $_REQUEST['per_page']??12,
+			'orderby'			=> 'menu_order title',
+			// 'nopaging'		=> true,
+			'tax_query' 		=> [
 				[
 					'taxonomy'	=> $SoS_Service->taxonomy,
 					'field'		=> 'term_id',
-					'terms'		=> $term->term_id
+					'terms'		=> [$term->term_id]
 				]
 			]
 		];
+		// print_r($args);wp_die();
 		$queries = new \WP_Query($args);
-		if($queries->have_posts()) {
-			while($queries->have_posts()) {
+		if ($queries->have_posts()) {
+			while ($queries->have_posts()) {
 				$queries->the_post();
 				$posts[] = [
 					'title'		=> get_the_title(),
-					'thumbnail'	=> get_the_post_thumbnail_url(get_the_ID(), 'thumbnail'),
-					'url'		=> get_the_permalink()
+					'url'		=> get_the_permalink(),
+					'thumbnail'	=> get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')
 				];
 			}
 			wp_reset_postdata();
@@ -318,22 +322,22 @@ class Ajax {
 		// wp_send_json_success($json, 200);
 		foreach($json['product'] as $i => $_prod) {
 			$json['product'][$i]['headerbgurl'] = ($_prod['headerbg']=='')?false:wp_get_attachment_url($_prod['headerbg']);
-			if(isset($_prod['options'])) {
+			if (isset($_prod['options'])) {
 				$_prod['options'] = (!empty($_prod['options']))?(array)$_prod['options']:[];
 				foreach($_prod['options'] as $j => $option) {
-					if(isset($option['image']) && !empty($option['image'])) {
+					if (isset($option['image']) && !empty($option['image'])) {
 						$json['product'][$i]['options'][$j]['imageUrl'] = wp_get_attachment_url($option['image']);
 					}
 				}
 			}
-			if(isset($_prod['groups'])) {
+			if (isset($_prod['groups'])) {
 				foreach($_prod['groups'] as $k => $group) {
-					if(isset($group['options'])) {
+					if (isset($group['options'])) {
 						foreach($group['options'] as $l => $option) {
-							if(isset($option['image']) && !empty($option['image'])) {
+							if (isset($option['image']) && !empty($option['image'])) {
 								$json['product'][$i]['groups'][$k]['options'][$l]['imageUrl'] = wp_get_attachment_url($option['image']);
 							}
-							if(isset($option['thumb']) && !empty($option['thumb'])) {
+							if (isset($option['thumb']) && !empty($option['thumb'])) {
 								$json['product'][$i]['groups'][$k]['options'][$l]['thumbUrl'] = wp_get_attachment_url($option['thumb']);
 							}
 						}
@@ -345,7 +349,7 @@ class Ajax {
 	}
 	public function merge_customfields($fields) {
 		$fieldID = 9000;
-		if(!$fields || $fields == "") {return $fields;}
+		if (!$fields || $fields == "") {return $fields;}
 		$fields = (array) $fields;
 		$fields[] = [
 			'fieldID' => $fieldID,
@@ -367,7 +371,7 @@ class Ajax {
 			'icon'	=> '<span class="fa fa-check"></span>',
 			'headerbgurl' => false,
 		];
-		if(!is_user_logged_in()) {
+		if (!is_user_logged_in()) {
 			$fieldID++;
 			$fields[] = [
 				'fieldID' => $fieldID,
@@ -434,7 +438,7 @@ class Ajax {
 	public function update_orderitem() {
 		global $SoS_Product;
 		$json = ['hooks' => ['order_item_update_failed'], 'message' => __('Something went wrong. Please review your request again.', 'sospopsprompts')];
-		if(!isset($_GET['order_id']) || empty($_GET['order_id']) || !isset($_GET['item_id']) || empty($_GET['item_id']) || !isset($_GET['teddyname']) || empty($_GET['teddyname'])) {
+		if (!isset($_GET['order_id']) || empty($_GET['order_id']) || !isset($_GET['item_id']) || empty($_GET['item_id']) || !isset($_GET['teddyname']) || empty($_GET['teddyname'])) {
 			wp_send_json_error($json);
 		}
 
@@ -442,17 +446,17 @@ class Ajax {
 		$item_id = $_GET['item_id'];
 		$order = wc_get_order($order_id);
 		foreach($order->get_items() as $order_item_id => $order_item) {
-			if($order_item_id != $item_id) {continue;}
+			if ($order_item_id != $item_id) {continue;}
 			$product_id = $order_item->get_product_id();
 			$popup_meta = $SoS_Product->get_post_meta($product_id, '_sos_custom_popup', true);
 			foreach($popup_meta as $i => $field) {
-				if($field['type'] == 'info') {
+				if ($field['type'] == 'info') {
 					$item_meta_data = $order_item->get_meta('custom_teddey_bear_data', true);
-					if(!$item_meta_data) {continue;}
+					if (!$item_meta_data) {continue;}
 					foreach($item_meta_data['field'] as $i => $iRow) {
 						foreach($iRow as $j => $jRow) {
-							if($field['steptitle'] == $jRow['title'] && $j == 0) {
-								if(
+							if ($field['steptitle'] == $jRow['title'] && $j == 0) {
+								if (
 									isset($item_meta_data['field'][$i][0]['value'])
 									// && isset($item_meta_data['field'][$i][1]['value'])
 									// && isset($item_meta_data['field'][$i][2]['value'])
@@ -489,7 +493,7 @@ class Ajax {
 		$filteredKeys = array_keys(SOSPOPSPROJECT_OPTIONS);
 		$filteredData = [];
 		foreach($filteredKeys as $key) {
-			if(strpos($key, 'teddy-name-') !== false) {
+			if (strpos($key, 'teddy-name-') !== false) {
 				$filteredData[] = SOSPOPSPROJECT_OPTIONS[$key];
 			}
 		}
@@ -500,8 +504,8 @@ class Ajax {
 	}
 	public function update_zipcode() {
 		$args = ['message' => __('Something went wrong. Failed to update zip code', 'domain'), 'hooks' => ['zipcodeupdatefailed']];
-		if(isset($_POST['_zipcode']) && !empty($_POST['_zipcode'])) {
-			if(is_user_logged_in()) {
+		if (isset($_POST['_zipcode']) && !empty($_POST['_zipcode'])) {
+			if (is_user_logged_in()) {
 				update_user_meta(get_current_user_id(), '_zip_code', $_POST['_zipcode']);
 				$args = ['message' => __('Zip code updated!', 'domain'), 'hooks' => ['zipcodeupdated'], 'zipcode' => $_POST['_zipcode']];
 				unset($args['message']);
@@ -514,7 +518,7 @@ class Ajax {
 		$json = ['message' => __('Error happening while trying to add information to cart.', 'domain')];
 		$product_id = 2735;$quantity = 1;
 		
-		if(class_exists('WooCommerce')) {
+		if (class_exists('WooCommerce')) {
 			$cart = WC()->cart;
 			$cart->add_to_cart($product_id, $quantity);
 			$json['redirectTo'] = wc_get_checkout_url();
@@ -528,10 +532,12 @@ class Ajax {
 		global $SoS_Service;
 		$json = ['hooks' => ['suggested_categories_failed']];
 		$terms = get_terms([
-			'taxonomy'   => $SoS_Service->taxonomy,
-			'hide_empty' => true
+			'number'		=> $_REQUEST['per_page']??12,
+			'search'		=> $_REQUEST['search']??'',
+			'taxonomy'   	=> $SoS_Service->taxonomy,
+			'hide_empty' 	=> true,
 		]);
-		if($terms && !is_wp_error($terms)) {
+		if ($terms && !is_wp_error($terms)) {
 			$terms_data = [];
 			foreach($terms as $term) {
 				$posts = $this->get_term_posts($term);
@@ -539,7 +545,7 @@ class Ajax {
 				foreach($posts as $post) {
 					$options[] = [
 						'text'		=> $post['title'],
-						'value'		=> $post['url']
+						'value'		=> $post['url'],
 					];
 				}
 				$term_data = [
