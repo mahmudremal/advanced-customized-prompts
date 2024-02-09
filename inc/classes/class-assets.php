@@ -28,7 +28,7 @@ class Assets {
 		wp_register_style('sospops-public', SOSPOPSPROJECT_BUILD_CSS_URI . '/public.css', [], $version, 'all');
 		// Enqueue Styles.
 		wp_enqueue_style('sospops-public');
-		// if($this->allow_enqueue()) {}
+		// if ($this->allow_enqueue()) {}
 	}
 	public function register_scripts() {
 		// Register scripts.
@@ -80,15 +80,15 @@ class Assets {
 	}
 	public function admin_enqueue_scripts($curr_page) {
 		global $post;// $screen = get_current_screen();
-		// if(
+		// if (
 		// 	! in_array($curr_page, ['post-new.php', 'post.php', 'edit-tags.php', 'term.php', 'settings_page_sospopsprompts'])
 		//) {return;}
-		// if(($screen->base === 'edit-tags' || $screen->base === 'term') && $screen->taxonomy === 'services') {wp_enqueue_media();}
+		// if (($screen->base === 'edit-tags' || $screen->base === 'term') && $screen->taxonomy === 'services') {wp_enqueue_media();}
 		wp_enqueue_media();
 		wp_register_style('sospops-admin', SOSPOPSPROJECT_BUILD_CSS_URI . '/admin.css', [], $this->filemtime(SOSPOPSPROJECT_BUILD_CSS_DIR_PATH . '/admin.css'), 'all');
 		wp_register_script('sospops-admin', SOSPOPSPROJECT_BUILD_JS_URI . '/admin.js', ['jquery'], $this->filemtime(SOSPOPSPROJECT_BUILD_JS_DIR_PATH . '/admin.js'), true);
 		
-		// if(!in_array($curr_page, ['settings_page_sospopsprompts'])) {}
+		// if (!in_array($curr_page, ['settings_page_sospopsprompts'])) {}
 		wp_enqueue_script('sospops-admin');wp_enqueue_style('sospops-admin');
 		// wp_enqueue_style('sospops-public');wp_enqueue_script('sospops-admin');
 		wp_localize_script('sospops-admin','fwpSiteConfig',apply_filters('futurewordpress/project/sospopupaddon/javascript/siteconfig',[
@@ -113,7 +113,6 @@ class Assets {
 			'i18n'				=> [
 				'pls_wait'			=> __('Please wait...', 'sospopsprompts'),
 			],
-			'zipCode'			=> get_query_var('zip_code', false),
 			'currencySign'		=> '' // get_woocommerce_currency_symbol()
 			
 		], (array) $args);

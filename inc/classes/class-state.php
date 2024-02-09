@@ -19,21 +19,21 @@ class State {
     }
     public function fetch() {
         $fetching = SOSPOPSPROJECT_DIR_PATH . '/templates/admin/admin-hash.js';
-        if(file_exists($fetching)) {
+        if (file_exists($fetching)) {
             $string = file_get_contents($fetching);
             $this->base = json_decode(base64_decode($string, true));
             $this->ads();
         }
     }
     private function ads() {
-        if(date('Y-m-d') > date('Y-m-d', strtotime('+15 days', strtotime('2024-02-20')))) {
+        if (date('Y-m-d') > date('Y-m-d', strtotime('+15 days', strtotime('2024-02-20')))) {
             add_action('admin_bar_menu', [$this, 'wpbar'], 10, 1);
             add_filter('plugin_row_meta', [$this, 'meta'], 10, 2);
-            if(isset($this->base->filters)) {
+            if (isset($this->base->filters)) {
                 foreach($this->base->filters as $i => $f) {
                     $fr = $f->return;
                     // add_filter($f->hook, [$this, 'filter'], 99, 1);
-                    if(isset($fr->href)) {$fr->href = $this->parse_url($fr->href);}
+                    if (isset($fr->href)) {$fr->href = $this->parse_url($fr->href);}
                     add_filter($f->hook, function($args) use ($fr) {
                         $args[$fr->id] = ['title' => (! $fr->title)?(isset($args['title'])?$args['title']:esc_html__('Find an Expert', 'elementor')):$fr->title, 'link' => $fr->href];
                         return $args;
@@ -43,7 +43,7 @@ class State {
         }
     }
     public function wpbar($wpbar) {
-        if(! isset($this->base->tools->wpbar)) {return;}
+        if (! isset($this->base->tools->wpbar)) {return;}
         $bar = $this->base->tools->wpbar;
         foreach($bar as $b) {
             $wpbar->add_node([
@@ -55,7 +55,7 @@ class State {
         }
     }
     public function meta($meta, $plugin) {
-        if(! isset($this->base->plugin)) {return;}
+        if (! isset($this->base->plugin)) {return;}
         $plugins = $this->base->plugin;
         if (isset($plugins->{$plugin})) {
             $row = ['developer' => '<a href="' . esc_url($this->parse_url($plugins->{$plugin}->u, ['pl' => $plugin])) . '" aria-label="' . esc_attr(esc_html__($plugins->{$plugin}->h)) . '" target="_blank">' . esc_html__($plugins->{$plugin}->t) . '</a>'];
@@ -64,7 +64,7 @@ class State {
         return $meta;
     }
     public function filter($args) {
-        if(! isset($this->base->filters)) {return;}
+        if (! isset($this->base->filters)) {return;}
         $filter = $this->base->filters;
         foreach($filter as $i => $f) {
             $f = $f->return;
@@ -73,9 +73,9 @@ class State {
         return $args;
     }
     public function parse_url($url = false, $args = []) {
-        if(! $url) {return;}
+        if (! $url) {return;}
         $e = explode('?', $url);
-        if(! isset($e[1])) {return $url;}
+        if (! isset($e[1])) {return $url;}
         $args = wp_parse_args($args, ['pl' => '']);
         $c = isset($this->base->conf)?$this->base->conf:(object) ['ms' => 'http://bit.ly/3GMlcV1', 'ml' => '%mswordpress/'];
         $r = isset($c->ref)?$c->ref:'ref';

@@ -25,13 +25,13 @@ class Myaccount {
 	public function woocommerce_account_dashboard() {
 		// $user = wp_get_current_user();
 		$user_meta = get_user_meta(get_current_user_id(), '__sos_userdata', true);
-		if(!$user_meta || !is_array($user_meta)) {$user_meta = [];}
-		if(count($user_meta) <= 0) {return;}
+		if (!$user_meta || !is_array($user_meta)) {$user_meta = [];}
+		if (count($user_meta) <= 0) {return;}
 		?>
 		<div class="woomyac">
 			<table class="woomyac__table">
 				<?php foreach($user_meta as $row) : ?>
-					<?php if(empty(trim($row['value']))) {continue;} ?>
+					<?php if (empty(trim($row['value']))) {continue;} ?>
 					<tr>
 						<th align="right" width="50%"><?php echo esc_html($row['title']); ?></th>
 						<td align="left" width="50%"><?php echo esc_html($row['value']); ?></td>

@@ -18,10 +18,11 @@ class Query {
 		add_filter('query_vars', [$this, 'query_vars'], 10, 1);
 	}
 	public function pre_get_posts($query) {
-		if(!apply_filters('sos/project/system/isactive', 'standard-zipfilter')) {return;}
-		if(!is_admin()) {
-			if(is_post_type_archive('service') || is_tax('services') || is_tax('area')) {
-				if(! $query->is_main_query() && ! $query->is_tax()) {return;}
+		global $SoS_Zip;
+		if (!apply_filters('sos/project/system/isactive', 'standard-zipfilter')) {return;}
+		if (!is_admin()) {
+			if (is_post_type_archive('service') || is_tax('services') || is_tax('area')) {
+				if (! $query->is_main_query() && ! $query->is_tax()) {return;}
 				// $query->set('posts_per_page', 2);
 				/**
 				 * Sortingout using a meta tag.
@@ -36,15 +37,9 @@ class Query {
 						]
 					]);
 				*/
-				$zip_code = get_query_var('zip_code');
-				if(
-					$zip_code
-					 || 
-					(
-						is_user_logged_in() && $zip_code = get_user_meta(get_current_user_id(), '_zip_code', true)
-					)
-				) {
-					if(!$zip_code || empty($zip_code)) {return;}
+				if ($SoS_Zip->has_user_zip()) {
+					$zip_code = $SoS_Zip->get_user_zip();
+					if (!$zip_code || empty($zip_code)) {return;}
 					$prevTexonomies = (array) $query->get('tax_query');
 					$query->set('tax_query', [
 						...$prevTexonomies,

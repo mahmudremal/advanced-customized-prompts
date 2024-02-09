@@ -41,7 +41,7 @@ class Rewrite {
 			return $template;
 		} else {
 			$file = SOSPOPSPROJECT_DIR_PATH . '/templates/dashboard/index.php';
-			if(file_exists($file) && ! is_dir($file)) {
+			if (file_exists($file) && ! is_dir($file)) {
 				return $file;
 			} else {
 				return $template;

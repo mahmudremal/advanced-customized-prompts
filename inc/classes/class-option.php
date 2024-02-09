@@ -88,7 +88,7 @@ class Option {
 	 */
 	public function get_options() {
 		$options = get_option($this->general->slug);
-		if(!$options && is_array($this->settings)) {
+		if (!$options && is_array($this->settings)) {
 			$options = Array();
 			foreach($this->settings as $section => $data) {
 				foreach($data['fields'] as $field) {
@@ -104,7 +104,7 @@ class Option {
 	 * @return void
 	 */
 	public function register_settings() {
-		if(is_array($this->settings)) {
+		if (is_array($this->settings)) {
 			register_setting($this->general->slug, $this->general->slug, array($this, 'validate_fields'));
 			foreach($this->settings as $section => $data) {
 				// Add section to page
@@ -154,7 +154,7 @@ class Option {
 			break;
 			case 'checkbox':
 				$checked = '';
-				if(($data && 'on' == $data) || $field['default'] == true) {
+				if (($data && 'on' == $data) || $field['default'] == true) {
 					$checked = 'checked="checked"';
 				}
 				$html .= '<input id="' . esc_attr($field['id']) . '" type="' . $field['type'] . '" name="' . esc_attr($option_name) . '" ' . $checked . ' ' . $this->attributes($field) . '/>' . "\n";
@@ -162,7 +162,7 @@ class Option {
 			case 'checkbox_multi':
 				foreach($field['options'] as $k => $v) {
 					$checked = false;
-					if(is_array($data) && in_array($k, $data)) {
+					if (is_array($data) && in_array($k, $data)) {
 						$checked = true;
 					}
 					$html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="checkbox" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '[]" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" /> ' . $v . '</label> ';
@@ -171,8 +171,8 @@ class Option {
 			case 'radio':
 				foreach($field['options'] as $k => $v) {
 					$checked = false;
-					if($k == $data) {$checked = true;}
-					if(! $checked && $k == $field['default']) {$checked = true;}
+					if ($k == $data) {$checked = true;}
+					if (! $checked && $k == $field['default']) {$checked = true;}
 					$html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="radio" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" ' . $this->attributes($field) . '/> ' . $v . '</label> ';
 				}
 			break;
@@ -180,7 +180,7 @@ class Option {
 				$html .= '<select name="' . esc_attr($option_name) . '" id="' . esc_attr($field['id']) . '" ' . $this->attributes($field) . '>';
 				foreach($field['options'] as $k => $v) {
 					$selected = ($k == $data);
-					if(empty($data) && ! $selected && $k == $field['default']) {$selected = true;}
+					if (empty($data) && ! $selected && $k == $field['default']) {$selected = true;}
 					$html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option>';
 				}
 				$html .= '</select> ';
@@ -189,7 +189,7 @@ class Option {
 				$html .= '<select name="' . esc_attr($option_name) . '[]" id="' . esc_attr($field['id']) . '" multiple="multiple" ' . $this->attributes($field) . '>';
 				foreach($field['options'] as $k => $v) {
 					$selected = false;
-					if(in_array($k, $data)) {
+					if (in_array($k, $data)) {
 						$selected = true;
 					}
 					$html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option> ';
@@ -221,7 +221,7 @@ class Option {
 		// Sanitize fields, eg. cast number field to integer
 		// $data['number_field'] = (int) $data['number_field'];
 		// Validate fields, eg. don't save options if the password field is empty
-		// if($data['password_field'] == '') {
+		// if ($data['password_field'] == '') {
 		// 	add_settings_error($this->general->slug, 'no-password', $this->general->no_password, 'error');
 		// 	return false;
 		// }
@@ -292,7 +292,7 @@ class Option {
 	<?php
 	}
 	public function attributes($field) {
-		if(! isset($field['attr']) || ! is_array($field['attr']) || count($field['attr']) < 1) {return '';}
+		if (! isset($field['attr']) || ! is_array($field['attr']) || count($field['attr']) < 1) {return '';}
 		$html = '';
 		foreach($field['attr'] as $attr => $value) {
 			$html .= $attr . '="' . $value . '" ';

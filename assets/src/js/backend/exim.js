@@ -37,13 +37,18 @@ class Exim {
                 button.disabled = true;
                 var counter = document.createElement('span');
                 counter.classList.add('counter');
-                thisClass.Post.on('event-progress', counter, (event) => {
-                  if (event?.percentComplete) {
+                counter.style.fontSize = '10px';
+                counter.style.marginLeft = '5px';
+                thisClass.Post.on(['event-progress', 'event-message'], counter, (event) => {
+                  event = thisClass.Post.event(event);
+                  if (event?.percentComplete && counter) {
                     counter.innerHTML = event.percentComplete.toFixed(0) + '%';
                   }
                 });
-                thisClass.Post.on('event-finish', counter, (event) => {
-                  counter.remove();button.disabled = false;
+                // , 'event-error'
+                thisClass.Post.on(['event-finish'], counter, (event) => {
+                  event = thisClass.Post.event(event);button.disabled = false;
+                  setTimeout(() => {counter.remove();}, 3000);
                 });
                 button.appendChild(counter);
                 var formdata = new FormData();
@@ -144,6 +149,13 @@ class Exim {
     var message = 'Select a valid JSON file. Make sure you upload the correct file either it could harm your database that might recover manually by expert.';
     var tabs = [
       {
+        name: 'mixed',
+        desc: message,
+        tab:  'Mixed',
+        clean: 'mixed',
+        taxonomy: 'n/a'
+      },
+      {
         name: 'services',
         desc: message,
         tab:  'Service',
@@ -237,48 +249,29 @@ class Exim {
         loader.classList.add('loader');
         counter.innerHTML = '0%';
 
-        ['upload-progress', 'event-progress', 'success', 'error', 'event-finish', 'event-error'].forEach((hook, i) => {
-          thisClass.Post.on(hook, counter, (event) => {
-            if (event?.detail && event.detail?.event) {
-              event = event.detail.event;
+        thisClass.Post.on(['event-progress'], counter, (event) => {
+          event = thisClass.Post.event(event);
+          if (event?.percentComplete) {
+            counter.innerHTML = event.percentComplete.toFixed(0) + '%';
+          }
+        });
+        thisClass.Post.on(['event-finish'], counter, (event) => {
+          event = thisClass.Post.event(event);
+          EximClass.mute_unmute_form(false);
+          console.log(event);
+          if (event?.json && event.json?.response) {
+            if (event.json.response?.success && thisClass.lastJson?.success) {
+              thisClass.lastJson.success = [...thisClass.lastJson?.success, ...event.json.response?.success];
             }
-            
-            switch (i) {
-              case 0:
-                if (event?.percentComplete) {
-                  // icons?.upload??'' + 
-                  counter.innerHTML = event.percentComplete.toFixed(0) + '%';
-                }
-                break;
-              case 1:
-                if (event?.percentComplete) {
-                  // icons?.download??'' + 
-                  counter.innerHTML = event.percentComplete.toFixed(0) + '%';
-                }
-                break;
-              // case 2:
-              // case 3:
-              case 4:
-                EximClass.mute_unmute_form(false);
-                if (event?.json && event.json?.response) {
-                  if (event.json.response?.success && thisClass.lastJson?.success) {
-                    thisClass.lastJson.success = [...thisClass.lastJson?.success, ...event.json.response?.success];
-                  }
-                  if (event.json.response?.message && thisClass.lastJson?.message) {
-                    thisClass.lastJson.message = [...thisClass.lastJson?.message, ...event.json.response?.message];
-                  }
-                  if (event.json.response?.imported_data && thisClass.lastJson?.imported_data) {
-                    thisClass.lastJson.imported_data = [...thisClass.lastJson?.imported_data, ...event.json.response?.imported_data];
-                  }
+            if (event.json.response?.message && thisClass.lastJson?.message) {
+              thisClass.lastJson.message = [...thisClass.lastJson?.message, ...event.json.response?.message];
+            }
+            if (event.json.response?.imported_data && thisClass.lastJson?.imported_data) {
+              thisClass.lastJson.imported_data = [...thisClass.lastJson?.imported_data, ...event.json.response?.imported_data];
+            }
 
-                  document.body.dispatchEvent(new Event('sos_imports_response'));
-                }
-              // case 5:
-                break;
-              default:
-                break;
-            }
-          });
+            document.body.dispatchEvent(new Event('sos_imports_response'));
+          }
         });
         
         loader.appendChild(counter);

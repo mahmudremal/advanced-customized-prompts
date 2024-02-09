@@ -10,6 +10,7 @@ use \WP_Query;use \WP_Error;
 class Import {
 	use Singleton;
 	private $csv_rows = false;
+	private $csv_terms = false;
 	private $csv_columns = false;
 	private $current_term = false;
 	private $json_response = false;
@@ -28,6 +29,7 @@ class Import {
 
 		add_filter('sos/import/cats/row', [$this, 'sos_import_cats_row'], 10, 3);
 		add_filter('sos/import/areas/row', [$this, 'sos_import_areas_row'], 10, 3);
+		add_filter('sos/import/mixed/row', [$this, 'sos_import_mixed_row'], 10, 3);
 		add_filter('sos/import/services/row', [$this, 'sos_import_services_row'], 10, 3);
 
 		add_action('wp_ajax_sospopsproject/ajax/import/clean', [$this, 'delete_all_services'], 10, 0);
@@ -37,74 +39,6 @@ class Import {
 		add_filter('pre_insert_term', [$this, 'pre_insert_term'], 10, 3);
 		
 	}
-
-	/**
-	 * Delete bulk imported data from here.
-	 * https://wordpress-1152450-4011671.cloudwaysapps.com/wp-admin/admin-ajax.php?action=sospopsproject/ajax/import/clean&clean=terms&taxonomy=services
-	 */
-	public function delete_all_services() {
-		global $wpdb;$this->json_response = ['hooks' => ['event_registered']];
-		switch ($_REQUEST['clean']??'') {
-			case 'terms':
-				$args = [
-					'taxonomy' => $_REQUEST['taxonomy']??'services',
-					'fields' => 'ids', 'number' => 500, 'hide_empty' => false
-				];
-				$terms = get_terms($args);
-				$args['terms'] = $terms;
-
-				do_action('sospopsproject/event/stream/init', [
-					'total'		=> count($terms),
-					'message'	=> 'Connected',
-					'status'	=> true
-				]);
-				
-				$args = wp_parse_args($args, [
-					'done'			=> 0,
-					'rest'			=> 0,
-					'type'			=> 'terms',
-					'total'			=> count($terms),
-					'hook'			=> 'sospopsproject/clean/stream/fetch/rows'
-				]);
-
-				$stream_register = apply_filters('sospopsproject/event/stream/register', $args);
-
-				if (!is_array($stream_register) && !isset($stream_register['type'])) {
-					if ($stream_register === true) {
-						$this->json_response['hooks'][] = 'event_registered';
-					}
-				}
-				break;
-			default:
-				$args = [
-					'numberposts'	=> -1,
-					'fields'		=> 'ids',
-					'hide_empty'	=> false,
-					'post_status'	=>'publish',
-					'post_type'		=>'service'
-				];
-				$ids = get_posts($args);
-				$args['posts'] = $ids;
-				$args = wp_parse_args($args, [
-					'done'			=> 0,
-					'rest'			=> 0,
-					'type'			=> 'posts',
-					'total'			=> count($posts),
-					'hook'			=> 'sospopsproject/clean/stream/fetch/rows'
-				]);
-
-				do_action('sospopsproject/event/stream/init', [
-					'total'		=> count($ids),
-					'message'	=> 'Connected',
-					'status'	=> true
-				]);
-
-				$stream_register = apply_filters('sospopsproject/event/stream/register', $args);
-				break;
-		}
-		wp_send_json_success($this->json_response);
-	}
-	
 	/**
 	 * Import Popup customized data for criteria
 	 * Two types of import for Popup.
@@ -132,6 +66,12 @@ class Import {
 	}
 
 	/**
+	 * Import mixed all in one csv
+	 */
+	public function mixed_allinone_import($type) {
+		$this->cats_areas_import($type);
+	}
+	/**
 	 * Import Category data
 	 * Import Areas data
 	 * Import single services
@@ -145,11 +85,11 @@ class Import {
 		/**
 		 * Rename any column for text to key.
 		 */
-		$this->redefine_column_keys($type);
+		// $this->redefine_column_keys($type);
 		/**
 		 * Convert columns to rows.
 		 */
-		$this->columns_to_rows();
+		// $this->columns_to_rows();
 
 		/**
 		 * Register for frontend response.
@@ -170,35 +110,24 @@ class Import {
 			'hook'			=> 'sospopsproject/import/stream/fetch/rows'
 		];
 		if (count($this->csv_rows) >= 1) {$args['csv_rows'] = $this->csv_rows;}
-		// if (count($this->csv_columns) >= 1) {$args['csv_columns'] = $this->csv_columns;}
+		if (count($this->csv_columns) >= 1) {$args['csv_columns'] = $this->csv_columns;}
 		// if (count($this->current_term) >= 1) {$args['current_term'] = $this->current_term;}
 		// if (count($this->json_response) >= 1) {$args['json_response'] = $this->json_response;}
-		// if (count($this->csv_attributes) >= 1) {$args['csv_attributes'] = $this->csv_attributes;}
-		// if (count($this->csv_columns_text) >= 1) {$args['csv_columns_text'] = $this->csv_columns_text;}
+		if (count($this->csv_attributes) >= 1) {$args['csv_attributes'] = $this->csv_attributes;}
+		if (count($this->csv_columns_text) >= 1) {$args['csv_columns_text'] = $this->csv_columns_text;}
 
 		$stream_register = apply_filters('sospopsproject/event/stream/register', $args);
 		
 		/**
-		 * Proceed with CSV Rows.
+		 * Proceed with event stream.
 		 */
-		if (is_array($stream_register) && isset($stream_register['type'])) {
-			$this->json_response['imported_data'] = $this->json_response['imported_data']??[];
-			foreach ($this->csv_rows as $key => $row) {
-				$this->json_response['imported_data'][] = apply_filters(
-					'sos/import/' . $type . '/row', 
-					false, $key, $row, $attr
-				);
-			}
-		} else {
-			if ($stream_register === true) {
-				$this->json_response['hooks'][] = 'event_registered';
-			}
+		if ($stream_register === true) {
+			$this->json_response['hooks'][] = 'event_registered';
 		}
-		
-		// print_r($this->csv_rows);wp_die();
 	}
 	public function services_import() {
 	}
+	
 	public function proceed_import($path) {
 		$this->csv_rows = [];
 		$this->csv_columns = [];
@@ -206,14 +135,33 @@ class Import {
 		$this->csv_attributes = [];
 		$this->csv_columns_text = [];
 		$row_order = 1;$first_row = false;
+		$this->csv_terms = (object) ['area' => [], 'services' => []];
+
+		
+		// $xml = simplexml_load_file($path);
+		// $xml_rows = $xml->Worksheet->Table->Row;
+		// $csv_rows = [];
+		// foreach ($xml_rows as $xml_row) {
+		// 	$cells = $xml_row->Cell;$csv_cells = [];
+		// 	foreach ($cells as $cell) {
+		// 		$csv_cells[] = (string) $cell->Data;
+		// 	}
+		// 	$csv_rows[] = $csv_cells;
+		// }
+			
 		if (($handle = fopen($path, "r")) !== FALSE) {
+			$csv_rows = [];
+
+			// while(($csv_row = fgetcsv($handle, 1000, ",")) !== FALSE) {
+			// 	$csv_rows[] = $csv_row;
+			// }
 			while(($csv_row = fgetcsv($handle, 1000, ",")) !== FALSE) {
 				$row_order++;
 				if ($first_row) {
 					/**
 					 * Escape heading row and proceed from 2nd row.
 					 */
-					$this->sort_single_row($first_row, $csv_row);
+					$this->csv_rows[] = $this->sort_single_row($first_row, $csv_row);
 				} else {
 					/**
 					 * Define the first row as CSV heading How.
@@ -222,7 +170,7 @@ class Import {
 				}
 			}
 			fclose($handle);
-
+			
 			switch ($_POST['import_type']) {
 				case 'pops':
 					$this->pops_import();
@@ -235,6 +183,9 @@ class Import {
 					break;
 				case 'services':
 					$this->cats_areas_import('services');
+					break;
+				case 'mixed':
+					$this->mixed_allinone_import('mixed');
 					break;
 				default:
 					# code...
@@ -299,50 +250,45 @@ class Import {
 	 * Sort Single Row acording to column.
 	 */
 	public function sort_single_row($first_row, $csv_row) {
-		for($cell = 0; $cell < count($csv_row); $cell++) {
-			// echo $first_row[$cell] . ': ' . $csv_row[$cell] . "\n";
-			$cell_striped = $this->trim_text_to_key($first_row[$cell]);
-			switch($cell_striped) {
-				case 'subcategory':
-					if (!empty(trim($csv_row[$cell]))) {
-						$term_name = $csv_row[$cell];$term_parent = false;
-						$term_explode = explode(' <- ', $csv_row[$cell]);$term_img = false;
-						if (isset($term_explode[1]) && !empty(trim($term_explode[1]))) {
-							$term_name = $term_explode[0];$term_parent = $term_explode[1];
-							$term_explode = explode(' <!> ', $term_name);
-							if (isset($term_explode[1]) && !empty(trim($term_explode[1]))) {
-								$term_name = $term_explode[0];
-								$term_img = $term_explode[1];
-							}
-						}
-						
-						$this->current_term = $term = get_term_by('name', $term_name, 'services');
-						if ($term && !is_wp_error($term)) {
-							$term = (array) $term;
-							$this->json_response['term_hooked'] = $this->json_response['term_hooked']??[];
-							$this->json_response['term_hooked'][] = $term;
-						} else {
-							$term = wp_insert_term($term_name, 'services', ['description' => '']);
-							if ($term && !is_wp_error($term)) {
-								$term = (array) $term;
-								$this->json_response['term_hooked'] = $this->json_response['term_hooked']??[];
-								$this->json_response['term_hooked'][] = $term;
-								$this->add_response_message(sprintf(
-									__('New Services Term created (%s) with the ID (%s) and is a parent term.', 'domain'),
-									$term_name, $term['term_id']
-								), true);
-							}
-						}
 
-					}
-					break;
-				default:
-					$this->csv_columns_text[$cell_striped] = $first_row[$cell];
-					$this->csv_columns[$cell_striped] = $this->csv_columns[$cell_striped]??[];
-					$this->csv_columns[$cell_striped][] = $csv_row[$cell];
-					break;
+		$row_args = [];$to_change = $this->column_keys_to_change();
+		foreach($first_row as $index => $key) {
+			$key_striped = $this->trim_text_to_key($first_row[$index]);
+			if (isset($to_change[$key_striped])) {$key_striped = $to_change[$key_striped];}
+			if (isset($csv_row[$index])) {
+				$row_args[$key_striped] = $csv_row[$index];
 			}
 		}
+		return $row_args;
+
+		
+		// for($cell = 0; $cell < count($csv_row); $cell++) {
+		// 	// echo $first_row[$cell] . ': ' . $csv_row[$cell] . "\n";
+		// 	$cell_striped = $this->trim_text_to_key($first_row[$cell]);
+		// 	switch($cell_striped) {
+		// 		case 'subcategory':
+		// 			// if (!empty(trim($csv_row[$cell]))) {
+		// 			// 	$term_name = $csv_row[$cell];$term_parent = false;
+		// 			// 	$term_explode = explode(' <- ', $csv_row[$cell]);$term_img = false;
+		// 			// 	if (isset($term_explode[1]) && !empty(trim($term_explode[1]))) {
+		// 			// 		$term_name = $term_explode[0];$term_parent = $term_explode[1];
+		// 			// 		$term_explode = explode(' <!> ', $term_name);
+		// 			// 		if (isset($term_explode[1]) && !empty(trim($term_explode[1]))) {
+		// 			// 			$term_name = $term_explode[0];
+		// 			// 			$term_img = $term_explode[1];
+		// 			// 		}
+		// 			// 	}
+						
+		// 			// 	$this->csv_terms->services[] = ['name' => $term_name, 'description' => ''];
+		// 			// }
+		// 			// break;
+		// 		default:
+		// 			$this->csv_columns_text[$cell_striped] = $first_row[$cell];
+		// 			$this->csv_columns[$cell_striped] = $this->csv_columns[$cell_striped]??[];
+		// 			$this->csv_columns[$cell_striped][] = $csv_row[$cell];
+		// 			break;
+		// 	}
+		// }
 	}
 	
 	/**
@@ -423,10 +369,10 @@ class Import {
 	 */
 	public function is_escapable_blank($key, $row) {
 		if (empty(trim($row))) {
-			$allowed_blanks = [
+			$unallowed_blanks = [
 				// 'texonomy_featured_image', '_faq_template'
 			];
-			if (!in_array($row, $allowed_blanks)) {
+			if (in_array($row, $unallowed_blanks)) {
 				return true;
 			}
 		}
@@ -574,6 +520,21 @@ class Import {
 	public function sortout_empty_columns_fileds() {
 		while (isset($this->csv_columns[''])) {unset($this->csv_columns['']);}
 	}
+
+	public function column_keys_to_change() {
+		return [
+			'service(formulafromnextthreefields-donotmanuallyedit)'		=> 'servicetitle',
+			'featuredbanner-1800x550'									=> 'featuredimage',
+			'details'													=> 'meta:details',
+			'overview'													=> 'meta:overview',
+			'installation/repair/service'								=> 'meta:service_type',
+			'fixedprice/fixedhourly/quoterequired'						=> 'meta:pricing_type',
+			'routinemaintenancerequired(y/n)'							=> 'meta:routinemaintenance',
+			'pricetocustomer'											=> 'meta:pricetocustomer',
+			'costtosos'													=> 'meta:costtosos',
+			'profit'													=> 'meta:profit',
+		];
+	}
 	
 	/**
 	 * Change coloumn title to key for further operations.
@@ -581,22 +542,11 @@ class Import {
 	 */
 	public function redefine_column_keys($type) {
 		switch ($type) {
-			case 'services':
+			case 'mixed':
 				/**
 				 * Titles to change to keys.
 				 */
-				$to_change = [
-					'service(formulafromnextthreefields-donotmanuallyedit)'		=> 'servicetitle',
-					'featuredbanner-1800x550'									=> 'featuredimage',
-					'details'													=> 'meta:details',
-					'overview'													=> 'meta:overview',
-					'installation/repair/service'								=> 'meta:service_type',
-					'fixedprice/fixedhourly/quoterequired'						=> 'meta:pricing_type',
-					'routinemaintenancerequired(y/n)'							=> 'meta:routinemaintenance',
-					'pricetocustomer'											=> 'meta:pricetocustomer',
-					'costtosos'													=> 'meta:costtosos',
-					'profit'													=> 'meta:profit',
-				];
+				$to_change = $this->column_keys_to_change();
 				foreach ($to_change as $key => $value) {
 					if (isset($this->csv_columns[$key])) {
 						$this->csv_columns[$value] = $this->csv_columns[$key];
@@ -780,7 +730,7 @@ class Import {
 	public function sos_import_services_row($response, $order, $row) {
 		$metas = [];$fields = [];
 		foreach ($row as $key => $value) {
-			if ($this->is_escapable_blank($key, $value)) {continue;}
+			// if ($this->is_escapable_blank($key, $value)) {continue;}
 			switch ((bool) $this->is_meta($key, $value)) {
 				case true:
 					$metas[$key] = $value;
@@ -793,25 +743,23 @@ class Import {
 
 		/**
 		 * Other fields to proceed services
-		 */
-		/**
 		 * Insert all meta data on the following services.
 		 */
 		$_thumbnail_id = $fields['featuredimage']??'';
-		if ($this->isFileUrl($_thumbnail_id)) {
-			if (
-				true
-				// $this->isRemoteUrl($_thumbnail_id)
-			) {
-				$_thumbnail_id = $this->insert_attachment_from_url($_thumbnail_id, 0, basename($_thumbnail_id));
-				if ($_thumbnail_id && !is_wp_error($_thumbnail_id) && is_int($_thumbnail_id)) {
-					// Yeah this is a proper thumbnail ID I hope.
-					$_thumbnail_id = (int) $_thumbnail_id;
-				} else {
-					$_thumbnail_id = false;
-				}
-			}
-		}
+		// if ($this->isFileUrl($_thumbnail_id)) {
+		// 	if (
+		// 		true
+		// 		// $this->isRemoteUrl($_thumbnail_id)
+		// 	) {
+		// 		$_thumbnail_id = $this->insert_attachment_from_url($_thumbnail_id, 0, basename($_thumbnail_id));
+		// 		if ($_thumbnail_id && !is_wp_error($_thumbnail_id) && is_int($_thumbnail_id)) {
+		// 			// Yeah this is a proper thumbnail ID I hope.
+		// 			$_thumbnail_id = (int) $_thumbnail_id;
+		// 		} else {
+		// 			$_thumbnail_id = false;
+		// 		}
+		// 	}
+		// }
 
 		/**
 		 * Term & parent Term fields.
@@ -828,7 +776,6 @@ class Import {
 			'post_content'	=> $fields['postcontent']??($fields['content']??($fields['meta:details']??'')),
 			'post_excerpt'	=> $fields['postexcerpt']??'',
 			'post_author'	=> get_current_user_id(),
-			'_thumbnail_id'	=> $_thumbnail_id,
 			'post_type'		=> 'service',
 			// 'post_category'	=> $services_ids,
 			'tax_input'		=> [
@@ -839,10 +786,13 @@ class Import {
 				// 'key'		=> 'value'
 			]
 		];
+		if ($_thumbnail_id && !empty($_thumbnail_id)) {
+			$args['_thumbnail_id'] = $_thumbnail_id;
+		}
 		
 		if (!empty(trim($args['post_title']))) {
 			$post_id = wp_insert_post($args, true); // Service ID.
-
+			
 			if ($post_id && !is_wp_error($post_id)) {
 				wp_set_post_terms($post_id, $zip_terms, 'area');
 				wp_set_post_terms($post_id, $services_ids, 'services');
@@ -851,14 +801,17 @@ class Import {
 				$this->add_response_message(sprintf(
 					__('New post entry (%s) created with the ID (%d).', 'domain'), $args['post_title'], $post_id
 				), true);
+
+
+				if (count($metas) >= 1) {$this->insert_service_metas($post_id, $metas, false);}
+
+				$this->insert_service_attributes($post_id, $fields, [
+					$response, $order, $row
+				]);
+				$this->insert_service_packages($post_id, $fields, [
+					$response, $order, $row
+				]);
 			}
-			if (count($metas) >= 1) {$this->insert_service_metas($post_id, $metas, false);}
-			$this->insert_service_attributes($post_id, $row, [
-				$response, $order, $row
-			]);
-			$this->insert_service_packages($post_id, $row, [
-				$response, $order, $row
-			]);
 		} else {
 			$this->add_response_message(sprintf(
 				__('Post row skipped due to empty title.', 'domain')
@@ -868,6 +821,13 @@ class Import {
 		
 		
 		return $response;
+	}
+
+	/**
+	 * Import mixed row.
+	 */
+	public function sos_import_mixed_row($response, $order, $row) {
+		return $this->sos_import_services_row($response, $order, $row);
 	}
 
 	/**
@@ -910,9 +870,18 @@ class Import {
 		// }
 
 		if (count($options) >= 1) {
+			// do_action('sospopsproject/event/stream/send', $options);
 			update_post_meta($post_id, '_sos_custom_popup', $options);
 			// $this->pops_import_to_services_under_category($options);
 			// $this->json_response['pops_data'] = $options;
+			
+			$this->add_response_message(sprintf(
+				__('Configuration setup done on the service (%s - %s).', 'domain'), get_the_title($post_id), $post_id
+			), true);
+		} else {
+			$this->add_response_message(sprintf(
+				__('Configuration setup failed on the service (%s - %s).', 'domain'), get_the_title($post_id), $post_id
+			), false);
 		}
 	}
 
@@ -988,7 +957,7 @@ class Import {
 		$terms_id = [];
 
 		foreach ($fields as $_key => $_cat) {
-			if($this->isFileUrl($_cat) || $this->isRemoteUrl($_cat)) {continue;}
+			if ($this->isFileUrl($_cat) || $this->isRemoteUrl($_cat)) {continue;}
 			if (strpos($_key, 'mastercategory') !== false) {
 				$term = get_term_by('name', $_cat, 'services');
 				if ($term && !is_wp_error($term)) {
@@ -1244,18 +1213,41 @@ class Import {
 		return $term;
 	}
 
+	/**
+	 * Create new term if not exists.
+	 * @return init
+	 * @return bool
+	 */
+	public function get_term_id($args) {
+		$this->current_term = $term = get_term_by('name', $args['name'], 'services');
+		if ($term && !is_wp_error($term)) {
+			$term = (array) $term;
+			$this->json_response['term_hooked'] = $this->json_response['term_hooked']??[];
+			$this->json_response['term_hooked'][] = $term;
+		} else {
+			$term = wp_insert_term($args['name'], $args['texonomy']??'services', ['description' => $args['description']??'']);
+			if ($term && !is_wp_error($term)) {
+				$term = (array) $term;
+				$this->json_response['term_hooked'] = $this->json_response['term_hooked']??[];
+				$this->json_response['term_hooked'][] = $term;
+				$this->add_response_message(sprintf(
+					__('New Services Term created (%s) with the ID (%s) and is a parent term.', 'domain'),
+					$term_name, $term['term_id']
+				), true);
+			}
+		}
+	}
+
 	public function import_stream_fetch_rows($stream_register) {
 		$this->json_response['imported_data'] = $this->json_response['imported_data']??[];
-		$type = '';
-		if (isset($stream_register['type'])) {$type = $stream_register['type'];}
 		if (isset($stream_register['csv_rows'])) {$this->csv_rows = $stream_register['csv_rows'];}
+		if (isset($stream_register['type'])) {$type = $stream_register['type'];} else {$type = '';}
 		if (isset($stream_register['csv_columns'])) {$this->csv_columns = $stream_register['csv_columns'];}
 		if (isset($stream_register['current_term'])) {$this->current_term = $stream_register['current_term'];}
 		if (isset($stream_register['json_response'])) {$this->json_response = $stream_register['json_response'];}
 		if (isset($stream_register['csv_attributes'])) {$this->csv_attributes = $stream_register['csv_attributes'];}
 		if (isset($stream_register['csv_columns_text'])) {$this->csv_columns_text = $stream_register['csv_columns_text'];}
 		
-
 		if (is_array($this->csv_rows)) {
 			do_action('sospopsproject/event/stream/init', [
 				'total'		=> count($this->csv_rows),
@@ -1284,8 +1276,8 @@ class Import {
 					apply_filters('sospopsproject/event/stream/register', [
 						...$stream_register,
 						'done'			=> (($stream_register['done']??0) + $increment),
-						'csv_rows'		=> $this->csv_rows,
 						'rest'			=> count($this->csv_rows),
+						'csv_rows'		=> $this->csv_rows,
 					]);
 					sleep(1);
 					do_action('sospopsproject/event/stream/break', [
@@ -1326,9 +1318,81 @@ class Import {
 			wp_send_json_error($stream_register);
 		}
 	}
+
+	/**
+	 * Delete bulk imported data from here.
+	 * https://wordpress-1152450-4011671.cloudwaysapps.com/wp-admin/admin-ajax.php?action=sospopsproject/ajax/import/clean&clean=terms&taxonomy=services
+	 */
+	public function delete_all_services() {
+		global $wpdb;$this->json_response = ['hooks' => []];
+		switch ($_REQUEST['clean']??'') {
+			case 'terms':
+				$args = [
+					'taxonomy' => $_REQUEST['taxonomy']??'services',
+					'fields' => 'ids', 'number' => 500, 'hide_empty' => false
+				];
+				$terms = get_terms($args);
+				$args['terms'] = $terms;
+				$args = wp_parse_args($args, [
+					'done'			=> 0,
+					'rest'			=> 0,
+					'type'			=> 'terms',
+					'total'			=> count($terms),
+					'hook'			=> 'sospopsproject/clean/stream/fetch/rows'
+				]);
+
+				$stream_register = apply_filters('sospopsproject/event/stream/register', $args);
+
+				if (!is_array($stream_register) && !isset($stream_register['type'])) {
+					if ($stream_register === true) {
+						$this->json_response['hooks'][] = 'event_registered';
+					}
+				}
+				break;
+			default:
+				$args = [
+					'numberposts'	=> -1,
+					'fields'		=> 'ids',
+					'hide_empty'	=> false,
+					'post_status'	=>'publish',
+					'post_type'		=>'service'
+				];
+				$ids = get_posts($args);
+				if ($ids && !is_wp_error($ids)) {
+					$args['posts'] = $ids;
+					$args = wp_parse_args($args, [
+						'done'			=> 0,
+						'rest'			=> 0,
+						'type'			=> 'posts',
+						'total'			=> count($ids),
+						'hook'			=> 'sospopsproject/clean/stream/fetch/rows'
+					]);
+					$stream_register = apply_filters('sospopsproject/event/stream/register', $args);
+					if (!is_array($stream_register) && !isset($stream_register['type'])) {
+						if ($stream_register === true) {
+							$this->json_response['hooks'][] = 'event_registered';
+						}
+					}
+				} else {
+					$this->json_response['message']	= is_wp_error($ids)?$ids->get_error_message():sprintf(__('Failed to get list or list is empty (%s)', 'domain'), json_encode($ids));
+				}
+				
+				break;
+		}
+		wp_send_json_success($this->json_response);
+	}
+	
 	public function clean_stream_fetch_rows($stream_register) {
+		do_action('sospopsproject/event/stream/init', [
+			'message'	=> 'Connected',
+			'status'	=> true,
+			'total'		=> $stream_register['total']??0
+		]);
 		switch ($stream_register['type']??'') {
 			case 'terms':
+			// 	do_action('sospopsproject/event/stream/send', $stream_register);
+			// 	break;
+			// case 'terms--':
 				$terms = $stream_register['terms']??[];
 				$type = $stream_register['type']??[];
 				$increment = 0;
@@ -1355,12 +1419,20 @@ class Import {
 						]);
 						break;
 					} else {
-						wp_delete_term($term_id, $_REQUEST['taxonomy']??'services');$increment++;
-						unset($terms[$index]);
+						$_is_deleted = wp_delete_term($term_id, $stream_register['taxonomy']??'services');$increment++;
+						if ($_is_deleted && !is_wp_error($_is_deleted)) {
+							unset($terms[$index]);
+						} else {
+							do_action('sospopsproject/event/stream/send', [
+								'message'	=> is_wp_error($_is_deleted)?$_is_deleted->get_error_message():$_is_deleted,
+								'type'		=> 'error',
+							]);
+						}
+						
 					}
 				}
 				$terms = get_terms([
-					'taxonomy' => $_REQUEST['taxonomy']??'services',
+					'taxonomy' => $stream_register['taxonomy']??'services',
 					'fields' => 'ids', 'number' => 500, 'hide_empty' => false
 				]);
 				if (count($terms) <= 0) {
@@ -1420,7 +1492,11 @@ class Import {
 				}
 				break;
 			default:
-				# code...
+				do_action('sospopsproject/event/stream/close', [
+					'message'	=> 'Invalid Requests',
+					'type'		=> 'finish',
+					'status'	=> true
+				]);
 				break;
 		}
 	}

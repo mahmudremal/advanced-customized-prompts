@@ -42,9 +42,6 @@ class Ajax {
 
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/hero/autocomplete', [$this, 'hero_autocomplete'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/hero/autocomplete', [$this, 'hero_autocomplete'], 10, 0);
-
-		add_action('wp_ajax_nopriv_sospopsproject/ajax/update/zipcode', [$this, 'update_zipcode'], 10, 0);
-		add_action('wp_ajax_sospopsproject/ajax/update/zipcode', [$this, 'update_zipcode'], 10, 0);
 		
 		add_action('wp_ajax_nopriv_sospopsproject/ajax/add/order', [$this, 'add_order'], 10, 0);
 		add_action('wp_ajax_sospopsproject/ajax/add/order', [$this, 'add_order'], 10, 0);
@@ -499,18 +496,6 @@ class Ajax {
 		}
 		foreach($filteredData as $i => $name) {
 			$args['names'][] = $name;
-		}
-		wp_send_json_success($args);
-	}
-	public function update_zipcode() {
-		$args = ['message' => __('Something went wrong. Failed to update zip code', 'domain'), 'hooks' => ['zipcodeupdatefailed']];
-		if (isset($_POST['_zipcode']) && !empty($_POST['_zipcode'])) {
-			if (is_user_logged_in()) {
-				update_user_meta(get_current_user_id(), '_zip_code', $_POST['_zipcode']);
-				$args = ['message' => __('Zip code updated!', 'domain'), 'hooks' => ['zipcodeupdated'], 'zipcode' => $_POST['_zipcode']];
-				unset($args['message']);
-				wp_send_json_success($args);
-			}
 		}
 		wp_send_json_success($args);
 	}

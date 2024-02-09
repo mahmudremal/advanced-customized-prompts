@@ -51,9 +51,9 @@ class Menus {
 	 */
 	public function get_child_menu_items($menu_array, $parent_id) {
 		$child_menus = [];
-		if(! empty($menu_array) && is_array($menu_array)) {
+		if (! empty($menu_array) && is_array($menu_array)) {
 			foreach ($menu_array as $menu) {
-				if(intval($menu->menu_item_parent) === $parent_id) {
+				if (intval($menu->menu_item_parent) === $parent_id) {
 					array_push($child_menus, $menu);
 				}
 			}
@@ -61,7 +61,7 @@ class Menus {
 		return $child_menus;
 	}
 	public function in_admin_header() {
-		if(! isset($_GET['page']) || $_GET['page'] != 'crm_dashboard') {return;}
+		if (! isset($_GET['page']) || $_GET['page'] != 'crm_dashboard') {return;}
 		
 		remove_all_actions('admin_notices');
 		remove_all_actions('all_admin_notices');
@@ -77,7 +77,7 @@ class Menus {
 		$arg = [];$tags = [
 			'username', 'sitename', 
 		];
-		if($html === false) {return $tags;}
+		if ($html === false) {return $tags;}
 		foreach($tags as $tag) {
 			$arg[] = sprintf("%s{$tag}%s", '<code>{', '}</code>');
 		}
@@ -287,7 +287,7 @@ class Menus {
 		$args = [];$filteredData = [];
 		$filteredKeys = array_keys(SOSPOPSPROJECT_OPTIONS);
 		foreach($filteredKeys as $key) {
-			if(strpos($key, 'teddy-name-') !== false) {
+			if (strpos($key, 'teddy-name-') !== false) {
 				$filteredData[] = SOSPOPSPROJECT_OPTIONS[$key];
 			}
 		}

@@ -29,7 +29,7 @@ class Email {
 			'contentType'	=> 'html', // plain
 			'headers'		=> ['Content-Type: text/html; charset=UTF-8']
 		]);
-		if(empty($args->to) || strpos($args->to, '@') === false) {
+		if (empty($args->to) || strpos($args->to, '@') === false) {
 			throw new \ErrorException(__('Recipients not found.', 'sossprompts'));
 		}
 		/**
@@ -38,18 +38,18 @@ class Email {
 		$args->message = $args->template = $this->generate_template($args);
 
 		foreach($args->attachments as $i => $path) {
-			if(!$path || empty($path) || !file_exists($path) || is_dir($path)) {
+			if (!$path || empty($path) || !file_exists($path) || is_dir($path)) {
 				unset($args->attachments[$i]);
 			}
 		}
-		if(empty($args->subject)) {
+		if (empty($args->subject)) {
 			$args->subject = __('A new quotation request sent by...', 'domain');
 		}
-		// if(count($args->attachments) <= 0) {
+		// if (count($args->attachments) <= 0) {
 		// 	throw new \ErrorException(__('Certificate not found or this could happens probably if path not matching or permission issue.', 'sossprompts'));
 		// }
 		$email_sent = wp_mail($args->to, $args->subject, $args->message, $args->headers, $args->attachments);
-		if($email_sent) {
+		if ($email_sent) {
 			return $email_sent;
 		} else {
 			throw new \ErrorException(__('Something went wrong. Email not sent.', 'sossprompts'));
@@ -58,7 +58,7 @@ class Email {
 	}
 	private function generate_template($args) {
 		$isHTML = ($args->contentType == 'html');
-		if($args->request_type == 'get_quotation') {
+		if ($args->request_type == 'get_quotation') {
 			include SOSPOPSPROJECT_DIR_PATH . '/templates/email/quotation-request.php';
 		} else {
 			include SOSPOPSPROJECT_DIR_PATH . '/templates/email/paid-request.php';
@@ -68,10 +68,10 @@ class Email {
 		 */
 		$all_fields = ($isHTML)?'<table border="0">':'';
 		foreach($args->dataset as $_i => $_row) {
-			if($_row->value == __('Select Your Service', 'domain')) {
+			if ($_row->value == __('Select Your Service', 'domain')) {
 				$_row->value = '';
 			}
-			if($args->contentType == 'html') {
+			if ($args->contentType == 'html') {
 				$all_fields .= '
 				<tr data-key="' . $_row->key . '">
 					<th>' . $_row->title . '</th>
@@ -88,10 +88,10 @@ class Email {
 		 */
 		$invoice_table = ($isHTML)?'<table border="0">':'';
 		foreach($args->charges as $_key => $_value) {
-			if($_value == __('Select Your Service', 'domain')) {
+			if ($_value == __('Select Your Service', 'domain')) {
 				$_value = '';
 			}
-			if($args->contentType == 'html') {
+			if ($args->contentType == 'html') {
 				$invoice_table .= '
 				<tr>
 					<th>' . $_key . '</th>
@@ -107,7 +107,7 @@ class Email {
 		 * Invoice Table area.
 		 */
 		$calculated = $this->get_calculation($args);
-		if($args->contentType == 'html') {
+		if ($args->contentType == 'html') {
 			$invoice_calculations = '
 			<table border="0">
 				<tr><th>' . esc_html__('Subtotal', 'domain') . '</th><td>:</td><td>' . $calculated->subtotal . '</td></tr>
@@ -120,7 +120,7 @@ class Email {
 		}
 		$payment_info = '';
 		// Payment info table goes here.
-		if($args->request_type == 'get_quotation') {
+		if ($args->request_type == 'get_quotation') {
 			$payment_info = __('No payments made yet.', 'domain');
 		} else {
 			$payment_info = __('Payment has been done before request sent. Transection ID# 12345678', 'domain');
@@ -139,12 +139,12 @@ class Email {
 		$args = (object) $args;
 		$calculated = (object) ['total' => 0, 'subtotal' => 0, 'tax' => 0];
 		$basePrice = get_post_meta($args->product_id, 'prices', true);
-		if($basePrice && is_numeric($basePrice) && (float) $basePrice > 0) {
+		if ($basePrice && is_numeric($basePrice) && (float) $basePrice > 0) {
 			$calculated->subtotal += (float) $basePrice;
 		}
 		foreach($args->charges as $_i => $_row) {
 			$_row = (object) $_row;
-			if($_row->price && is_numeric($_row->price) && (float) $_row->price > 0) {
+			if ($_row->price && is_numeric($_row->price) && (float) $_row->price > 0) {
 				$calculated->subtotal += (float) $_row->price;
 				// $calculated->tax += (((float) $_value / 100) * 12.5); // 12.5 is tax percentage. For example
 			}

@@ -64,8 +64,8 @@ class Order {
 			<div class="fwp-outfit__body">
 				<?php
 				$args = (object) get_post_meta($order_id, 'order_infos', true);
-				if(!empty($args)) {
-					if(isset($args->charges)) {
+				if (!empty($args)) {
+					if (isset($args->charges)) {
 						?>
 						<span class="fwp-outfit__product"><?php echo esc_html(__('Charges', 'doamin')); ?></span>
 						<ul class="fwp-outfit__list">
@@ -78,7 +78,7 @@ class Order {
 						<?php
 							foreach($args->charges as $_i => $_row) {
 								$_row = (object) $_row;
-								if(!isset($_row->item)) {continue;}
+								if (!isset($_row->item)) {continue;}
 								$_row->item = substr(
 									$_row->item,
 									0,
@@ -96,15 +96,15 @@ class Order {
 						</ul>
 						<?php
 					}
-					if(isset($args->dataset)) {
+					if (isset($args->dataset)) {
 						?>
 						<span class="fwp-outfit__product"><?php echo esc_html(__('Dataset', 'doamin')); ?></span>
 						<ul class="fwp-outfit__list">
 						<?php
 							foreach($args->dataset as $_i => $_row) {
 								$_row = (object) $_row;
-								if(!isset($_row->value)) {continue;}
-								if($_row->value == __('Select Your Service', 'domain')) {
+								if (!isset($_row->value)) {continue;}
+								if ($_row->value == __('Select Your Service', 'domain')) {
 									$_row->value = 'N/A';
 								}
 								?>
@@ -150,7 +150,7 @@ class Order {
 						<span class="fwp-outfit__title"><?php echo esc_html(__('Payment ID#', 'domain')); ?> :</span>
 						<?php
 						$link_before = '';$link_after = '';
-						if(! in_array(strtolower($payment_status), ['complete'])) {
+						if (! in_array(strtolower($payment_status), ['complete'])) {
 							$link_before = '<a href="' . esc_url(get_post_meta($order_id, 'payment_url', true)) . '" class="fwp-outfit__link" target="_blank">;';
 							$link_after = '</a>';
 						}
@@ -180,7 +180,7 @@ class Order {
 			'post_type'				=> $this->post_type,
 			'comment_status'		=> 'closed'
 		], true);
-		if($order_id && !is_wp_error($order_id)) {
+		if ($order_id && !is_wp_error($order_id)) {
 			$is_updated = add_post_meta($order_id, 'order_infos', $args);
 			return $order_id;
 		} else {
@@ -193,19 +193,19 @@ class Order {
 		 * Update Order status from Draft to Publish.
 		 * Adding some meta data.
 		 */
-		if(isset($result['client_reference_id']) && $result['client_reference_id'] && !empty($result['client_reference_id'])) {
+		if (isset($result['client_reference_id']) && $result['client_reference_id'] && !empty($result['client_reference_id'])) {
 			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_status', $result['status']);
 			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_result', $result);
 			$is_updated = wp_update_post([
 			'ID'           => $result['client_reference_id'],
 			'post_status' => 'publish'
 			], true);
-			if($meta_updated && $is_updated && !is_wp_error($is_updated)) {
+			if ($meta_updated && $is_updated && !is_wp_error($is_updated)) {
 				try {
 					$args = get_post_meta($result['client_reference_id'], 'order_infos', true);
-					if($args && !empty($args)) {
+					if ($args && !empty($args)) {
 						$email_sent = apply_filters('sos_send_email', '', $args);
-						if($email_sent !== false && !empty($email_sent)) {
+						if ($email_sent !== false && !empty($email_sent)) {
 							/**
 							 * Successfully Updated order status.
 							 */
@@ -226,14 +226,14 @@ class Order {
 		 * Update Order status from Draft to Publish.
 		 * Adding some meta data.
 		 */
-		if(isset($result['client_reference_id']) && $result['client_reference_id'] && !empty($result['client_reference_id'])) {
+		if (isset($result['client_reference_id']) && $result['client_reference_id'] && !empty($result['client_reference_id'])) {
 			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_status', $result['status']);
 			$meta_updated = update_post_meta($result['client_reference_id'], 'payment_result', $result);
 			$is_updated = wp_update_post([
 				'ID'           	=> $result['client_reference_id'],
 				'post_status'	=> 'trash'
 			], true);
-			if($meta_updated && $is_updated && !is_wp_error($is_updated)) {}
+			if ($meta_updated && $is_updated && !is_wp_error($is_updated)) {}
 		}
 		return false;
 	}

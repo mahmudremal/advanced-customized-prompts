@@ -82,13 +82,13 @@ class Stripe {
 		$result = [];foreach($methods as $method) {$result[$method] = $method;}return $result;
 	}
 	public function allowSitchPause($default, $todo, $user_id) {
-		if($todo == 'unpause') {
+		if ($todo == 'unpause') {
 			return true;
 		} else {
 			$lastdid = get_usermeta($user_id, 'subscription_last_changed', true);
 			$someDate = new \DateTime(date('Y-M-d H:i:s', (int) $lastdid));
 			$now = new \DateTime();
-			if($someDate->diff($now)->days > 60) {
+			if ($someDate->diff($now)->days > 60) {
 				// The date was more than 60 days ago.
 				return true;
 			}
@@ -105,7 +105,7 @@ class Stripe {
 		// 	$user_id, $args['email'], $args['id'], $args['object'], $args['address'], $args['invoice_prefix'], $args['phone'], maybe_serialize($json)
 		//));
 		foreach($args as $key => $val) {
-			if($val == NULL) {
+			if ($val == NULL) {
 				$args[$key] = false;
 			}
 		}
@@ -125,7 +125,7 @@ class Stripe {
 
 		$record_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}fwp_stripe_payments WHERE session_id=%s AND status=%s;", $json['id'], $json['payment_status']));
 
-		if($record_count <= 0) {
+		if ($record_count <= 0) {
 			$wpdb->insert($wpdb->prefix . 'fwp_stripe_payments', [
 				'user_id' => $user_id,
 				'session_id' => $json['id'],
@@ -157,16 +157,16 @@ class Stripe {
 	}
 
 	public function thePaymentlink($args, $default = false) {
-		if(isset($args['order_id'])) {$order_id = $args['order_id'];unset($args['order_id']);} else {$order_id = false;}
+		if (isset($args['order_id'])) {$order_id = $args['order_id'];unset($args['order_id']);} else {$order_id = false;}
 		$session = $this->create_stripe_checkout_session($args, $order_id);
 		// print_r([$session, $args]);wp_die();
-		if(isset($session['error'])) {
+		if (isset($session['error'])) {
 			return false;
 		} else {
-			if(isset($order_id) && $order_id && isset($session['id'])) {
+			if (isset($order_id) && $order_id && isset($session['id'])) {
 				update_post_meta($order_id, 'payment_id', $session['id']);
 			}
-			if(isset($order_id) && $order_id && isset($session['url'])) {
+			if (isset($order_id) && $order_id && isset($session['url'])) {
 				update_post_meta($order_id, 'payment_url', $session['url']);
 			}
 			$payment_link = isset($session['url'])?$session['url']:'https://checkout.stripe.com/pay/'.$session['id'];
@@ -195,9 +195,9 @@ class Stripe {
 			],
 			'mode'										=> 'payment',
 		];
-		if($client_reference_id) {$param['client_reference_id'] = $client_reference_id;}
-		if($args) {$param['line_items'] = [$args];}
-		// if($param['line_items'] === false) {return false;}
+		if ($client_reference_id) {$param['client_reference_id'] = $client_reference_id;}
+		if ($args) {$param['line_items'] = [$args];}
+		// if ($param['line_items'] === false) {return false;}
 
 		curl_setopt_array($curl, array(
 		CURLOPT_URL => "https://api.stripe.com/v1/checkout/sessions",
@@ -220,7 +220,7 @@ class Stripe {
 
 		$result = json_decode($result, true);
 		$this->lastResult = $result;
-		// if($result['error']) {return false;}
+		// if ($result['error']) {return false;}
 		// $session_id = isset($result['id']) ? $result['id'] : false;
 		return $result;
 	}
@@ -239,8 +239,8 @@ class Stripe {
 		// Decode the JSON response
 		$session = json_decode($response, true);
 		// Check if the session was successful
-		if(in_array($session['status'], ['success', 'complete']) || in_array($session['payment_status'], ['paid', 'success'])) {
-			if($meta = get_user_meta(get_current_user_id(), 'payment_done', true) && $meta && ! empty($meta)) {
+		if (in_array($session['status'], ['success', 'complete']) || in_array($session['payment_status'], ['paid', 'success'])) {
+			if ($meta = get_user_meta(get_current_user_id(), 'payment_done', true) && $meta && ! empty($meta)) {
 				update_user_meta(get_current_user_id(), 'payment_done', wp_date('M d, Y H:i:s'));
 			} else {
 				add_user_meta(get_current_user_id(), 'payment_done', wp_date('M d, Y H:i:s'));
@@ -297,7 +297,7 @@ class Stripe {
 			"Content-Type: application/x-www-form-urlencoded",
 		]);
 		$response = curl_exec($ch);
-		if(curl_errno($ch)) {
+		if (curl_errno($ch)) {
 			echo 'Error:' . curl_error($ch);
 		}
 	
@@ -309,9 +309,9 @@ class Stripe {
 	}	
 	public function customerIDfromEmail($email) {
 		$this->userInfo = $userInfo = get_user_by('email', $email);
-		if($userInfo && ! empty($userInfo->ID)) {
+		if ($userInfo && ! empty($userInfo->ID)) {
 			$customer_id = get_user_meta($userInfo->ID, 'stripe_customer_id', true);
-			if($customer_id && ! empty($customer_id)) {
+			if ($customer_id && ! empty($customer_id)) {
 				return $customer_id;
 			}
 		}
@@ -328,8 +328,8 @@ class Stripe {
 		$data = json_decode($response);
 		$this->lastResult = $data;
 		
-		if(isset($data->data[0]) && ! empty($data->data[0]->id)) {
-			if($userInfo && ! empty($userInfo->ID)) {
+		if (isset($data->data[0]) && ! empty($data->data[0]->id)) {
+			if ($userInfo && ! empty($userInfo->ID)) {
 				update_user_meta($userInfo->ID, 'stripe_customer_id', $data->data[0]->id);
 			}
 			$customer_id = $data->data[0]->id;
@@ -339,7 +339,7 @@ class Stripe {
 			 * Customer ID not found!
 			 */
 			$customer_id = $this->createStripeCustomer($email, 'tok_visa');
-			if($customer_id && !empty($customer_id)) {
+			if ($customer_id && !empty($customer_id)) {
 				return $customer_id;
 			} else {
 				return false;
@@ -369,7 +369,7 @@ class Stripe {
 		curl_close($ch);
 	}
 	public function paymentHistoryfromCustmerID($customerID) {
-		if(! $customerID) {return false;}
+		if (! $customerID) {return false;}
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, 'https://api.stripe.com/v1/charges?customer=' . $customerID);
 		curl_setopt($ch, CURLOPT_USERPWD, $this->stripeSecretKey . ':');
@@ -380,7 +380,7 @@ class Stripe {
 			
 			// return $data;
 			
-		if(isset($data['error'])) {
+		if (isset($data['error'])) {
 		return false;
 		} else {
 		return isset($data['data']) ? $data : false;
@@ -388,9 +388,9 @@ class Stripe {
 	}
 	public function paymentHistory($default, $email) {
 		// $email = 'figosim608@mirtox.com';
-		if(! $email) {return $default;}
+		if (! $email) {return $default;}
 		$customerID = $this->customerIDfromEmail($email);
-		if(! $customerID) {return $default;}
+		if (! $customerID) {return $default;}
 		// $payment_history = $this->stripe_payment_history($customerID);
 		$payment_history = $this->paymentHistoryfromCustmerID($customerID);
 		// print_r(json_encode($payment_history));
@@ -400,9 +400,9 @@ class Stripe {
 	public function subscriptionToggle($status, $email, $user_id = false) {
 		// $customer_id = $this->customerIDfromEmail($email);
 		// print_r([$status, $email, $user_id]);
-		// if($customer_id && ! empty($customer_id)) {
-		// 	if($user_id) {
-		// 		// if(get_user_meta($user_id, 'customer_id', true)) {
+		// if ($customer_id && ! empty($customer_id)) {
+		// 	if ($user_id) {
+		// 		// if (get_user_meta($user_id, 'customer_id', true)) {
 		// 		// 	update_user_meta($user_id, 'customer_id', $customer_id);
 		// 		// }
 		// 	}
@@ -488,9 +488,9 @@ class Stripe {
 	}
 	public function subscriptionCancel($status, $email, $user_id = false) {
 		$customer_id = $this->customerIDfromEmail($email);
-		if(! $customer_id) {return false;}
+		if (! $customer_id) {return false;}
 		$subscription_id = $this->getStripeSubscriptionIdByCustomerID($customer_id);
-		if(! $subscription_id) {return false;}
+		if (! $subscription_id) {return false;}
 		// print_r([$status, $email, $user_id, $customer_id, $subscription_id]);
 		$is_success = $this->cancelStripeSubscription($subscription_id);
 		return ($is_success);
@@ -516,12 +516,12 @@ class Stripe {
 
 		// print_r($response);
 
-		if(! $err) {
+		if (! $err) {
 			$data = json_decode($response);
-			if(! empty($data->status) && $data->status == 'canceled') {
+			if (! empty($data->status) && $data->status == 'canceled') {
 				return true;
 			}
-			if(! empty($data->deleted) && $data->deleted == true) {
+			if (! empty($data->deleted) && $data->deleted == true) {
 				return true;
 			}
 		}
@@ -540,13 +540,13 @@ class Stripe {
 		curl_close($ch);
 		$data = json_decode($response, true);
 		$this->lastResult = $data;
-		if(isset($data['error'])) {
-			if(isset($data['error']['code']) && $data['error']['code'] == 'resource_missing' && $this->userInfo !== false) {
+		if (isset($data['error'])) {
+			if (isset($data['error']['code']) && $data['error']['code'] == 'resource_missing' && $this->userInfo !== false) {
 				update_user_meta($this->userInfo->ID, 'stripe_customer_id', false);
 			}
 			return false;
 		} else {
-			if(isset($data['data'][0]) && isset($data['data'][0]['id'])) {
+			if (isset($data['data'][0]) && isset($data['data'][0]['id'])) {
 				$subscription_id = $data['data'][0]['id'];
 				return $subscription_id; 
 			} else {
@@ -589,11 +589,11 @@ class Stripe {
 	public function pauseSubscriptionUsingEmail($action, $email) {
 		$api_key = $this->stripeSecretKey;
 		$customer_id = $this->customerIDfromEmail($email);
-		if(! $customer_id) {return false;}
+		if (! $customer_id) {return false;}
 		$subscription_id = $this->getStripeSubscriptionIdByCustomerID($customer_id);
 		// print_r([$customer_id, $subscription_id, $email]);wp_die();
 		$status = in_array($action, ['pause', 'unpause']) ? $action : false;
-		if(! $status) {return $status;}
+		if (! $status) {return $status;}
 		$is_success = $this->toggleStripeSubscriptionPause($status, $subscription_id);
 		return ($is_success);
 	}
@@ -684,7 +684,7 @@ class Stripe {
 		curl_close($ch);
 		$responseArray = json_decode($response, true);
 		$this->lastResult = $responseArray;
-		if(isset($responseArray['error'])) {
+		if (isset($responseArray['error'])) {
 			return false;
 		} else {
 			return true;
@@ -710,7 +710,7 @@ class Stripe {
 		$response = curl_exec($ch);
 		curl_close($ch);
 		$this->lastResult = $paymentMethod = json_decode($response, true);
-		if(isset($paymentMethod['error'])) {
+		if (isset($paymentMethod['error'])) {
 			return false;
 		}
 		return $paymentMethod['id'];
@@ -759,7 +759,7 @@ class Stripe {
 		$response = curl_exec($ch);
 		curl_close($ch);
 		$this->lastResult = $response = json_decode($response, true);
-		if(isset($response['error'])) {
+		if (isset($response['error'])) {
 			return false;
 		} else {
 			return $response['id'];
@@ -776,17 +776,17 @@ class Stripe {
 		try {
 			// $args->card_email
 			$customerID = $this->customerIDfromEmail($args->card_email);
-			if($customerID) {
+			if ($customerID) {
 				$subscriptionId = $this->getStripeSubscriptionIdByCustomerID($customerID);
-				if($subscriptionId) {
+				if ($subscriptionId) {
 					$cardToken = $this->getOrCreateCardToken($args->card_number, $args->card_month, $args->card_year, $args->card_cvc);
-					if($cardToken) {
+					if ($cardToken) {
 						$paymentMethod = $this->getOrCreatePaymentMethod($cardToken);
-						if($paymentMethod) {
+						if ($paymentMethod) {
 							$isAttachedMethod = $this->attachPaymentMethodToCustomer($customerID, $paymentMethod);
-							if($isAttachedMethod) {
+							if ($isAttachedMethod) {
 								$addPayMethod2Subscribe = $this->addPaymentMethodToSubscription($subscriptionId, $paymentMethod);
-								if($addPayMethod2Subscribe) {
+								if ($addPayMethod2Subscribe) {
 									return true;
 								}
 							}

@@ -28,7 +28,7 @@ class Service {
 		add_action('elementor/query/sos/single/service/recommended', [$this, 'single_service_recommended'], 10, 1);
 	}
 	public function service_custom_template($template) {
-		if(is_singular('service')) {
+		if (is_singular('service')) {
 			$template = SOSPOPSPROJECT_DIR_PATH . '/templates/service/single-service.php';
 		}
 		return $template;
@@ -63,7 +63,7 @@ class Service {
 		// print_r([$taxonomy, $value, $term]);
 		
 		?>
-		<?php if(!$value) : ?>
+		<?php if (!$value) : ?>
 		<div class="form-field">
 			<label for="texonomy_featured_image">Featured Image</label>
 			<?php endif; ?>
@@ -71,7 +71,7 @@ class Service {
 			<input name="texonomy_featured_image" type="hidden" value="<?php echo esc_attr(($value)?$value:''); ?>" />
 			<img src="<?php echo esc_attr($imgUrl); ?>" alt="Select Image" data-handle="texonomy_featured_image">
 			<p><?php esc_html_e('Upload/Change category featured image.', 'domain'); ?></p>
-			<?php if(!$value) : ?>
+			<?php if (!$value) : ?>
 		</div>
 		<?php endif; ?>
 		<?php
@@ -99,7 +99,7 @@ class Service {
 			$options[$_value] = $_text;
 		}
 		?>
-		<?php if(!$fieldOnly) : ?>
+		<?php if (!$fieldOnly) : ?>
 		<div class="form-field">
 			<label for="_faq_template">FAQS template</label>
 			<?php endif; ?>
@@ -114,7 +114,7 @@ class Service {
 				],
 				'child' => false
 			]); ?>
-			<?php if(!$fieldOnly) : ?>
+			<?php if (!$fieldOnly) : ?>
 		</div>
 		<?php endif; ?>
 		<?php
@@ -134,8 +134,8 @@ class Service {
 		<?php
 	}
 	public function save_services_field($term_id) {
-		if(isset($_POST['texonomy_featured_image'])) {update_term_meta($term_id, 'texonomy_featured_image', sanitize_text_field($_POST['texonomy_featured_image']));}
-		if(isset($_POST['_faq_template'])) {update_term_meta($term_id, '_faq_template', sanitize_text_field($_POST['_faq_template']));}
+		if (isset($_POST['texonomy_featured_image'])) {update_term_meta($term_id, 'texonomy_featured_image', sanitize_text_field($_POST['texonomy_featured_image']));}
+		if (isset($_POST['_faq_template'])) {update_term_meta($term_id, '_faq_template', sanitize_text_field($_POST['_faq_template']));}
 		
 		// print_r(['texonomy_featured_image', $_POST['texonomy_featured_image']]);wp_die();
 		
@@ -143,7 +143,7 @@ class Service {
 	public function single_service_recommended($query) {
 		// $query->set( 'post_type', [ 'custom-post-type1', 'custom-post-type2' ] );
 		// $meta_query = $query->get( 'meta_query' );
-		// if(!$meta_query) {$meta_query = [];}
+		// if (!$meta_query) {$meta_query = [];}
 		// $meta_query[] = [
 		// 	'key' => 'project_type',
 		// 	'value' => [ 'design', 'development' ],

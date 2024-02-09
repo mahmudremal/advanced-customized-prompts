@@ -23,9 +23,9 @@ class Product {
 		echo do_shortcode('[yith_wcwl_add_to_wishlist]', false);
 		
 		$_meta = (array) get_post_meta($product_id, '_teddy_custom_data', true);
-		if(isset($_meta['isFeatured']) || isset($_meta['isBestSeller'])) {
-		  if(isset($_meta['isFeatured'])) { ?><span class="uael-woo-featured"><?php esc_html_e('Featured', 'domain'); ?></span><?php }
-		  if(isset($_meta['isBestSeller'])) { ?><span class="uael-woo-bestseller"><?php esc_html_e('Best Seller', 'domain'); ?></span><?php }
+		if (isset($_meta['isFeatured']) || isset($_meta['isBestSeller'])) {
+		  if (isset($_meta['isFeatured'])) { ?><span class="uael-woo-featured"><?php esc_html_e('Featured', 'domain'); ?></span><?php }
+		  if (isset($_meta['isBestSeller'])) { ?><span class="uael-woo-bestseller"><?php esc_html_e('Best Seller', 'domain'); ?></span><?php }
 		}
 	}
 	public function get_post_meta($post_id, $meta_key, $single) {

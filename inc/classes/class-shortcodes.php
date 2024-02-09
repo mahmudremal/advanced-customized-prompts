@@ -60,7 +60,7 @@ class Shortcodes {
 		?>
 		<button class="btn button custom_zip_btn sos_zip_preview" type="button" data-config="<?php echo esc_attr(json_encode(['id' => $_post_id])); ?>"><?php echo esc_html(($args->input && $args->zip_code && !empty($args->zip_code))?$args->zip_code:$args->title); ?></button>
 		<?php
-		if($args->input) {
+		if ($args->input) {
 			?>
 			<input type="hidden" name="zip_code" value="<?php echo esc_attr($args->zip_code); ?>">
 			<?php
@@ -80,7 +80,7 @@ class Shortcodes {
 		$term_ids[] = [35];
 		$service_term = get_queried_object();
 		$service_args = ['post_type' => $SoS_Service->post_type];
-		if($service_term) {
+		if ($service_term) {
 			$service_args['tax_query'] = [
 				[
 				  'taxonomy'	=> $SoS_Service->taxonomy,
@@ -91,14 +91,14 @@ class Shortcodes {
 			];
 		}
 		$__services = get_posts($service_args);
-		if($__services && ! is_wp_error($__services)) :
+		if ($__services && ! is_wp_error($__services)) :
 			?><div class="services-loops"><?php
 			foreach($__services as $_service) :
 				$_service_id = $_service->ID;
 				// setup_postdata($_service_id);
 				// print_r([$_service]);
 				// include SOSPOPSPROJECT_DIR_PATH . '/templates/service/loop-service.php';
-				if($_service_id && is_int($_service_id) && $_service_id >= 1) :
+				if ($_service_id && is_int($_service_id) && $_service_id >= 1) :
 					?>
 					<div class="serviceloop <?php echo esc_attr('serviceloop-' . $_service_id); ?>">
 						<div class="serviceloop__wrap">
@@ -136,7 +136,7 @@ class Shortcodes {
 		]);
 		ob_start();
 		try {
-			if(!empty($terms) && !is_wp_error($terms)) {
+			if (!empty($terms) && !is_wp_error($terms)) {
 				?>
 				<div class="service_catlist">
 					<!-- <div class="service_catlist__header">
@@ -244,12 +244,12 @@ class Shortcodes {
 		$args = (object) wp_parse_args($args, ['post_id' => get_the_ID()]);
 
 		$zip_code = get_query_var('zip_code');
-		if(
+		if (
 			($zip_code && !empty($zip_code))
 				|| 
 			(is_user_logged_in() && $zip_code = get_user_meta(get_current_user_id(), '_zip_code', true))
 		) {
-			if(!has_term($zip_code, 'area', $post)) {
+			if (!has_term($zip_code, 'area', $post)) {
 				return do_shortcode('[elementor-template id="1876"]');
 			}
 		}
@@ -257,7 +257,7 @@ class Shortcodes {
 	}
 	public function sos_single_service_review_form($args) {
 		// $args = (object) wp_parse_args($args, []);
-		if(!is_user_logged_in()) {return '';}
+		if (!is_user_logged_in()) {return '';}
 		// Some conditions here to filterout.
 		return do_shortcode('[site_reviews_form assigned_posts="post_id" assigned_users="user_id" hide="email,title"]');
 	}
@@ -266,7 +266,7 @@ class Shortcodes {
 		return do_shortcode('[site_reviews assigned_posts="post_id" display="6" pagination="ajax" hide="title" fallback="[elementor-template id=1466]"]');
 	}
 	public function posts_pre_query($posts, $args) {
-		if($args->query['post_type'] == 'service') {
+		if ($args->query['post_type'] == 'service') {
 			// print_r($args);
 		}
 		return $posts;
@@ -277,8 +277,8 @@ class Shortcodes {
 		$args = (object) wp_parse_args($args, [
 			'field' => 'url'
 		]);
-		if($this->payment_stripe_info && isset($this->payment_stripe_info['id'])) {
-			if($args->field && !empty($args->field) && isset($this->payment_stripe_info[$args->field])) {
+		if ($this->payment_stripe_info && isset($this->payment_stripe_info['id'])) {
+			if ($args->field && !empty($args->field) && isset($this->payment_stripe_info[$args->field])) {
 				return $this->payment_stripe_info[$args->field];
 			}
 		}

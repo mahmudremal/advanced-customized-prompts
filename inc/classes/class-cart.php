@@ -36,7 +36,7 @@ class Cart {
 
 	public function ajax_add_to_cart() {
 		global $SoS_Email;global $SoS_Order;
-		if(!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
+		if (!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
 			wp_send_json_error('Missing required data.');
 		}
 		$json = [
@@ -46,7 +46,7 @@ class Cart {
 		$product_id = intval($_POST['product_id']);
 		$quantity = intval($_POST['quantity']);
 		// $product = wc_get_product($product_id);
-		// if(!$product || !$product->is_purchasable()) {
+		// if (!$product || !$product->is_purchasable()) {
 		// 	wp_send_json_error('Invalid product or product is not purchasable.');
 		// }
 		
@@ -55,25 +55,25 @@ class Cart {
 			$charges = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['charges']))), true);
 
 			$is_updated = true;
-			if(is_user_logged_in()) {
+			if (is_user_logged_in()) {
 				$is_updated = update_user_meta(get_current_user_id(), '__sos_userdata', $dataset);
 				foreach($dataset as $row) {
-					if(isset($row['name']) && !empty(trim($row['name'])) && !empty(trim($row['value']))) {
+					if (isset($row['name']) && !empty(trim($row['name'])) && !empty(trim($row['value']))) {
 						$is_added = update_user_meta(get_current_user_id(), str_replace([' '], [''], $row['name']), $row['value']);
 					}
 				}
 			}
-			if(isset($_POST['product_type'])) {
+			if (isset($_POST['product_type'])) {
 				$args = [
 					'dataset' => $dataset,
 					'charges' => $charges,
 					'request_type' => $_POST['product_type'],
 					'product_id'	=> $_POST['product_id'],
 				];
-				if($_POST['product_type'] == 'get_quotation') {
+				if ($_POST['product_type'] == 'get_quotation') {
 					try {
 						$email_sent = apply_filters('sos_send_email', '', $args);
-						if($email_sent !== false && !empty($email_sent)) {
+						if ($email_sent !== false && !empty($email_sent)) {
 							$json['email_sent'] = true;
 							$json['email_template'] = $email_sent;
 							// $json['redirectTo'] = site_url('/contact-us/');
@@ -82,11 +82,11 @@ class Cart {
 						//throw $th;
 						$json['message'] = $th->getMessage;
 					}
-				// } elseif($_POST['product_type'] == 'add') {
+				// } elseif ($_POST['product_type'] == 'add') {
 					// $json['redirectTo'] = wc_get_checkout_url();
 				} else {
 					$order_id = $SoS_Order->createOrder($args);
-					if($order_id) {
+					if ($order_id) {
 						$json['order_created'] = $order_id;
 						$json['email_sent'] = true;
 						$payment_link = apply_filters('sos/project/payment/stripe/paymentlink', [
@@ -104,17 +104,17 @@ class Cart {
 								],
 							]
 						], true);
-						if($payment_link && !empty($payment_link)) {
+						if ($payment_link && !empty($payment_link)) {
 							$json['payment_link'] = $payment_link;
 							$json['redirectTo'] = $payment_link;
 						}
 					}
 				}
 			}
-			if($is_updated || $json['email_sent']) {
+			if ($is_updated || $json['email_sent']) {
 				$json['message'] = __('Successfully updated your information.', 'domain');
 				$json['hooks'] = ['addedToCartSuccess'];
-				if(isset($json['payment_link']) && $json['payment_link'] && !empty($json['payment_link'])) {
+				if (isset($json['payment_link']) && $json['payment_link'] && !empty($json['payment_link'])) {
 					$json['hooks'] = ['addedToCartToCheckout'];
 				}
 				wp_send_json_success($json);
@@ -126,7 +126,7 @@ class Cart {
 		wp_send_json_error($json);
 	}
 	public function woocommerce_add_cart_item_data($cart_item_data, $product_id, $variation_id, $quantity) {
-		if(!isset($_POST['dataset']) || !isset($_POST['dataset'])) {return $cart_item_data;}
+		if (!isset($_POST['dataset']) || !isset($_POST['dataset'])) {return $cart_item_data;}
 		$dataset = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['dataset']))), true);
 		$charges = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['charges']))), true);
 		
@@ -136,13 +136,13 @@ class Cart {
 		return $cart_item_data;
 	}
 	public function woocommerce_get_item_data($item_data, $cart_item) {
-		if(isset($cart_item['custom_teddey_bear_makeup'])) {
+		if (isset($cart_item['custom_teddey_bear_makeup'])) {
 			$item_data[] = [
 				'key' => 'Custom Makeup Charges',
 				'value' => $cart_item['custom_teddey_bear_makeup']
 			];
 		}
-		if(isset($cart_item['custom_teddey_bear_data'])) {
+		if (isset($cart_item['custom_teddey_bear_data'])) {
 			$item_data[] = [
 				'key' => 'Custom Teddy Bear Data',
 				'value' => $cart_item['custom_teddey_bear_data']
@@ -155,7 +155,7 @@ class Cart {
 		$cart = WC()->cart;
 		
 		foreach($cart->get_cart() as $cart_item_key => $cart_item) {
-			if(array_key_exists('custom_teddey_bear_makeup', $cart_item)) {
+			if (array_key_exists('custom_teddey_bear_makeup', $cart_item)) {
 				// $additional_cost = 0;
 				// print_r($cart->get_cart());
 				foreach($cart_item['custom_teddey_bear_makeup'] as $fee) {
@@ -168,7 +168,7 @@ class Cart {
 	}
 	public function woocommerce_order_item_name($item_name, $order_item, $order) {
 		$meta_data = $order_item->get_meta_data();
-		if($meta_data && !empty($meta_data)) {
+		if ($meta_data && !empty($meta_data)) {
             $item_name .= '<br><small class="additional-charges">';
             foreach ($meta_data as $meta) {
                 $key = $meta->key;$value = $meta->value;
@@ -182,10 +182,10 @@ class Cart {
     	return $item_name;
 	}
 	public function display_additional_charges($item_name, $cart_item, $cart_item_key) {
-		// if(isset($cart_item['_additional_charges_applied'])) {return $item_name;}
-		if(isset($cart_item['custom_teddey_bear_makeup']) && !in_array($cart_item_key, $this->showedAlready)) {
+		// if (isset($cart_item['_additional_charges_applied'])) {return $item_name;}
+		if (isset($cart_item['custom_teddey_bear_makeup']) && !in_array($cart_item_key, $this->showedAlready)) {
 			foreach($cart_item['custom_teddey_bear_makeup'] as $fee) {
-				if(!empty($fee['price']) && is_numeric($fee['price'])) {
+				if (!empty($fee['price']) && is_numeric($fee['price'])) {
 					$item_name .= '<br><small class="additional-charges">'.esc_html($fee['item']).': '.wc_price($fee['price']).' x '.esc_html(number_format_i18n($cart_item['quantity'], 0)).'</small>';
 				}
 			}
@@ -195,17 +195,17 @@ class Cart {
 		return $item_name;
 	}
 	public function woocommerce_calculate_totals($cart) {
-		if(is_admin() && !defined('DOING_AJAX')) {return;}
+		if (is_admin() && !defined('DOING_AJAX')) {return;}
 	
 		foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
-			if(array_key_exists('custom_teddey_bear_makeup', $cart_item) && !in_array($cart_item_key, $this->calculatedAlready)) {
+			if (array_key_exists('custom_teddey_bear_makeup', $cart_item) && !in_array($cart_item_key, $this->calculatedAlready)) {
 				$additional_cost = 0;
 				foreach($cart_item['custom_teddey_bear_makeup'] as $fee) {
-					if(!empty($fee['price']) && is_numeric($fee['price'])) {
+					if (!empty($fee['price']) && is_numeric($fee['price'])) {
 						$additional_cost += ($fee['price'] * $cart_item['quantity']);
 					}
 				}
-				if($additional_cost > 0) {
+				if ($additional_cost > 0) {
 					$cart_item['data']->set_price($cart_item['data']->get_price() + $additional_cost);
 				}
 				$this->calculatedAlready[] = $cart_item_key;
@@ -216,18 +216,18 @@ class Cart {
 	public function custom_upload_audio_video($file) {
 		$upload_dir = wp_upload_dir();$custom_dir = 'custom_popup';
 		$target_dir = $upload_dir['basedir'].'/'.$custom_dir.'/';
-		if(!file_exists($target_dir)) {mkdir($target_dir, 0755, true);}
+		if (!file_exists($target_dir)) {mkdir($target_dir, 0755, true);}
 		$file_name = $file['name'];$file_tmp = $file['tmp_name'];$file_type = $file['type'];
 		$allowed_regex = '/^(audio|video|text)\/(.*?)/i';
-		if(!preg_match($allowed_regex, $file_type)) {
+		if (!preg_match($allowed_regex, $file_type)) {
 			throw new \Exception(__('Error: Only audio and video files are allowed.', 'sospopsprompts'));
 		}
 		$max_file_size = 400 * 1024 * 1024;
-		if($file['size'] > $max_file_size) {
+		if ($file['size'] > $max_file_size) {
 			throw new \Exception(__('Error: File size exceeds the maximum limit of 400 MB.', 'sospopsprompts'));
 		}
 		$target_file = $target_dir . $file_name;
-		if(!move_uploaded_file($file_tmp, $target_file)) {
+		if (!move_uploaded_file($file_tmp, $target_file)) {
 			throw new \Exception(__('Error uploading file.', 'sospopsprompts'));
 		}
 		return true;

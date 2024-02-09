@@ -155,7 +155,7 @@ class Meta_Boxes {
 			update_post_meta($post_id, $_key, $_POST[$_key]);
 		}
 		$_key = '_sos_custom_services';
-		if(array_key_exists($_key, $_POST)) {
+		if (array_key_exists($_key, $_POST)) {
 			update_post_meta($post_id, $_key, $_POST[$_key]);
 		}
 	}
@@ -181,7 +181,7 @@ class Meta_Boxes {
 			break;
 			case 'checkbox':
 				$checked = '';
-				if(($data && 'on' == $data) || $field['default'] == true) {
+				if (($data && 'on' == $data) || $field['default'] == true) {
 					$checked = 'checked="checked"';
 				}
 				$html .= '<input id="' . esc_attr($field['id']) . '" type="' . $field['type'] . '" name="' . esc_attr($option_name) . '" ' . $checked . ' ' . $this->attributes($field) . '/>' . "\n";
@@ -189,7 +189,7 @@ class Meta_Boxes {
 			case 'checkbox_multi':
 				foreach($field['options'] as $k => $v) {
 					$checked = false;
-					if(is_array($data) && in_array($k, $data)) {
+					if (is_array($data) && in_array($k, $data)) {
 						$checked = true;
 					}
 					$html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="checkbox" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '[]" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" /> ' . $v . '</label> ';
@@ -198,8 +198,8 @@ class Meta_Boxes {
 			case 'radio':
 				foreach($field['options'] as $k => $v) {
 					$checked = false;
-					if($k == $data) {$checked = true;}
-					if(! $checked && $k == $field['default']) {$checked = true;}
+					if ($k == $data) {$checked = true;}
+					if (! $checked && $k == $field['default']) {$checked = true;}
 					$html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="radio" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" ' . $this->attributes($field) . '/> ' . $v . '</label> ';
 				}
 			break;
@@ -207,7 +207,7 @@ class Meta_Boxes {
 				$html .= '<select name="' . esc_attr($option_name) . '" id="' . esc_attr($field['id']) . '" ' . $this->attributes($field) . '>';
 				foreach($field['options'] as $k => $v) {
 					$selected = ($k == $data);
-					if(empty($data) && ! $selected && $k == $field['default']) {$selected = true;}
+					if (empty($data) && ! $selected && $k == $field['default']) {$selected = true;}
 					$html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option>';
 				}
 				$html .= '</select> ';
@@ -216,7 +216,7 @@ class Meta_Boxes {
 				$html .= '<select name="' . esc_attr($option_name) . '[]" id="' . esc_attr($field['id']) . '" multiple="multiple" ' . $this->attributes($field) . '>';
 				foreach($field['options'] as $k => $v) {
 					$selected = false;
-					if(in_array($k, $data)) {
+					if (in_array($k, $data)) {
 						$selected = true;
 					}
 					$html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option> ';
@@ -242,7 +242,7 @@ class Meta_Boxes {
 		echo '<div class="fwp-form__field fwp-form__field__' . esc_attr($field['type']) . '">'.$html.'</div>';
 	}
 	public function attributes($field) {
-		if(! isset($field[ 'attr' ]) || ! is_array($field[ 'attr' ]) || count($field[ 'attr' ]) < 1) {return '';}
+		if (! isset($field[ 'attr' ]) || ! is_array($field[ 'attr' ]) || count($field[ 'attr' ]) < 1) {return '';}
 		$html = '';
 		foreach($field[ 'attr' ] as $attr => $value) {
 			$html .= $attr . '="' . $value . '" ';

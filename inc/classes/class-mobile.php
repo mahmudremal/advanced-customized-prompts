@@ -24,14 +24,14 @@ class Mobile {
 		 * Mobile screen home page ID is 1507
 		 */
 
-		// if(wp_is_mobile()) {wp_die('Working');}
+		// if (wp_is_mobile()) {wp_die('Working');}
 		
 		$mobile_home_page = 1507;
-		if(is_front_page() && wp_is_mobile() && !is_page($mobile_home_page)) {
+		if (is_front_page() && wp_is_mobile() && !is_page($mobile_home_page)) {
 			wp_redirect(get_permalink($mobile_home_page));exit;
 		}
 		$mobile_service_page = 1764;$desktop_service_page = 424;
-		if(is_page($desktop_service_page) && wp_is_mobile() && !is_page($mobile_service_page)) {
+		if (is_page($desktop_service_page) && wp_is_mobile() && !is_page($mobile_service_page)) {
 			wp_redirect(get_permalink($mobile_service_page));exit;
 		}
 	}
@@ -39,9 +39,9 @@ class Mobile {
 		/**
 		 * Mobile screen home page ID is 1507
 		 */
-		if($query->is_main_query() && $query->is_front_page()) {
+		if ($query->is_main_query() && $query->is_front_page()) {
 			$mobile_home_page = 1507;
-			if(is_front_page() && wp_is_mobile() && !is_page($mobile_home_page)) {
+			if (is_front_page() && wp_is_mobile() && !is_page($mobile_home_page)) {
 				print_r($query);
 				$query->set('post_id', $mobile_home_page);
 				// $query->set('page_id', $mobile_home_page);

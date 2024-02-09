@@ -27,7 +27,7 @@ class Install {
 		}
 		$options = ['fwp_google_auth_code', 'fwp_google_afterauth_redirect'];
 		foreach( $options as $option ) {
-			if( ! get_option( $option, false ) ) {add_option( $option, []);}
+			if ( ! get_option( $option, false ) ) {add_option( $option, []);}
 		}
 	}
 	public function register_deactivation_hook() {

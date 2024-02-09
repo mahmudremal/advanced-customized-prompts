@@ -41,7 +41,7 @@ class Post {
                 PostClass.do('event-finish', event);
                 source.close();resolve(event.json);
               }
-              if(event.json?.progress) {
+              if (event.json?.progress) {
                 event.percentComplete = event.json.progress;
                 PostClass.do('event-progress', event);
               }
@@ -111,7 +111,7 @@ class Post {
                 if (hook == 'event_registered') {
                   PostClass.sendToServer(data, thisClass, {
                     eventStream: true,
-                    url: `${thisClass.config?.site_url??location.origin}/wp-json/sospopsproject/event/stream/run`
+                    url: `${thisClass.config?.site_url??location.origin}wp-json/sospopsproject/event/stream/run`
                   });
                 } else {
                   document.body.dispatchEvent(new Event(hook));
@@ -180,7 +180,7 @@ class Post {
     }
     return thisClass.i18n?.somethingwentwrong??'Something went wrong!'; // Default fallback message
   }
-  on(hook, element, callback) {
+  on(hooks, element, callback) {
     if (element === false) {
       element = document.createElement('div');
     }
@@ -191,8 +191,14 @@ class Post {
       console.warn(`Element not found for hook "${hook}"`);
       return;
     }
-    this.eventElements.push({hook: hook, element: element, callback: callback});
-    element.addEventListener(hook, callback);
+    if (typeof hooks !== 'object') {
+      hooks = [hooks];
+    }
+    hooks.forEach(hook => {
+      this.eventElements.push({hook: hook, element: element, callback: callback});
+      element.addEventListener(hook, callback);
+    });
+    
   }
   off(hook, element, callback) {
     const index = this.eventElements.findIndex(
@@ -211,6 +217,9 @@ class Post {
         event: event,
       },
     })));
+  }
+  event(event) {
+    return (event?.detail && event.detail?.event)?event.detail.event:event;
   }
 
   example() {

@@ -6,31 +6,6 @@ import { secondStepInputFields } from "./database";
 const PROMPTS = {
     i18n: {},voices: {}, names: [], global_cartBtn: false,
     allStepsIn1Screen: true, freezedSteps: 0,
-    zip_template: (thisClass) => {
-        const subTitle = PROMPTS.i18n?.findsupersrvcinarea??'Simply Enter Your Location or Zip Code';
-        const txtFind = PROMPTS.i18n?.findservices??'Locate Local Services';
-        const enterZipCode = PROMPTS.i18n?.enterzipcode??'Locate Me or Enter Your Zip Code';
-        const locateMe = PROMPTS.i18n?.locateme??'Locate me';
-        const Or = PROMPTS.i18n?.or??'or';
-        const html = `
-        <p class="swal2-html-container__subtitle">${subTitle}</p>
-        <div class="swal2-html-container__form">
-            <div class="location-picker">
-                <div class="icon-container">
-                    <i class="fas fa-map-marker-alt" fa-bullseye></i>
-                </div>
-                <div class="input-container">
-                    <input type="text" class="zip-code" placeholder="${enterZipCode}" value="${thisClass.config?.userzip??''}">
-                </div>
-                <button class="submit-button">${txtFind}</button>
-            </div>
-            <div class="location-locateme">
-                <p class="location-locateme__text">${Or} <a class="locate-me" href="#">${locateMe}</a></p>
-            </div>
-        </div>
-        `;
-        return html;
-    },
     get_template: (thisClass) => {
         var json, html;PROMPTS.global_cartBtn = false;
         html = document.createElement('div');html.classList.add('dynamic_popup');

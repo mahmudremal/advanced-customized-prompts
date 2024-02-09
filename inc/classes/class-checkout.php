@@ -39,7 +39,7 @@ class Checkout {
 	}
 	public function woocommerce_checkout_get_value($value, $input) {
 		$fields = $this->get_fields();
-		if(array_key_exists($input, $fields)) {
+		if (array_key_exists($input, $fields)) {
 			// print_r([$value, $input]);
 			return $fields[$input];
 		}
