@@ -11,10 +11,12 @@ use SOSPOPSPROJECT\inc\Traits\Singleton;
 
 class Cart {
 	use Singleton;
+	public  $ajax;
 	private $base;
 	private $showedAlready;
 	private $calculatedAlready;
 	protected function __construct() {
+		$this->ajax = [];
 		$this->base = [];
 		$this->showedAlready = [];
 		$this->calculatedAlready = [];
@@ -39,7 +41,7 @@ class Cart {
 		if (!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
 			wp_send_json_error('Missing required data.');
 		}
-		$json = [
+		$this->ajax = [
 			'hooks' => ['popup_submitting_failed'], 'email_sent' => false,
 			'message' => __('Something went wrong. Please try again.', 'sospopsprompts')
 		];
@@ -65,30 +67,33 @@ class Cart {
 			}
 			if (isset($_POST['product_type'])) {
 				$args = [
-					'dataset' => $dataset,
-					'charges' => $charges,
-					'request_type' => $_POST['product_type'],
+					'dataset'		=> $dataset,
+					'charges'		=> $charges,
+					'request_type'	=> $_POST['product_type'],
 					'product_id'	=> $_POST['product_id'],
 				];
+				$order_id = $SoS_Order->createOrder($args);
+				if ($order_id) {
+					$args['order_id'] = $order_id;
+				}
 				if ($_POST['product_type'] == 'get_quotation') {
 					try {
 						$email_sent = apply_filters('sos_send_email', '', $args);
 						if ($email_sent !== false && !empty($email_sent)) {
-							$json['email_sent'] = true;
-							$json['email_template'] = $email_sent;
-							// $json['redirectTo'] = site_url('/contact-us/');
+							$this->ajax['email_sent'] = true;
+							// $this->ajax['email_template'] = $email_sent;
+							// $this->ajax['redirectTo'] = site_url('/contact-us/');
 						}
 					} catch (\ErrorException $th) {
 						//throw $th;
-						$json['message'] = $th->getMessage;
+						$this->ajax['message'] = $th->getMessage;
 					}
 				// } elseif ($_POST['product_type'] == 'add') {
-					// $json['redirectTo'] = wc_get_checkout_url();
+					// $this->ajax['redirectTo'] = wc_get_checkout_url();
 				} else {
-					$order_id = $SoS_Order->createOrder($args);
 					if ($order_id) {
-						$json['order_created'] = $order_id;
-						$json['email_sent'] = true;
+						$this->ajax['order_created'] = $order_id;
+						$this->ajax['email_sent'] = true;
 						$payment_link = apply_filters('sos/project/payment/stripe/paymentlink', [
 							'order_id'	=> $order_id,
 							'quantity'	=> 1,
@@ -105,25 +110,25 @@ class Cart {
 							]
 						], true);
 						if ($payment_link && !empty($payment_link)) {
-							$json['payment_link'] = $payment_link;
-							$json['redirectTo'] = $payment_link;
+							$this->ajax['payment_link'] = $payment_link;
+							$this->ajax['redirectTo'] = $payment_link;
 						}
 					}
 				}
 			}
-			if ($is_updated || $json['email_sent']) {
-				$json['message'] = __('Successfully updated your information.', 'domain');
-				$json['hooks'] = ['addedToCartSuccess'];
-				if (isset($json['payment_link']) && $json['payment_link'] && !empty($json['payment_link'])) {
-					$json['hooks'] = ['addedToCartToCheckout'];
+			if ($is_updated || $this->ajax['email_sent']) {
+				$this->ajax['message'] = __('Successfully updated your information.', 'domain');
+				$this->ajax['hooks'] = ['addedToCartSuccess'];
+				if (isset($this->ajax['payment_link']) && $this->ajax['payment_link'] && !empty($this->ajax['payment_link'])) {
+					$this->ajax['hooks'] = ['addedToCartToCheckout'];
 				}
-				wp_send_json_success($json);
+				wp_send_json_success($this->ajax);
 			}
 		} catch (\Exception $e) {
 			// Handle the exception here
-			$json['message'] = 'Error: ' . $e->getMessage();
+			$this->ajax['message'] = 'Error: ' . $e->getMessage();
 		}
-		wp_send_json_error($json);
+		wp_send_json_error($this->ajax);
 	}
 	public function woocommerce_add_cart_item_data($cart_item_data, $product_id, $variation_id, $quantity) {
 		if (!isset($_POST['dataset']) || !isset($_POST['dataset'])) {return $cart_item_data;}

@@ -25,3 +25,8 @@ Payment informations:
 Thanks and Congratulation on your new project.
 Best Wishes
 ';
+
+$template = apply_filters('sos/project/system/getoption', 'email-template-paid', false);
+if ($template && !empty(trim($template))) {
+    $args->template = $template;
+}

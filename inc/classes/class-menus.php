@@ -149,6 +149,13 @@ class Menus {
 					'type'					=> 'checkbox',
 					'default'				=> false
 				],
+				[
+					'id' 					=> 'standard-placeholder',
+					'label'					=> __('Service Placeholder', 'sospopsprompts'),
+					'description'			=> __('Input an attachment image ID for replacing those service featured image. Leaving it blank will prevent replacing function.', 'sospopsprompts'),
+					'type'					=> 'text',
+					'default'				=> 38190
+				],
 			]
 		];
 		$args['email'] 		= [
@@ -177,11 +184,30 @@ class Menus {
 					'default'				=> ''
 				],
 				[
-					'id' 						=> 'email-template',
-					'label'					=> __('Email template', 'sospopsprompts'),
-					'description'			=> __('Here you could change email template by replacing this template contents.', 'sospopsprompts'),
+					'id' 						=> 'email-type',
+					'label'					=> __('Email Type', 'sospopsprompts'),
+					'description'			=> false, // __('Select Email type.', 'sospopsprompts'),
+					'type'					=> 'radio',
+					'default'				=> 'html',
+					'options'				=> [
+						'html'				=> __('HTML', 'sospopsprompts'),
+						'plain'				=> __('Text', 'sospopsprompts'),
+					]
+				],
+				[
+					'id' 						=> 'email-template-quota',
+					'label'					=> __('Email template Quotation', 'sospopsprompts'),
+					'description'			=> __('Here you could change email template by replacing this template contents. Leaving it blank will replace refault email template. Please find the magic keywords below:', 'sospopsprompts'),
 					'type'					=> 'textarea',
-					'default'				=> "Dear [Name],\nWe are delighted to invite you to join us for [Event/Service/Product], a [brief description of event/service/product].\n[Event/Service/Product] offers [brief summary of benefits or features]. As a valued member of our community, we would like to extend a special invitation for you to be part of this exciting opportunity.\nTo register, simply click on the link below:\n[Registration link]\nShould you have any questions or require additional information, please do not hesitate to contact us at [contact information].\nWe look forward to seeing you at [Event/Service/Product].\nBest regards,\n[Your Name/Company Name]",
+					'default'				=> "",
+					'attr'					=> ['data-a-tinymce' => true]
+				],
+				[
+					'id' 						=> 'email-template-paid',
+					'label'					=> __('Email template Payments', 'sospopsprompts'),
+					'description'			=> __('Here you could change email template by replacing this template contents. Leaving it blank will replace refault email template. Please find the magic keywords below:', 'sospopsprompts'),
+					'type'					=> 'textarea',
+					'default'				=> "",
 					'attr'					=> ['data-a-tinymce' => true]
 				],
 			]
@@ -249,22 +275,22 @@ class Menus {
 				],
 			]
 		];
-		/**
-			$args['names'] 		= [
-				'title'							=> __('Teddy name', 'sospopsprompts'),
-				'description'					=> __('List of teddy names that will include in a lottery when user choose to suggest a teddy name.', 'sospopsprompts'),
-				'fields'						=> [
-					...$this->optionaize_teddy_names(),
-					[
-						'id' 					=> 'do_repeater',
-						'label'					=> '',
-						'description'			=> false,
-						'type'					=> 'button',
-						'default'				=> __('Add another', 'sospopsprompts')
-					],
-				]
-			];
-		*/
+		$args['order'] 		= [
+			'title'							=> __('Order', 'sospopsprompts'),
+			'description'					=> __('Inline order configuration here.', 'sospopsprompts'),
+			'fields'						=> [
+				[
+					'id' 					=> 'order-format',
+					'label'					=> 'Title format',
+					'description'			=> sprintf(
+						__('Input a short title formate for order. Following these keywords: %s. After {{date-... would be valid date format.', 'sospopsprompts'),
+						'{{date-d M, Y H:i}}' // {{client-name}}, {{client-email}}, 
+					),
+					'type'					=> 'text',
+					'default'				=> '{{date-d M, Y H:i}}',
+				],
+			]
+		];
 		return $args;
 	}
 	public function get_query($args) {

@@ -11,7 +11,7 @@ use SOSPOPSPROJECT\inc\Traits\Singleton;
  */
 class Order {
 	use Singleton;
-	private $post_type;
+	public $post_type;
 	private $lastCustomData;
 	protected $confirmMailTrack = false;
 	/**
@@ -31,19 +31,26 @@ class Order {
 		/**
 		 * Actions
 		 */
-		add_action('add_meta_boxes',[$this, 'add_custom_meta_box']);
+		add_action('add_meta_boxes',[$this, 'add_custom_meta_box'], 10, 2);
 	}
-	public function add_custom_meta_box() {
-		$screens = ['product_services'];
+	public function add_custom_meta_box($post_type, $post) {
+		$screens = [$this->post_type];
 		foreach($screens as $screen) {
+			$order_type = get_post_meta($post->ID, 'order_type', true);
 			add_meta_box(
 				'sos_order_details',           				// Unique ID
+
+				($order_type == 'get_quotation')?
+				__('Quotation Details', 'sospopsprompts')
+				:
 				__('Order Details', 'sospopsprompts'),  	// Box title
+
 				[$this, 'order_details_meta_box_html'],		// Content callback, must be of type callable
 				$screen,									// Post type
 				'normal',                   				// Context
 				'high'										// Priority
 			);
+			if ($order_type == 'get_quotation') {continue;}
 			add_meta_box(
 				'sos_payment_details',           			// Unique ID
 				__('Payment Details', 'sospopsprompts'),  	// Box title
@@ -131,41 +138,83 @@ class Order {
 		$payment_status = get_post_meta($order_id, 'payment_status', true);
 		$payment_result = get_post_meta($order_id, 'payment_result', true);
 		// print_r($payment_result);
-		?>
-		<div class="fwp-outfit__container">
-			<!-- <div class="fwp-outfit__header">
-				<span class="fwp-outfit__title"><?php // echo esc_html(get_post_meta($order_id, 'payment_status', true)); ?></span>
-			</div> -->
-			<div class="fwp-outfit__body">
-				<ul class="fwp-outfit__list">
-					<li class="fwp-outfit__items">
-						<span class="fwp-outfit__title"><?php echo esc_html(__('Subtotal', 'domain')); ?> :</span>
-						<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($payment_result['amount_subtotal'] / 100); ?></span>
-					</li>
-					<li class="fwp-outfit__items">
-						<span class="fwp-outfit__title"><?php echo esc_html(__('Total', 'domain')); ?> :</span>
-						<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($payment_result['amount_total'] / 100); ?></span>
-					</li>
-					<li class="fwp-outfit__items">
-						<span class="fwp-outfit__title"><?php echo esc_html(__('Payment ID#', 'domain')); ?> :</span>
+		if(!$payment_result || empty($payment_result)) {
+			include SOSPOPSPROJECT_DIR_PATH . '/templates/metabox/pending-payment.php';
+		} else {
+			$payment = $payment_result;
+			?>
+			<div class="fwp-outfit__container">
+				<!-- <div class="fwp-outfit__header">
+					<span class="fwp-outfit__title"><?php // echo esc_html(get_post_meta($order_id, 'payment_status', true)); ?></span>
+				</div> -->
+				<div class="fwp-outfit__body">
+					<ul class="fwp-outfit__list">
 						<?php
-						$link_before = '';$link_after = '';
-						if (! in_array(strtolower($payment_status), ['complete'])) {
-							$link_before = '<a href="' . esc_url(get_post_meta($order_id, 'payment_url', true)) . '" class="fwp-outfit__link" target="_blank">;';
-							$link_after = '</a>';
+						$args = [
+							[
+								'label'			=> __('Subtotal', 'domain'),
+								'value'			=> ($payment['amount_subtotal'] / 100)
+							],
+							[
+								'label'			=> __('Total', 'domain'),
+								'value'			=> ($payment['amount_total'] / 100)
+							],
+							[
+								'label'			=> __('Payment Status', 'domain'),
+								'value'			=> $payment_status
+							],
+						];
+						if (isset($payment['client_reference_id']) && !empty($payment['client_reference_id'])) {
+							$args[] = [
+								'label'		=> __('Client Reference ID', 'domain'),
+								'value'		=> $payment['client_reference_id']
+							];
 						}
+						if (isset($payment['created']) && !empty($payment['created'])) {
+							$args[] = [
+								'label'		=> __('Payment Made', 'domain'),
+								'value'		=> wp_date('d M, Y H:i', $payment['created'])
+							];
+						}
+						if (isset($payment['currency']) && !empty($payment['currency'])) {
+							$args[] = [
+								'label'		=> __('Payment Currency', 'domain'),
+								'value'		=> strtoupper($payment['currency'])
+							];
+						}
+						if (isset($payment['ui_mode']) && !empty($payment['ui_mode'])) {
+							$args[] = [
+								'label'		=> __('Payment Made Using', 'domain'),
+								'value'		=> strtoupper($payment['ui_mode'])
+							];
+						}
+						if (isset($payment['ui_mode']) && !empty($payment['ui_mode'])) {
+							$payargs = [
+								'label'		=> __('Payment ID#', 'domain'),
+								'value'		=> get_post_meta($order_id, 'payment_id', true)
+							];
+							$payment_url = get_post_meta($order_id, 'payment_url', true);
+							if ($payment_url && !in_array(strtolower($payment_status), ['complete'])) {
+								$payargs['link'] = $payment_url;
+							}
+							$args[] = $payargs;
+						}
+						foreach($args as $row) :
+							$isLink = isset($row['link']);
+							?>
+							<li class="fwp-outfit__items">
+								<<?php echo esc_attr($isLink?'a':'span') ?> class="fwp-outfit__title" href="<?php echo esc_attr($isLink?$row['link']:'#') ?>"><?php echo esc_html($row['label']); ?> :</<?php echo esc_attr($isLink?'a':'span') ?>>
+								<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($row['value']); ?></span>
+							</li>
+							<?php
+							endforeach;
 						?>
-						<span class="fwp-outfit__price"><?php echo $link_before . esc_html(get_post_meta($order_id, 'payment_id', true)) . $link_after; ?></span>
-					</li>
-					<li class="fwp-outfit__items">
-						<span class="fwp-outfit__title"><?php echo esc_html(__('Payment Status', 'domain')); ?> :</span>
-						<span class="fwp-outfit__price" style="text-transform: capitalize;"><?php echo esc_html($payment_status); ?></span>
-					</li>
-				</ul>
+					</ul>
+				</div>
+				<div class="fwp-outfit__footer"></div>
 			</div>
-			<div class="fwp-outfit__footer"></div>
-		</div>
-		<?php
+			<?php
+		}
 	}
 
 
@@ -174,18 +223,43 @@ class Order {
 	 */
 	public function createOrder($args) {
 		$args = (object) wp_parse_args($args, ['request_type' => 'get_quotation']);
+		$title_format = str_replace(
+			['{{', '}}'], ['', ''],
+			apply_filters('sos/project/system/getoption', 'order-format', '{{date-d M, Y H:i}}')
+		);
+		// if (strpos($title_format, 'client-') !== false) {
+		// 	$title_format = str_replace('client-', '', $title_format);
+		// 	switch ($title_format) {
+		// 		case 'name':
+		// 			$title_format = '';
+		// 			break;
+		// 		case 'name':
+		// 			$title_format = '';
+		// 			break;
+		// 		default:
+		// 			break;
+		// 	}
+		// }
+		if (strpos($title_format, 'date-') !== false) {
+			$title_format = str_replace('date-', '', $title_format);
+			$title_format = wp_date($title_format);
+		}
+			
 		$order_id = wp_insert_post([
-			'post_title'			=> wp_date('M d, Y H:i:s'),
+			'post_title'			=> $title_format,
 			'post_status'			=> ($args->request_type == 'get_quotation')?'publish':'draft', // pending
 			'post_type'				=> $this->post_type,
 			'comment_status'		=> 'closed'
 		], true);
 		if ($order_id && !is_wp_error($order_id)) {
 			$is_updated = add_post_meta($order_id, 'order_infos', $args);
+			$is_updated = add_post_meta($order_id, 'order_type', $args->request_type);
 			return $order_id;
 		} else {
 			return false;
 		}
+
+		
 	}
 	public function handle_payment_success($result) {
 		

@@ -57,6 +57,15 @@ class Zip {
 		return false;
 		
 	}
+	public function get_user_zip_term($user_id = false) {
+		$_zip_code = $this->get_user_zip($user_id);
+		if ($_zip_code && !empty($_zip_code)) {
+			$_zip_term = get_term_by('name', $_zip_code, 'area');
+			return $_zip_term;
+		}
+		return false;
+		
+	}
 	public function update_zipcode() {
 		$args = ['message' => __('Something went wrong. Failed to update zip code', 'domain'), 'hooks' => ['zipcodeupdatefailed']];
 		if (isset($_POST['_zipcode']) && !empty($_POST['_zipcode'])) {

@@ -21,8 +21,8 @@ class Query {
 		global $SoS_Zip;
 		if (!apply_filters('sos/project/system/isactive', 'standard-zipfilter')) {return;}
 		if (!is_admin()) {
-			if (is_post_type_archive('service') || is_tax('services') || is_tax('area')) {
-				if (! $query->is_main_query() && ! $query->is_tax()) {return;}
+			if (is_post_type_archive('service') || $query->is_tax('services') || $query->is_tax('area')) {
+				if (!$query->is_main_query()) {return;}
 				// $query->set('posts_per_page', 2);
 				/**
 				 * Sortingout using a meta tag.
@@ -38,17 +38,26 @@ class Query {
 					]);
 				*/
 				if ($SoS_Zip->has_user_zip()) {
-					$zip_code = $SoS_Zip->get_user_zip();
-					if (!$zip_code || empty($zip_code)) {return;}
+					$zip_term = $SoS_Zip->get_user_zip_term();
+					if (!$zip_term || empty($zip_term)) {return;}
 					$prevTexonomies = (array) $query->get('tax_query');
-					$query->set('tax_query', [
-						...$prevTexonomies,
-						[
-							'taxonomy'	=> 'area',
-							'field'		=> 'slug',
-							'terms'		=> $zip_code
-						]
-					]);
+					if (isset($prevTexonomies[0]) && empty($prevTexonomies[0])) {
+						unset($prevTexonomies[0]);
+					}
+					$zip_codes = [$zip_term->term_id];
+
+					if ($query->is_tax('services')) {
+						$query->set('tax_query', [
+							...$prevTexonomies,
+							[
+								'taxonomy'			=> 'area',
+								'field'				=> 'term_id', // slug
+								'terms'				=> (array) $zip_codes,
+								'operator'			=> 'IN',
+								'include_children'	=> true
+							]
+						]);
+					}
 				}
 				
 			}

@@ -85,19 +85,22 @@ class Import {
 		/**
 		 * Rename any column for text to key.
 		 */
-		// $this->redefine_column_keys($type);
+		$this->redefine_column_keys($type);
 		/**
 		 * Convert columns to rows.
 		 */
+		// print_r(
+		// 	$this->csv_rows
+		// );wp_die();
 		// $this->columns_to_rows();
 
 		/**
 		 * Register for frontend response.
 		 */
-		if (count($this->csv_columns) >= 1) {
-			$this->json_response['csv_rows'] = $this->csv_rows;
-			$this->json_response['csv_columns'] = $this->csv_columns;
-		}
+		// if (count($this->csv_columns) >= 1) {
+		// 	$this->json_response['csv_rows'] = $this->csv_rows;
+		// 	$this->json_response['csv_columns'] = $this->csv_columns;
+		// }
 		
 		/**
 		 * Register for event stream.
@@ -123,39 +126,22 @@ class Import {
 		 */
 		if ($stream_register === true) {
 			$this->json_response['hooks'][] = 'event_registered';
+			$this->json_response['csv'] = $args;
 		}
 	}
 	public function services_import() {
 	}
 	
-	public function proceed_import($path) {
+	public function proceed_import($csv) {
 		$this->csv_rows = [];
 		$this->csv_columns = [];
 		$this->json_response = [];
 		$this->csv_attributes = [];
 		$this->csv_columns_text = [];
-		$row_order = 1;$first_row = false;
+		$row_order = 1;$first_row = false;$csv_rows = [];
 		$this->csv_terms = (object) ['area' => [], 'services' => []];
-
-		
-		// $xml = simplexml_load_file($path);
-		// $xml_rows = $xml->Worksheet->Table->Row;
-		// $csv_rows = [];
-		// foreach ($xml_rows as $xml_row) {
-		// 	$cells = $xml_row->Cell;$csv_cells = [];
-		// 	foreach ($cells as $cell) {
-		// 		$csv_cells[] = (string) $cell->Data;
-		// 	}
-		// 	$csv_rows[] = $csv_cells;
-		// }
-			
-		if (($handle = fopen($path, "r")) !== FALSE) {
-			$csv_rows = [];
-
-			// while(($csv_row = fgetcsv($handle, 1000, ",")) !== FALSE) {
-			// 	$csv_rows[] = $csv_row;
-			// }
-			while(($csv_row = fgetcsv($handle, 1000, ",")) !== FALSE) {
+		if (true) {
+			foreach ($csv as $index => $csv_row) {
 				$row_order++;
 				if ($first_row) {
 					/**
@@ -169,8 +155,7 @@ class Import {
 					$first_row = ($first_row)?$first_row:$csv_row;
 				}
 			}
-			fclose($handle);
-			
+
 			switch ($_POST['import_type']) {
 				case 'pops':
 					$this->pops_import();
@@ -223,11 +208,19 @@ class Import {
 	 */
 	public function import_bulks() {
 		$this->json_response = ['message' => [], 'hooks' => []];
-		$csv = $_FILES['csv']??($_FILES['sos_import']??false);
-		if ($csv) {
-			$path = $csv['tmp_name'];
-			$this->proceed_import($path);
-		} else {
+		$csv = $_POST['csv']??($_POST['sos_import']??false);
+		
+		try {
+			if (!$csv || empty($csv)) {
+				throw new \Exception(
+					__('Failed to get CSV file.', 'domain')
+				);
+			}
+			$csv = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode(isset($_POST['csv'])?$_POST['csv']:'{}'))), true);
+			
+			$this->proceed_import($csv);
+		} catch (\Exception $th) {
+			// 
 			$this->add_response_message(__('Failed to get CSV file.', 'domain'), false);
 		}
 		$this->json_response = (object) wp_parse_args(
@@ -746,20 +739,21 @@ class Import {
 		 * Insert all meta data on the following services.
 		 */
 		$_thumbnail_id = $fields['featuredimage']??'';
-		// if ($this->isFileUrl($_thumbnail_id)) {
-		// 	if (
-		// 		true
-		// 		// $this->isRemoteUrl($_thumbnail_id)
-		// 	) {
-		// 		$_thumbnail_id = $this->insert_attachment_from_url($_thumbnail_id, 0, basename($_thumbnail_id));
-		// 		if ($_thumbnail_id && !is_wp_error($_thumbnail_id) && is_int($_thumbnail_id)) {
-		// 			// Yeah this is a proper thumbnail ID I hope.
-		// 			$_thumbnail_id = (int) $_thumbnail_id;
-		// 		} else {
-		// 			$_thumbnail_id = false;
-		// 		}
-		// 	}
-		// }
+
+		if ($this->isFileUrl($_thumbnail_id)) {
+			if (
+				true
+				// $this->isRemoteUrl($_thumbnail_id)
+			) {
+				$_thumbnail_id = $this->insert_attachment_from_url($_thumbnail_id, 0, basename($_thumbnail_id));
+				if ($_thumbnail_id && !is_wp_error($_thumbnail_id) && is_int($_thumbnail_id)) {
+					// Yeah this is a proper thumbnail ID I hope.
+					$_thumbnail_id = (int) $_thumbnail_id;
+				} else {
+					$_thumbnail_id = false;
+				}
+			}
+		}
 
 		/**
 		 * Term & parent Term fields.
@@ -1132,7 +1126,7 @@ class Import {
 		require_once(ABSPATH . 'wp-admin/includes/file.php');
 		require_once(ABSPATH . 'wp-admin/includes/media.php');
 		$upload_dir = wp_upload_dir();
-
+		
 		// Check if it is dropbox and then ensure download parameter on url.
 		if (strpos($file_url, 'dropbox.com') !== false && substr($file_url, -5) == '&dl=0') {
 			$file_url = substr($file_url, 0, -1) . '1';

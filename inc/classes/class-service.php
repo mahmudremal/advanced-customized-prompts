@@ -25,6 +25,7 @@ class Service {
 		add_action('services_edit_form_fields', [$this, 'services_edit_form_fields__faq'], 10, 2);
 		add_action('created_services', [$this, 'save_services_field'], 10, 1);
 		add_action('edited_services', [$this, 'save_services_field'], 10, 1);
+		add_action('post_thumbnail_id', [$this, 'post_thumbnail_id'], 10, 2);
 		add_action('elementor/query/sos/single/service/recommended', [$this, 'single_service_recommended'], 10, 1);
 	}
 	public function service_custom_template($template) {
@@ -150,5 +151,18 @@ class Service {
 		// 	'compare' => 'in',
 		// ];
 		// $query->set( 'meta_query', $meta_query );
+	}
+	/**
+	 * replacing service thumbnail
+	 */
+	public function post_thumbnail_id($thumbnail_id, $post) {
+		// if (is_singular()) {return $thumbnail_id;} // Pause if it is singular
+		if (!$thumbnail_id || empty($thumbnail_id)) {
+			$placeholder = apply_filters('sos/project/system/getoption', 'standard-placeholder', 38190);
+			if ($placeholder && !empty($placeholder)) {
+				$thumbnail_id = (int) $placeholder;
+			}
+		}
+		return $thumbnail_id;
 	}
 }

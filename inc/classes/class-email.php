@@ -17,6 +17,7 @@ class Email {
 		add_filter('sos_send_email', [$this, 'sos_send_email'], 10, 2);
 	}
 	public function sos_send_email($content, $args) {
+		global $SoS_Cart;
 		$args = (object) wp_parse_args($args, [
 			'dataset'		=> [],
 			'charges'		=> [],
@@ -26,8 +27,10 @@ class Email {
 			'template'		=> apply_filters('sos/project/system/getoption', 'email-template', ''),
 			'message'		=> '',
 			'attachments'	=> [],
-			'contentType'	=> 'html', // plain
-			'headers'		=> ['Content-Type: text/html; charset=UTF-8']
+			'contentType'	=> apply_filters('sos/project/system/getoption', 'email-type', 'html'),
+			'headers'		=> ['Content-Type: text/'.
+									apply_filters('sos/project/system/getoption', 'email-type', 'html')
+								.'; charset=UTF-8']
 		]);
 		if (empty($args->to) || strpos($args->to, '@') === false) {
 			throw new \ErrorException(__('Recipients not found.', 'sossprompts'));
@@ -35,7 +38,7 @@ class Email {
 		/**
 		 * Generating template from prebuild template
 		 */
-		$args->message = $args->template = $this->generate_template($args);
+		$args->template = $this->generate_template($args);
 
 		foreach($args->attachments as $i => $path) {
 			if (!$path || empty($path) || !file_exists($path) || is_dir($path)) {
@@ -48,8 +51,9 @@ class Email {
 		// if (count($args->attachments) <= 0) {
 		// 	throw new \ErrorException(__('Certificate not found or this could happens probably if path not matching or permission issue.', 'sossprompts'));
 		// }
-		$email_sent = wp_mail($args->to, $args->subject, $args->message, $args->headers, $args->attachments);
+		$email_sent = wp_mail($args->to, $args->subject, $args->template, $args->headers, $args->attachments);
 		if ($email_sent) {
+			// $SoS_Cart->ajax['email_args'] = $args;
 			return $email_sent;
 		} else {
 			throw new \ErrorException(__('Something went wrong. Email not sent.', 'sossprompts'));
@@ -64,10 +68,36 @@ class Email {
 			include SOSPOPSPROJECT_DIR_PATH . '/templates/email/paid-request.php';
 		}
 		/**
+		 * Order Link button
+		 */
+		$order_link = __('N/A', 'sospopsprompts');
+		if (isset($args->order_id) && !empty($args->order_id)) {
+			$order = get_post($args->order_id);
+			if ($order && !is_wp_error($order)) {
+				$edit_link = get_edit_post_link($order);
+				if ($edit_link && !empty($edit_link)) {
+					if ($args->contentType == 'html') {
+						$order_link = sprintf(
+							'%s%s%s',
+							sprintf(
+								'<a href="%s" target="_blank" rel="nofollow">',
+								$edit_link
+							),
+							__('View/Edit', 'sospopsprompts'),
+							'<a>'
+						);
+					} else {
+						$order_link = $edit_link;
+					}
+				}
+			}
+		}
+		/**
 		 * Invoice Table area.
 		 */
 		$all_fields = ($isHTML)?'<table border="0">':'';
 		foreach($args->dataset as $_i => $_row) {
+			$_row = (object) $_row;
 			if ($_row->value == __('Select Your Service', 'domain')) {
 				$_row->value = '';
 			}
@@ -87,19 +117,19 @@ class Email {
 		 * Invoice Table area.
 		 */
 		$invoice_table = ($isHTML)?'<table border="0">':'';
-		foreach($args->charges as $_key => $_value) {
-			if ($_value == __('Select Your Service', 'domain')) {
-				$_value = '';
-			}
+		foreach($args->charges as $_row) {
+			// if ($_row['price'] == __('Select Your Service', 'domain')) {
+			// 	$_row['price'] = '';
+			// }
 			if ($args->contentType == 'html') {
 				$invoice_table .= '
 				<tr>
-					<th>' . $_key . '</th>
+					<th>' . $_row['item'] . '</th>
 					<td>:</td>
-					<td>' . $_value . '</td>
+					<td>' . $_row['price'] . '</td>
 				</tr>';
 			} else {
-				$invoice_table .= "$_key : $_value \n";
+				$invoice_table .= $_row['item'] . ' : ' . $_row['price'] . "\n";
 			}
 		}
 		$invoice_table .= ($isHTML)?'</table>':'';
@@ -126,10 +156,11 @@ class Email {
 			$payment_info = __('Payment has been done before request sent. Transection ID# 12345678', 'domain');
 		}
 		$allStrings = [
+			'{{print_order_link}}'				=> $order_link,
 			'{{print_all_fields}}'              => $all_fields,
+			'{{print_payment_info}}'            => $payment_info,
 			'{{print_invoice_table}}'           => $invoice_table,
 			'{{print_invoice_calculations}}'    => $invoice_calculations,
-			'{{print_payment_info}}'            => $payment_info,
 		];
 		$args->template = str_replace(array_keys($allStrings), array_values($allStrings), $args->template);
 		return $args->template;

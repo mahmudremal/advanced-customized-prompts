@@ -3,12 +3,14 @@
  */
 
 import icons from "../frontend/icons";
+import Papa from "papaparse";
 
 class Exim {
   constructor(thisClass) {
     this.setup_hooks(thisClass);
   }
   setup_hooks(thisClass) {
+    this.Papa = Papa;
     this.init_import_button(thisClass);
     this.init_import_events(thisClass);
   }
@@ -29,6 +31,16 @@ class Exim {
               button.addEventListener('change', (event) => {
                 const files = event.target.files;
                 EximClass.fileContents = files;
+                [...EximClass.fileContents].forEach((csv, csvIndex) => {
+                  Papa.parse(csv, {
+                    skipEmptyLines: true,
+                    complete: (results, file) => {
+                      const jsonData = JSON.stringify(results?.data);
+                      EximClass.fileContents = jsonData;
+                      // EximClass.fileContents = new Blob([jsonData], {type: 'application/json'});
+                    }
+                  });
+                });
               });
             });
             document.querySelectorAll('.clean_execution').forEach((button) => {
@@ -72,20 +84,24 @@ class Exim {
             document.querySelectorAll('.exim_popup__content__form').forEach((form) => {
               form.addEventListener('submit', (event) => {
                 event.preventDefault();event.stopPropagation();
-                if(EximClass?.fileContents && EximClass.fileContents.length >= 1) {
+                if(EximClass?.fileContents) {
                   /**
                    * Initializing form data.
                    */
                   var formdata = new FormData(form);
                   formdata.append('action', 'sospopsproject/ajax/import/bulks');
                   formdata.append('_nonce', thisClass.ajaxNonce);
+                  formdata.delete('sos_import');
+                  formdata.append("csv", EximClass.fileContents);
+                  // formdata.append("csv", EximClass.fileContents, EximClass.fileContents.name??'sos_import.json');
+
                   EximClass.mute_unmute_form(true);
                   
                   var args = {
                     // eventStream: true,
                   };
                   thisClass.Post.sendToServer(formdata, thisClass, args).then((response) => {
-                    console.log('Success:', response);
+                    // console.log('Success:', response);
                   }).catch(err => {
                     EximClass.mute_unmute_form(false);
                     console.error('Error:', err);
@@ -98,7 +114,7 @@ class Exim {
       });
     });
   }
-  readFile(file) {
+  async readFile(file) {
     return new Promise(function(resolve, reject) {
       const reader = new FileReader();
       reader.onload = function(event) {
@@ -282,6 +298,13 @@ class Exim {
         popup.querySelectorAll('.preloader').forEach(el => el.remove());
       }
     });
+  }
+  csvToArray(csv, config) {
+    var config = {
+      skipEmptyLines: true,
+      // skipFirstNLines: false
+    };
+    Papa.parse(csv, config);
   }
 }
 export default Exim;

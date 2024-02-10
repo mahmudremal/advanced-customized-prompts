@@ -529,7 +529,7 @@ class Ajax {
 				$options = [];
 				foreach($posts as $post) {
 					$options[] = [
-						'text'		=> $post['title'],
+						'text'		=> esc_html($this->stripeSpecialChars($post['title'])),
 						'value'		=> $post['url'],
 					];
 				}
@@ -545,5 +545,13 @@ class Ajax {
 			wp_send_json_success($json);
 		}
 		wp_send_json_error($json);
+	}
+
+	public function stripeSpecialChars($string) {
+		return str_replace([
+			'&#8211;'
+		], [
+			'–'
+		], $string);
 	}
 }
