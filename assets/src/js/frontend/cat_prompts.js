@@ -7,6 +7,11 @@ const CAT_PROMPTS = {
     lastCategoryLink: false,
     lastCategoryID: false,
     init: (thisClass) => {
+        /**
+         * Prevent this fucntion to disable Sidebar popup.
+         */
+        return;
+        
         document.querySelectorAll('.service_catlist__list__link:not([data-pops-handled])').forEach((el) => {
             el.dataset.popsHandled = true;
             el.addEventListener('click', (event) => {
@@ -58,7 +63,9 @@ const CAT_PROMPTS = {
                                 <a class="sos-catpops__catlink" href="${cat?.url}" data-category="${cat?.term_id}" target="_self" data-count="${cat?.count??0}" data-parent="${cat?.parent??0}" data-index="${i}">
                                     <div class="sos-catpops__catitem">
                                         <div class="sos-catpops__catitem__image">
-                                            ${((cat?.thumbnail) && (cat?.thumbnail??'').trim() != '')?(cat?.thumbnail??''):(icons?.blank)}
+                                            ${((cat?.thumbnail) && (cat?.thumbnail??'').trim() != '')?`
+                                                <img src="${cat.thumbnail}" alt="Thumb" />
+                                            `:(icons?.blank)}
                                         </div>
                                         <div class="sos-catpops__catitem__label">
                                             ${cat?.name??''}

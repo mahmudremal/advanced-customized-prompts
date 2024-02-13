@@ -117,7 +117,7 @@ class Ajax {
 				(is_user_logged_in() && $zip_code = get_user_meta(get_current_user_id(), '_zip_code', true))
 			) {
 				$terms = wp_get_post_terms($_post->ID, 'area', ['fields' => 'names']);
-				if (! has_term($zip_code, 'area', $_post)) {
+				if (!has_term($zip_code, 'area', $_post)) {
 					$service['not_in_area'] = true;
 					$service['not_in_area_message'] = sprintf(
 						__('This Service not available in your location %s while this service only available on these following locations %s.', 'domain'),
@@ -196,7 +196,7 @@ class Ajax {
 			if (!$term_link || is_wp_error($term_link)) {$term_link = false;}
 			$json['redirectedTo'] = $term_link;
 		}
-		if (isset($request['field']["9002"]) && ! is_user_logged_in()) {
+		if (isset($request['field']["9002"]) && !is_user_logged_in()) {
 			$user_email = $request['field']["9002"];
 			$user_name = $request['field']["9003"];
 			$user_pass = $request['field']["9004"];
@@ -238,9 +238,9 @@ class Ajax {
 		global $SoS_Service;global $wpdb;$json = ['hooks' => ['categorylistsfalied'], 'parent' => []];
 		if (isset($_POST['category_id'])) {
 			$category = get_term($_POST['category_id']);
-			if ($category && ! is_wp_error($category)) {
+			if ($category && !is_wp_error($category)) {
 				$catChilds = get_term_children($category->term_id, $SoS_Service->taxonomy);
-				if ($catChilds && ! is_wp_error($catChilds)) {
+				if ($catChilds && !is_wp_error($catChilds)) {
 					$category->childrens = [];
 					foreach($catChilds as $term_id) {
 						$term = get_term($term_id);
@@ -257,7 +257,7 @@ class Ajax {
 						];
 					}
 				}
-				$category->services = $this->get_term_posts($term);
+				$category->services = $this->get_term_posts(get_term($category->term_id));
 				$json['parent'] = $category;
 				$json['hooks'] = ['categorylistsloaded'];
 				wp_send_json_success($json);

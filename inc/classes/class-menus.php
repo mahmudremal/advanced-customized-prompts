@@ -20,6 +20,17 @@ class Menus {
 		add_filter('sos/project/settings/general', [$this, 'general'], 10, 1);
 		add_filter('sos/project/settings/fields', [$this, 'menus'], 10, 1);
 		add_action('in_admin_header', [$this, 'in_admin_header'], 100, 0);
+		add_action('admin_menu', [$this, 'admin_menu'], 10, 0);
+	}
+	public function admin_menu() {
+		add_submenu_page(
+			'edit.php?post_type=service', __('Configuration', 'domain'), __('Configuration', 'domain'), 'manage_options', 'configuration', [$this, 'admin_menu_callback'], 10
+		);
+	}
+	public function admin_menu_callback() {
+		?>
+			<script>location.href = '<?php echo admin_url('options-general.php?page=sospopsprompts'); ?>';</script>
+		<?php
 	}
 	public function register_menus() {
 		register_nav_menus([

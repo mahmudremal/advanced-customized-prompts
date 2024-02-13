@@ -47,19 +47,34 @@ class Query {
 					$zip_codes = [$zip_term->term_id];
 
 					if ($query->is_tax('services')) {
-						$query->set('tax_query', [
-							...$prevTexonomies,
-							[
-								'taxonomy'			=> 'area',
-								'field'				=> 'term_id', // slug
-								'terms'				=> (array) $zip_codes,
-								'operator'			=> 'IN',
-								'include_children'	=> true
-							]
-						]);
+						// $query->set('tax_query', [
+						// 	...$prevTexonomies,
+						// 	[
+						// 		'taxonomy'			=> 'area',
+						// 		'field'				=> 'term_id', // slug
+						// 		'terms'				=> (array) $zip_codes,
+						// 		'operator'			=> 'IN',
+						// 		'include_children'	=> true
+						// 	]
+						// ]);
 					}
 				}
-				
+			}
+			
+			if (
+				$query->get('post_type') == 'service' && !$query->is_main_query() && !$query->is_tax('services') && !$query->post_type('services')
+			) {
+				$tax_query = (array) $query->get('tax_query');
+				foreach ($tax_query as $i => $row) {
+					if (
+						isset($row['taxonomy']) && $row['taxonomy'] == 'services'
+										&& $row['operator'] == 'IN' && 
+						isset($row['terms']) && count($row['terms']) == 1 && empty(trim($row['terms'][0]))
+					) {
+						unset($tax_query[$i]);
+					}
+				}
+				$query->set('tax_query', $tax_query);
 			}
 		}
 	}

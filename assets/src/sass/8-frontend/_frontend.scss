@@ -1917,7 +1917,7 @@ $frameWidth: 500px;
         }
       }
     }
-    &__catlink {}
+    // &__catlink {}
     &__catitem {
       gap: 5px;
       width: 100%;
@@ -1947,6 +1947,7 @@ $frameWidth: 500px;
         img {
           width: 100%;
           height: auto;
+          border-radius: $primaryBorderRadius;
         }
       }
       &__label {
@@ -2092,10 +2093,16 @@ $frameWidth: 500px;
   display: flex;
   flex-wrap: wrap;
   .serviceloop {
-    width: calc(100% / 3);
+    width: 100%;
+    @include mq($from: mobile) {
+      width: calc(100% / 2 - 4px);
+    }
+    @include mq($from: medium) {
+      width: calc(100% / 3 - 4px);
+    }
     &__wrap {
       padding: 5px;
-      max-width: 300px;
+      // max-width: 300px;
       box-shadow: 0 0 10px #e5e5e5;
       border-radius: $primaryBorderRadius;
     }
@@ -2110,6 +2117,7 @@ $frameWidth: 500px;
       font-size: 16px;
       font-weight: 600;
       color: $darkColor;
+      line-height: 20px;
       padding: 5px 5px 10px 10px;
     }
   }
@@ -2174,6 +2182,18 @@ $frameWidth: 500px;
       border-radius: 7px 0 0 7px !important;
       .ss-arrow {
         margin-right: 10px;
+      }
+      &.ss-main {
+        .ss-values .ss-single {
+          max-width: 85%;
+        }
+        .ss-values .ss-single,
+        .ss-list .ss-option {
+          display: block;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
       }
     }
   }
