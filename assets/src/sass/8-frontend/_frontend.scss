@@ -2097,7 +2097,7 @@ $frameWidth: 500px;
     @include mq($from: mobile) {
       width: calc(100% / 2 - 4px);
     }
-    @include mq($from: medium) {
+    @include mq($from: 950px) {
       width: calc(100% / 3 - 4px);
     }
     &__wrap {
@@ -2114,10 +2114,10 @@ $frameWidth: 500px;
       height: 160px;
     }
     &__title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       color: $darkColor;
-      line-height: 20px;
+      line-height: 16px;
       padding: 5px 5px 10px 10px;
     }
   }
@@ -2207,6 +2207,10 @@ $frameWidth: 500px;
       border-radius: 0;
       color: $darkColor;
       background: #fff;
+      line-height: 18px;
+      @include mq($until: 350px) {
+        font-size: 12px;
+      }
     }
   }
   &__submit {
@@ -2301,5 +2305,16 @@ button.btn.button.custom_pops_btn {
 
 .ss-content .ss-list .ss-optgroup .ss-option {
   font-size: 14px;
+  overflow: hidden;
   line-height: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+}
+.elementor-element-3ba3ce1 .elementor-icon-list-item {
+  cursor: pointer;
+  .elementor-icon-list-icon i {
+    width: unset;
+  }
 }

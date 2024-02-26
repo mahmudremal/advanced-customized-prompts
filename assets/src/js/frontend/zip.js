@@ -25,7 +25,7 @@ class Zip {
         }
     }
     classes_zip_picker() {
-        var classes = ['#header-menu-zip-pops-launch', '.custom_zip_btn'];
+        var classes = ['.elementor-element-3ba3ce1 .elementor-icon-list-item', '.custom_zip_btn'];
         return classes.map((clas) => clas + ':not([data-handled])').join(', ');
     }
     zip_template(thisClass) {
