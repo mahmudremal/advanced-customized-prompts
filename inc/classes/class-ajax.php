@@ -148,6 +148,7 @@ class Ajax {
 				],
 			];
 			$json['product']['custom_fields'] = ($json['product']['custom_fields'] && !empty($json['product']['custom_fields']))?(array)$json['product']['custom_fields']:[];
+			$json['product']['existing_data'] = !empty($json['product']['existing_data'])?$json['product']['existing_data']:[];
 			foreach($json['product']['custom_fields'] as $i => $_prod) {
 				$json['product']['custom_fields'][$i]['headerbgurl'] = ($_prod['headerbg']=='')?false:wp_get_attachment_url($_prod['headerbg']);
 				if (isset($_prod['options'])) {

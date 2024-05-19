@@ -72,7 +72,6 @@
 		"bootstrap": "^5.3.0",
 		"dompurify": "^3.0.3",
 		"flatpickr": "^4.6.13",
-		"openai": "^3.2.1",
 		"papaparse": "^5.4.1",
 		"recordrtc": "^5.6.2",
 		"sass": "^1.56.1",
